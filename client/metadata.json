@@ -1,0 +1,5 @@
+{
+  "name": "LineUp",
+  "description": "A high-end, responsive SaaS chat interface with dark/light mode support, three-pane layout, and robust user status features.",
+  "requestFramePermissions": ["microphone", "camera"]
+}

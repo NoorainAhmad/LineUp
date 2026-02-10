@@ -1,0 +1,226 @@
+import React from "react";
+
+const EMOJI_LIST = [
+  "😀",
+  "😃",
+  "😄",
+  "😁",
+  "😆",
+  "😅",
+  "😂",
+  "🤣",
+  "😊",
+  "😇",
+  "🙂",
+  "🙃",
+  "😉",
+  "😌",
+  "😍",
+  "🥰",
+  "😘",
+  "😗",
+  "😙",
+  "😚",
+  "😋",
+  "😛",
+  "😝",
+  "😜",
+  "🤪",
+  "🤨",
+  "🧐",
+  "🤓",
+  "😎",
+  "🤩",
+  "🥳",
+  "😏",
+  "😒",
+  "😞",
+  "😔",
+  "😟",
+  "😕",
+  "🙁",
+  "☹️",
+  "😣",
+  "😖",
+  "😫",
+  "😩",
+  "🥺",
+  "😢",
+  "😭",
+  "😤",
+  "😠",
+  "😡",
+  "🤬",
+  "🤯",
+  "😳",
+  "🥵",
+  "🥶",
+  "😱",
+  "😨",
+  "😰",
+  "😥",
+  "😓",
+  "🤗",
+  "🤔",
+  "🤭",
+  "🤫",
+  "🤥",
+  "😶",
+  "😐",
+  "😑",
+  "😬",
+  "🙄",
+  "😯",
+  "😦",
+  "😧",
+  "😮",
+  "😲",
+  "😴",
+  "🤤",
+  "😪",
+  "😵",
+  "🤐",
+  "🥴",
+  "🤢",
+  "🤮",
+  "🤧",
+  "😷",
+  "🤒",
+  "🤕",
+  "🤑",
+  "🤠",
+  "😈",
+  "👿",
+  "👍",
+  "👎",
+  "👌",
+  "✌️",
+  "🤞",
+  "🤟",
+  "🤘",
+  "🤙",
+  "👈",
+  "👉",
+  "👆",
+  "👇",
+  "✋",
+  "🤚",
+  "🖐",
+  "🖖",
+  "👋",
+  "🤙",
+  "💪",
+  "🦾",
+  "🖕",
+  "✍️",
+  "🙏",
+  "🦶",
+  "🦵",
+  "👂",
+  "🦻",
+  "👃",
+  "🧠",
+  "🫀",
+  "🫁",
+  "🦷",
+  "🦴",
+  "👀",
+  "👁",
+  "👅",
+  "👄",
+  "💋",
+  "🩸",
+  "❤️",
+  "🧡",
+  "💛",
+  "💚",
+  "💙",
+  "💜",
+  "🖤",
+  "🤍",
+  "🤎",
+  "💔",
+  "❣️",
+  "💕",
+  "💞",
+  "💓",
+  "💗",
+  "💖",
+  "💘",
+  "💝",
+  "💟",
+  "☮️",
+  "✝️",
+  "☪️",
+  "🕉",
+  "☸️",
+  "✡️",
+  "🔯",
+  "🕎",
+  "☯️",
+  "☦️",
+  "🛐",
+  "⛎",
+  "♈️",
+  "♉️",
+  "♊️",
+  "♋️",
+  "♌️",
+  "♍️",
+  "♎️",
+  "♏️",
+  "♐️",
+  "♑️",
+  "♒️",
+  "♓️",
+  "🆔",
+  "⚛️",
+  "🉑",
+  "☢️",
+  "☣️",
+  "📴",
+  "📳",
+  "🈶",
+];
+
+interface EmojiPickerProps {
+  onSelect: (emoji: string) => void;
+  onClose: () => void;
+}
+
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({
+  onSelect,
+  onClose,
+}) => {
+  return (
+    <div className="absolute bottom-4 left-4 w-72 h-80 bg-surface border border-border rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+      <div className="p-3 bg-surface-hover border-b border-border flex justify-between items-center">
+        <span className="text-xs font-bold text-secondary uppercase tracking-wider">
+          Emoji
+        </span>
+        <button
+          onClick={onClose}
+          className="text-secondary hover:text-text-main text-xs"
+        >
+          Close
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 grid grid-cols-6 gap-1 custom-scrollbar bg-surface">
+        {EMOJI_LIST.map((emoji, index) => (
+          <button
+            key={index}
+            onClick={() => onSelect(emoji)}
+            className="w-full aspect-square flex items-center justify-center text-xl hover:bg-surface-hover rounded-lg transition-colors"
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+      <div className="p-2 bg-surface-hover border-t border-border">
+        <div className="text-[10px] text-center text-secondary">
+          Cortix Emoji Pack
+        </div>
+      </div>
+    </div>
+  );
+};

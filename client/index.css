@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors linked to CSS Variables */
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-text-main: var(--color-text-main);
+  --color-text-inverse: var(--color-text-inverse);
+  --color-border: var(--color-border);
+  --color-bubble-in: var(--color-bubble-in);
+  --color-bubble-out: var(--color-bubble-out);
+  --color-bubble-meta: var(--color-bubble-meta);
+  --color-input: var(--color-input);
+  --color-icon: var(--color-icon);
+
+  /* Fonts */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Custom Animations */
+  --animate-pulse-fast: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+:root {
+  /* Light Mode Tokens (WhatsApp Web / Clean SaaS) */
+  --color-background: #efeae2;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f6f6;
+  --color-primary: #00a884;
+  --color-secondary: #54656f;
+  --color-text-main: #111b21;
+  --color-text-inverse: #ffffff;
+  --color-border: #e9edef;
+  --color-bubble-in: #ffffff;
+  --color-bubble-out: #d9fdd3;
+  --color-bubble-meta: #667781;
+  --color-input: #f0f2f5;
+  --color-icon: #54656f;
+  --color-pattern: 17, 27, 33;
+}
+
+.dark {
+  /* Dark Mode Tokens */
+  --color-background: #0b141a;
+  --color-surface: #202c33;
+  --color-surface-hover: #2a3942;
+  --color-primary: #00a884;
+  --color-secondary: #8696a0;
+  --color-text-main: #e9edef;
+  --color-text-inverse: #111b21;
+  --color-border: #222e35;
+  --color-bubble-in: #202c33;
+  --color-bubble-out: #005c4b;
+  --color-bubble-meta: #8696a0;
+  --color-input: #2a3942;
+  --color-icon: #aebac1;
+  --color-pattern: 255, 255, 255;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+    background-color: var(--color-background);
+    color: var(--color-text-main);
+    overflow: hidden;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+@layer utilities {
+  .bg-pattern {
+    background-image: radial-gradient(
+      circle at center,
+      rgba(var(--color-pattern), 0.1) 1px,
+      transparent 1px
+    );
+    background-size: 20px 20px;
+  }
+
+  /* Helper for the high-end SaaS feel you mentioned */
+  .border-etched {
+    border: 1px solid var(--color-border);
+  }
+}

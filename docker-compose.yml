@@ -1,0 +1,89 @@
+services:
+  # --- Database Services ---
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: my_application_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Cache Services ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6337:6379"
+    volumes:
+      - redis_data:/data
+
+  # --- New Media Services ---
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: media_storage
+    restart: always
+    ports:
+      - "9000:9000" # S3 API Port
+      - "9001:9001" # Web Console UI
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Automatic Bucket Creation Utility
+  create_buckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: 
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for MinIO API..."
+        until /usr/bin/mc alias set myminio http://minio:9000 admin password123; do
+          sleep 2
+        done
+
+        echo "✅ Creating Bucket..."
+        /usr/bin/mc mb --ignore-existing myminio/media-uploads
+        /usr/bin/mc anonymous set download myminio/media-uploads
+
+        echo "⚙️ Configuring Webhook..."
+        # Using single quotes for the MC command to avoid shell interpolation issues
+        /usr/bin/mc admin config set myminio notify_webhook:primary endpoint='http://host.docker.internal:5000/api/v1/media/webhook' queue_limit='10'
+        
+        echo "🔄 Restarting MinIO to load Webhook..."
+        /usr/bin/mc admin service restart myminio
+        
+        echo "⏳ Giving MinIO 15s to reboot..."
+        sleep 15
+
+        echo "🔔 Registering Event Trigger..."
+        # Loop specifically for the ARN registration
+        until /usr/bin/mc event add myminio/media-uploads arn:minio:sqs::primary:webhook --event put; do
+          echo "ARN not ready, retrying..."
+          sleep 3
+        done
+
+        echo "🚀 Setup Complete & Webhook Active!"
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
