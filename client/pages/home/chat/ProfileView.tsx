@@ -44,14 +44,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     email: user?.email || "",
     location: user?.location || "",
     avatarUrl: user?.avatarUrl || "",
-  });
-
-  console.log("User:", userId);
+  }); 
 
   const fetchUser = async () => {
     try {
-      const user = await UserService.getUserById(userId);
-      console.log("Fetched user:", user);
+      const user = await UserService.getUserById(userId); 
       setUser(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -153,7 +150,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </span>
         </div>
 
-        {!isEditing && canEdit && (
+        {/* {!isEditing && canEdit && (
           <button
             onClick={() => setIsEditing(true)}
             className="text-secondary hover:text-primary transition-colors p-2 hover:bg-surface-hover rounded-full"
@@ -162,7 +159,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           >
             <Pencil size={18} />
           </button>
-        )}
+        )} */}
 
         {isEditing && (
           <button
@@ -326,7 +323,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           />
         </div>
 
-        <div className="space-y-1 pt-4">
+        {/* <div className="space-y-1 pt-4">
           {canEdit && (
             <>
               <ActionItem icon={BellOff} label="Mute Notifications" />
@@ -348,7 +345,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               This is a system account and cannot be modified
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

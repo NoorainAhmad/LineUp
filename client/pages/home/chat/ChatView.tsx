@@ -1073,7 +1073,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
               >
                 <div className="relative">
                   <Avatar
-                    user={chat.isGroup ? undefined : otherUser}
+                    user={chat.isGroup ? null : otherUser}
+                    isGroup={chat.isGroup}
+                    groupName={chat.isGroup ? chat.groupName : null}
                     size="md"
                     showStatus={!chat.isGroup}
                   />

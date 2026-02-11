@@ -57,8 +57,7 @@ const HierarchyNode = ({
     queryFn: async () => {
       try {
         if (!user.id) return [];
-        const response = await UserService.getUserSubordinates(user?.id);
-        console.log(response);
+        const response = await UserService.getUserSubordinates(user?.id); 
         return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error("Error fetching subordinates:", error);
@@ -351,8 +350,7 @@ export const UserView: React.FC<UserViewProps> = ({
 
   const handleUserSelect = (selectedUser: User) => {
     // This would navigate to the selected user's profile
-    // For now, we'll just alert the action
-    console.log("Selected user:", selectedUser);
+    // For now, we'll just alert the action 
     // In a real app, you would have navigation or call a callback
   };
 

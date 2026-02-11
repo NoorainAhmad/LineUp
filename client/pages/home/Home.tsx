@@ -34,6 +34,7 @@ import { UserService } from "@/services/user.service";
 import { CannedResponseService } from "@/services/canned.service";
 import { StatusService } from "@/services/status.service";
 import { ChatService } from "@/services/chat.service";
+import GroupProfileView from "./chat/GroupProfileView";
 
 // Helper function to normalize API response
 const normalizeChatData = (apiChat: any): Chat => {
@@ -561,61 +562,143 @@ export const Home: React.FC = () => {
   );
 
   const handleCreateGroup = useCallback(
-    (name: string, participants: User[]) => {
-      // Note: In a real app, you would call ChatService.createChat
-      const newChat: Chat = {
-        id: Date.now().toString(),
-        isGroup: true,
-        groupName: name,
-        members: participants.map((user) => ({
-          id: `member-${Date.now()}-${user.id}`,
-          userId: user.id,
-          user: user,
-          chatId: Date.now().toString(),
-          chat: {} as Chat,
-          unreadCount: 0,
-          isPinned: false,
-          isMuted: false,
-          isArchived: false,
-          joinedAt: new Date().toISOString(),
-        })),
-        messages: [],
-        lastMessage: {
-          id: "init",
-          senderId: "system",
-          content: `Group "${name}" created`,
-          type: MessageType.TEXT,
-          sender: {
-            id: "system",
-            guid: "system",
-            name: "System",
-            phone: "",
-            status: UserStatus.OFFLINE,
-            lastSeen: "Just now",
-            ipAddress: "0.0.0.0",
-            isActive: true,
-            role: UserRole.DEVELOPER,
-            permission: [],
-            children: [],
+    async (groupName: string, participants: User[]) => {
+      try {
+        // Ensure current user is included
+        const memberIds = [
+          currentUser.id,
+          ...participants
+            .map((p) => p.id)
+            .filter((id) => id !== currentUser.id),
+        ];
+
+        if (memberIds.length < 3) {
+          alert("Group chat requires at least 3 participants.");
+          return;
+        }
+
+        // Check if group chat with exact same members already exists
+        const existingGroupChat = chatsData.find(
+          (chat) =>
+            chat.isGroup &&
+            chat.members.length === memberIds.length &&
+            memberIds.every((id) =>
+              chat.members.some((member) => member.user.id === id),
+            ),
+        );
+
+        if (existingGroupChat) {
+          setSelectedChat(existingGroupChat);
+          setActiveTab("chat");
+          setSelectedUser(null);
+          return;
+        }
+
+        // Create the group chat via API
+        const response = await ChatService.createChat({
+          isGroup: true,
+          memberIds,
+          groupName: groupName.trim() || `Group (${participants.length + 1})`,
+          groupImage: null,
+        });
+
+        // Normalize the response data
+        const newChat = normalizeChatData(response.data || response);
+
+        // Update the chats cache
+        queryClient.setQueryData(["chats"], (old: Chat[] = []) => {
+          // Check if already exists
+          const existing = old.find((chat) => chat.id === newChat.id);
+          if (existing) return old;
+          return [newChat, ...old];
+        });
+
+        // Select the new chat
+        setSelectedChat(newChat);
+        setActiveTab("chat");
+        setSelectedUser(null);
+
+        // Force refresh of chats list
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["chats"] });
+        }, 500);
+      } catch (error: any) {
+        console.error("Error creating group chat:", error);
+
+        // Fallback: Create a temporary local group chat
+        const memberIds = [
+          currentUser.id,
+          ...participants
+            .map((p) => p.id)
+            .filter((id) => id !== currentUser.id),
+        ];
+
+        const tempChat: Chat = {
+          id: `local-group-${Date.now()}`,
+          isGroup: true,
+          groupName: groupName.trim() || `Group (${participants.length + 1})`,
+          groupImage: null,
+          members: memberIds.map((userId, index) => {
+            const user =
+              userId === currentUser.id
+                ? currentUser
+                : participants.find((p) => p.id === userId)!;
+            return {
+              id: `member-${userId}-${Date.now()}-${index}`,
+              userId,
+              user,
+              chatId: `local-group-${Date.now()}`,
+              chat: {} as Chat,
+              unreadCount: 0,
+              isPinned: false,
+              isMuted: false,
+              isArchived: false,
+              joinedAt: new Date().toISOString(),
+            };
+          }),
+          messages: [],
+          lastMessage: {
+            id: `welcome-${Date.now()}`,
+            senderId: currentUser.id,
+            content: `${currentUser.name} created group "${groupName || `Group (${participants.length + 1})`}"`,
+            type: MessageType.TEXT,
+            sender: currentUser,
+            chatId: `local-group-${Date.now()}`,
+            chat: {} as Chat,
+            isEdited: false,
+            isDeleted: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           },
-          chatId: Date.now().toString(),
-          chat: {} as Chat,
-          isEdited: false,
-          isDeleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+        };
 
-      // Invalidate chats query
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-      setSelectedChat(newChat);
+        // Add to local cache
+        queryClient.setQueryData(["chats"], (old: Chat[] = []) => {
+          // Check if group with same members exists
+          const existing = old.find(
+            (chat) =>
+              chat.isGroup &&
+              chat.members.length === memberIds.length &&
+              memberIds.every((id) =>
+                chat.members.some((member) => member.user.id === id),
+              ),
+          );
+          if (existing) return old;
+          return [tempChat, ...old];
+        });
+
+        setSelectedChat(tempChat);
+        setActiveTab("chat");
+        setSelectedUser(null);
+
+        alert(
+          "Note: This group chat is created locally. It may not sync across devices.",
+        );
+      }
     },
-    [queryClient],
+    [chatsData, currentUser, queryClient],
   );
 
   const handleStartChat = useCallback(
@@ -1157,7 +1240,7 @@ export const Home: React.FC = () => {
               className="absolute inset-0 bg-black/50 md:hidden"
               onClick={() => setShowProfile(false)}
             ></div>
-            {selectedChat.members.length > 0 && (
+            {!selectedChat.isGroup && (
               <ProfileView
                 userId={
                   selectedChat.members.find((m) => m.user.id !== currentUser.id)
@@ -1166,6 +1249,24 @@ export const Home: React.FC = () => {
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile}
                 onDelete={handleDeleteContact}
+              />
+            )}
+            {selectedChat.isGroup && (
+              <GroupProfileView
+                chat={selectedChat}
+                onClose={() => setShowProfile(false)}
+                onUpdate={() => {
+                  alert("Feature coming soon...");
+                }}
+                onDelete={() => {
+                  alert("Feature coming soon...");
+                }}
+                onLeaveGroup={() => {
+                  alert("Feature coming soon...");
+                }}
+                onAddParticipants={() => {
+                  alert("Feature coming soon...");
+                }}
               />
             )}
           </div>

@@ -45,7 +45,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     if (!groupName.trim()) return;
     const participants = Array.from(contacts).filter((u) =>
       selectedIds.has(u.id),
-    );
+    ); 
     onCreate(groupName, participants);
     onClose();
   };

@@ -65,9 +65,7 @@ export class StatusService {
           fileName: file.name,
           fileSize: file.size,
           mimeType: file.type,
-        };
-
-        console.log(`✅ Status media uploaded: ${publicUrl}`);
+        }; 
       } catch (error) {
         console.error("❌ Status media upload failed:", error);
         throw new Error("Failed to upload status media");

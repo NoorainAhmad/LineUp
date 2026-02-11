@@ -41,8 +41,7 @@ interface AddUserModalProps {
   showRoleSelection?: boolean;
   masters: UserType[];
   admins: UserType[];
-  branches: UserType[];
-  users: UserType[];
+  branches: UserType[]; 
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -51,8 +50,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   showRoleSelection = false,
   masters,
   admins,
-  branches,
-  users,
+  branches 
 }) => {
   const { user: CurrentUser } = useAuth();
 
