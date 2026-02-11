@@ -31,6 +31,7 @@ import { User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useQuery } from "@tanstack/react-query";
 import { UserService } from "@/services/user.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserViewProps {
   user: User;
@@ -54,7 +55,7 @@ const HierarchyNode = ({
   const { data: children = [] } = useQuery({
     queryKey: ["user-children", user.id],
     queryFn: async () => {
-      try { 
+      try {
         if (!user.id) return [];
         const response = await UserService.getUserSubordinates(user?.id);
         console.log(response);
@@ -163,6 +164,8 @@ export const UserView: React.FC<UserViewProps> = ({
   onUpdate,
   onBack,
 }) => {
+  const { user: currentUser } = useAuth();
+
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,7 +185,7 @@ export const UserView: React.FC<UserViewProps> = ({
     queryFn: async () => {
       try {
         const response = await UserService.getUserSubordinates(user.id);
-        return Array.isArray(response) ? response: [];
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error("Error fetching subordinates:", error);
         return [];
@@ -501,7 +504,7 @@ export const UserView: React.FC<UserViewProps> = ({
             </div>
 
             {/* Main Action */}
-            {!isEditing && (
+            {!isEditing && !currentUser?.id && (
               <button
                 onClick={handleStartChatWithUser}
                 disabled={!user.isActive}
