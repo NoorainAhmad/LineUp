@@ -663,22 +663,28 @@ export const UserView: React.FC<UserViewProps> = ({
                   <Mail size={16} /> Contact Details
                 </h3>
                 <div className="space-y-4">
-                  <EditableRow
-                    icon={Mail}
-                    label="Email Address"
-                    value={formData.email}
-                    isEditing={isEditing}
-                    onChange={(v) => setFormData({ ...formData, email: v })}
-                    disabled={!user.isActive}
-                  />
-                  <EditableRow
-                    icon={Phone}
-                    label="Phone Number"
-                    value={formData.phone}
-                    isEditing={isEditing}
-                    onChange={(v) => setFormData({ ...formData, phone: v })}
-                    disabled={!user.isActive}
-                  />
+                  {(currentUser.role === UserRole.MASTER ||
+                    currentUser.role === UserRole.DEVELOPER) && (
+                    <EditableRow
+                      icon={Mail}
+                      label="Email Address"
+                      value={formData.email}
+                      isEditing={isEditing}
+                      onChange={(v) => setFormData({ ...formData, email: v })}
+                      disabled={!user.isActive}
+                    />
+                  )}
+                  {(currentUser.role === UserRole.MASTER ||
+                    currentUser.role === UserRole.DEVELOPER) && (
+                    <EditableRow
+                      icon={Phone}
+                      label="Phone Number"
+                      value={formData.phone}
+                      isEditing={isEditing}
+                      onChange={(v) => setFormData({ ...formData, phone: v })}
+                      disabled={!user.isActive}
+                    />
+                  )}
                   <EditableRow
                     icon={MapPin}
                     label="Location"
