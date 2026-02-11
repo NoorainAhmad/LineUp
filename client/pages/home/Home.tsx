@@ -913,6 +913,7 @@ export const Home: React.FC = () => {
         <UserView
           user={selectedUser}
           onStartChat={handleStartChat}
+          onSelect={setSelectedUser}
           onUpdate={handleUpdateUser}
           onBack={handleBackToMenu}
         />

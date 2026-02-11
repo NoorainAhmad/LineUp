@@ -35,7 +35,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface UserViewProps {
   user: User;
-  onStartChat: (user: User) => void;
+  onStartChat: (user: User) => void; 
+  onSelect: (user: User) => void;
   onUpdate: (user: User) => void;
   onBack?: () => void;
 }
@@ -160,6 +161,7 @@ const HierarchyNode = ({
 export const UserView: React.FC<UserViewProps> = ({
   user,
   onStartChat,
+  onSelect,
   onUpdate,
   onBack,
 }) => {
@@ -349,6 +351,7 @@ export const UserView: React.FC<UserViewProps> = ({
   };
 
   const handleUserSelect = (selectedUser: User) => {
+    onSelect(selectedUser);
     // This would navigate to the selected user's profile
     // For now, we'll just alert the action 
     // In a real app, you would have navigation or call a callback
