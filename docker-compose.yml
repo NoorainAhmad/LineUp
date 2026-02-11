@@ -5,8 +5,8 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: pg_admin
-      POSTGRES_PASSWORD: pg_password_123
+      POSTGRES_USER: postgresql_admin
+      POSTGRES_PASSWORD: postgresql_password_123
       POSTGRES_DB: lineup
     ports:
       - "5432:5432"
