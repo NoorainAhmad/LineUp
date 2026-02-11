@@ -40,6 +40,7 @@ import {
   UserStatus,
   CannedResponse,
   MessageType,
+  User,
 } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmojiPicker } from "../../../components/ui/EmojiPicker";
@@ -97,18 +98,51 @@ const renderMessageContent = (
   searchQuery: string,
   audioRefs: React.MutableRefObject<{ [key: string]: HTMLAudioElement }>,
 ) => {
+  // Determine if this is a group chat
+  const isGroupChat = chat?.isGroup || false;
+
+  // Get sender name
+  const senderName = msg.sender?.name || "Unknown";
+
   return (
-    <>
+    <div>
+      {/* Sender Name - Only show in group chats and not for own messages */}
+      {isGroupChat && !isMe && (
+        <div className="px-4 pt-2 pb-0.5">
+          <span className="text-xs font-semibold text-primary">
+            {senderName}
+          </span>
+        </div>
+      )}
+
+      {/* Sender Name for own messages in group chats (optional) */}
+      {isGroupChat && isMe && (
+        <div className="px-4 pt-2 pb-0.5 text-right">
+          <span className="text-xs font-semibold text-secondary">You</span>
+        </div>
+      )}
+
       {msg.type === MessageType.IMAGE && (
         <div className="p-1">
           <img
             src={msg.fileUrl}
             alt={msg.fileName}
-            className="rounded-xl w-full max-w-sm max-h-80 object-cover"
+            className="rounded-xl w-full max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(msg.fileUrl, "_blank");
+            }}
           />
           {msg.content && msg.content !== "Photo" && (
             <p className="px-3 pt-2 pb-1 text-sm">
               <HighlightedText text={msg.content} highlight={searchQuery} />
+            </p>
+          )}
+
+          {/* Show sender name at bottom for images in group chats (alternative position) */}
+          {isGroupChat && !isMe && (
+            <p className="px-3 pb-1 text-[10px] text-secondary font-medium">
+              {senderName}
             </p>
           )}
         </div>
@@ -120,12 +154,20 @@ const renderMessageContent = (
             <FileText size={20} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
-              <HighlightedText
-                text={msg.fileName || "Document"}
-                highlight={searchQuery}
-              />
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium truncate">
+                <HighlightedText
+                  text={msg.fileName || "Document"}
+                  highlight={searchQuery}
+                />
+              </p>
+              {/* Sender name inline for files in group chats */}
+              {isGroupChat && !isMe && (
+                <span className="text-[10px] text-secondary whitespace-nowrap">
+                  • {senderName}
+                </span>
+              )}
+            </div>
             <p className="text-xs opacity-70">
               {msg.fileSize} • {msg.fileName?.split(".").pop()?.toUpperCase()}
             </p>
@@ -133,7 +175,10 @@ const renderMessageContent = (
           <a
             href={msg.fileUrl}
             download={msg.fileName}
+            target="_blank"
+            rel="noopener noreferrer"
             className="p-2 hover:bg-surface-hover rounded-full transition-colors"
+            onClick={(e) => e.stopPropagation()}
           >
             <Download size={18} />
           </a>
@@ -144,7 +189,11 @@ const renderMessageContent = (
         <div className="p-3 flex items-center gap-3 min-w-50">
           <button
             onClick={() => toggleAudio(msg.id, msg.fileUrl || "")}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${playingAudioId === msg.id ? "bg-primary text-white" : "bg-surface text-text-main hover:bg-surface-hover"}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${
+              playingAudioId === msg.id
+                ? "bg-primary text-white"
+                : "bg-surface text-text-main hover:bg-surface-hover"
+            }`}
           >
             {playingAudioId === msg.id ? (
               <Pause size={18} />
@@ -153,14 +202,20 @@ const renderMessageContent = (
             )}
           </button>
           <div className="flex flex-col justify-center gap-1 flex-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] opacity-70 flex items-center gap-1 font-mono">
+                <Mic size={10} /> Voice Message
+              </span>
+              {/* Sender name for audio in group chats */}
+              {isGroupChat && !isMe && (
+                <span className="text-[10px] text-secondary">{senderName}</span>
+              )}
+            </div>
             <div className="h-1.5 bg-black/10 dark:bg-white/20 rounded-full w-full overflow-hidden">
               {playingAudioId === msg.id && (
                 <div className="h-full bg-primary animate-pulse w-2/3 rounded-full"></div>
               )}
             </div>
-            <span className="text-[10px] opacity-70 flex items-center gap-1 font-mono">
-              <Mic size={10} /> Voice Message
-            </span>
           </div>
           <div className="flex items-center self-end">
             <Avatar
@@ -182,7 +237,7 @@ const renderMessageContent = (
           </p>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
@@ -965,7 +1020,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div className="z-10 text-center p-8 animate-in zoom-in-95 duration-500">
           <div className="w-32 h-32 rounded-3xl bg-surface border border-border shadow-2xl flex items-center justify-center mb-8 mx-auto rotate-12 hover:rotate-0 transition-transform duration-500">
             <div className="w-24 h-24 bg-linear-to-tr from-primary to-green-300 rounded-2xl flex items-center justify-center text-white shadow-inner">
-              <span className="text-5xl font-black"><MessageCircleCodeIcon size={48} /></span>
+              <span className="text-5xl font-black">
+                <MessageCircleCodeIcon size={48} />
+              </span>
             </div>
           </div>
           <h2 className="text-4xl font-black text-text-main mb-4 tracking-tight">
