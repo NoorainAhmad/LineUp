@@ -20,6 +20,6 @@
     "resolveJsonModule": true,
     "declaration": false                                 /* We don't need .d.ts files for this internal app */
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/generated/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

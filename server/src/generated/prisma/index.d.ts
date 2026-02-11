@@ -1679,7 +1679,7 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     children: number
-    memberships: number
+    members: number
     messages: number
     medias: number
     statuses: number
@@ -1689,7 +1689,7 @@ export namespace Prisma {
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     children?: boolean | UserCountOutputTypeCountChildrenArgs
-    memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
+    members?: boolean | UserCountOutputTypeCountMembersArgs
     messages?: boolean | UserCountOutputTypeCountMessagesArgs
     medias?: boolean | UserCountOutputTypeCountMediasArgs
     statuses?: boolean | UserCountOutputTypeCountStatusesArgs
@@ -1718,7 +1718,7 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type UserCountOutputTypeCountMembersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ChatMemberWhereInput
   }
 
@@ -2091,7 +2091,7 @@ export namespace Prisma {
     updatedAt?: boolean
     parent?: boolean | User$parentArgs<ExtArgs>
     children?: boolean | User$childrenArgs<ExtArgs>
-    memberships?: boolean | User$membershipsArgs<ExtArgs>
+    members?: boolean | User$membersArgs<ExtArgs>
     messages?: boolean | User$messagesArgs<ExtArgs>
     medias?: boolean | User$mediasArgs<ExtArgs>
     statuses?: boolean | User$statusesArgs<ExtArgs>
@@ -2166,7 +2166,7 @@ export namespace Prisma {
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     parent?: boolean | User$parentArgs<ExtArgs>
     children?: boolean | User$childrenArgs<ExtArgs>
-    memberships?: boolean | User$membershipsArgs<ExtArgs>
+    members?: boolean | User$membersArgs<ExtArgs>
     messages?: boolean | User$messagesArgs<ExtArgs>
     medias?: boolean | User$mediasArgs<ExtArgs>
     statuses?: boolean | User$statusesArgs<ExtArgs>
@@ -2186,7 +2186,7 @@ export namespace Prisma {
     objects: {
       parent: Prisma.$UserPayload<ExtArgs> | null
       children: Prisma.$UserPayload<ExtArgs>[]
-      memberships: Prisma.$ChatMemberPayload<ExtArgs>[]
+      members: Prisma.$ChatMemberPayload<ExtArgs>[]
       messages: Prisma.$MessagePayload<ExtArgs>[]
       medias: Prisma.$MediaPayload<ExtArgs>[]
       statuses: Prisma.$StatusPayload<ExtArgs>[]
@@ -2607,7 +2607,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     parent<T extends User$parentArgs<ExtArgs> = {}>(args?: Subset<T, User$parentArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     children<T extends User$childrenArgs<ExtArgs> = {}>(args?: Subset<T, User$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    members<T extends User$membersArgs<ExtArgs> = {}>(args?: Subset<T, User$membersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     messages<T extends User$messagesArgs<ExtArgs> = {}>(args?: Subset<T, User$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     medias<T extends User$mediasArgs<ExtArgs> = {}>(args?: Subset<T, User$mediasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     statuses<T extends User$statusesArgs<ExtArgs> = {}>(args?: Subset<T, User$statusesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3098,9 +3098,9 @@ export namespace Prisma {
   }
 
   /**
-   * User.memberships
+   * User.members
    */
-  export type User$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$membersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the ChatMember
      */
@@ -10298,7 +10298,7 @@ export namespace Prisma {
     id: string
     command: string
     text: string
-    description: string
+    description: string | null
     userId: string
     createdAt: Date
     updatedAt: Date
@@ -10384,7 +10384,7 @@ export namespace Prisma {
       id: string
       command: string
       text: string
-      description: string
+      description: string | null
       userId: string
       createdAt: Date
       updatedAt: Date
@@ -12609,7 +12609,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     parent?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     children?: UserListRelationFilter
-    memberships?: ChatMemberListRelationFilter
+    members?: ChatMemberListRelationFilter
     messages?: MessageListRelationFilter
     medias?: MediaListRelationFilter
     statuses?: StatusListRelationFilter
@@ -12637,7 +12637,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     parent?: UserOrderByWithRelationInput
     children?: UserOrderByRelationAggregateInput
-    memberships?: ChatMemberOrderByRelationAggregateInput
+    members?: ChatMemberOrderByRelationAggregateInput
     messages?: MessageOrderByRelationAggregateInput
     medias?: MediaOrderByRelationAggregateInput
     statuses?: StatusOrderByRelationAggregateInput
@@ -12668,7 +12668,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"User"> | Date | string
     parent?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     children?: UserListRelationFilter
-    memberships?: ChatMemberListRelationFilter
+    members?: ChatMemberListRelationFilter
     messages?: MessageListRelationFilter
     medias?: MediaListRelationFilter
     statuses?: StatusListRelationFilter
@@ -13197,7 +13197,7 @@ export namespace Prisma {
     id?: StringFilter<"CannedResponse"> | string
     command?: StringFilter<"CannedResponse"> | string
     text?: StringFilter<"CannedResponse"> | string
-    description?: StringFilter<"CannedResponse"> | string
+    description?: StringNullableFilter<"CannedResponse"> | string | null
     userId?: StringFilter<"CannedResponse"> | string
     createdAt?: DateTimeFilter<"CannedResponse"> | Date | string
     updatedAt?: DateTimeFilter<"CannedResponse"> | Date | string
@@ -13208,7 +13208,7 @@ export namespace Prisma {
     id?: SortOrder
     command?: SortOrder
     text?: SortOrder
-    description?: SortOrder
+    description?: SortOrderInput | SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13222,7 +13222,7 @@ export namespace Prisma {
     NOT?: CannedResponseWhereInput | CannedResponseWhereInput[]
     command?: StringFilter<"CannedResponse"> | string
     text?: StringFilter<"CannedResponse"> | string
-    description?: StringFilter<"CannedResponse"> | string
+    description?: StringNullableFilter<"CannedResponse"> | string | null
     userId?: StringFilter<"CannedResponse"> | string
     createdAt?: DateTimeFilter<"CannedResponse"> | Date | string
     updatedAt?: DateTimeFilter<"CannedResponse"> | Date | string
@@ -13233,7 +13233,7 @@ export namespace Prisma {
     id?: SortOrder
     command?: SortOrder
     text?: SortOrder
-    description?: SortOrder
+    description?: SortOrderInput | SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13249,7 +13249,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"CannedResponse"> | string
     command?: StringWithAggregatesFilter<"CannedResponse"> | string
     text?: StringWithAggregatesFilter<"CannedResponse"> | string
-    description?: StringWithAggregatesFilter<"CannedResponse"> | string
+    description?: StringNullableWithAggregatesFilter<"CannedResponse"> | string | null
     userId?: StringWithAggregatesFilter<"CannedResponse"> | string
     createdAt?: DateTimeWithAggregatesFilter<"CannedResponse"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CannedResponse"> | Date | string
@@ -13326,7 +13326,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
@@ -13353,7 +13353,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
@@ -13380,7 +13380,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
@@ -13407,7 +13407,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
@@ -13558,7 +13558,7 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
-    user: UserCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembersInput
     chat: ChatCreateNestedOneWithoutMembersInput
   }
 
@@ -13580,7 +13580,7 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembersNestedInput
     chat?: ChatUpdateOneRequiredWithoutMembersNestedInput
   }
 
@@ -13971,7 +13971,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutCannedResponsesInput
@@ -13981,7 +13981,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     userId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13991,7 +13991,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutCannedResponsesNestedInput
@@ -14001,7 +14001,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14011,7 +14011,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     userId: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -14021,7 +14021,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14030,7 +14030,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15293,9 +15293,9 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
-  export type UserCreateNestedOneWithoutMembershipsInput = {
-    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+  export type UserCreateNestedOneWithoutMembersInput = {
+    create?: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembersInput
     connect?: UserWhereUniqueInput
   }
 
@@ -15313,12 +15313,12 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type UserUpdateOneRequiredWithoutMembershipsNestedInput = {
-    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
-    upsert?: UserUpsertWithoutMembershipsInput
+  export type UserUpdateOneRequiredWithoutMembersNestedInput = {
+    create?: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembersInput
+    upsert?: UserUpsertWithoutMembersInput
     connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembershipsInput, UserUpdateWithoutMembershipsInput>, UserUncheckedUpdateWithoutMembershipsInput>
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembersInput, UserUpdateWithoutMembersInput>, UserUncheckedUpdateWithoutMembersInput>
   }
 
   export type ChatUpdateOneRequiredWithoutMembersNestedInput = {
@@ -15871,7 +15871,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
@@ -15897,7 +15897,7 @@ export namespace Prisma {
     parentId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
@@ -15928,7 +15928,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
@@ -15954,7 +15954,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
@@ -16140,7 +16140,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -16149,7 +16149,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -16193,7 +16193,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
@@ -16219,7 +16219,7 @@ export namespace Prisma {
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
@@ -16443,7 +16443,7 @@ export namespace Prisma {
     id?: StringFilter<"CannedResponse"> | string
     command?: StringFilter<"CannedResponse"> | string
     text?: StringFilter<"CannedResponse"> | string
-    description?: StringFilter<"CannedResponse"> | string
+    description?: StringNullableFilter<"CannedResponse"> | string | null
     userId?: StringFilter<"CannedResponse"> | string
     createdAt?: DateTimeFilter<"CannedResponse"> | Date | string
     updatedAt?: DateTimeFilter<"CannedResponse"> | Date | string
@@ -16456,7 +16456,7 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
-    user: UserCreateNestedOneWithoutMembershipsInput
+    user: UserCreateNestedOneWithoutMembersInput
   }
 
   export type ChatMemberUncheckedCreateWithoutChatInput = {
@@ -16645,7 +16645,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type UserCreateWithoutMembershipsInput = {
+  export type UserCreateWithoutMembersInput = {
     id?: string
     guid?: string
     name: string
@@ -16671,7 +16671,7 @@ export namespace Prisma {
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
   }
 
-  export type UserUncheckedCreateWithoutMembershipsInput = {
+  export type UserUncheckedCreateWithoutMembersInput = {
     id?: string
     guid?: string
     name: string
@@ -16697,9 +16697,9 @@ export namespace Prisma {
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
   }
 
-  export type UserCreateOrConnectWithoutMembershipsInput = {
+  export type UserCreateOrConnectWithoutMembersInput = {
     where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    create: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
   }
 
   export type ChatCreateWithoutMembersInput = {
@@ -16729,18 +16729,18 @@ export namespace Prisma {
     create: XOR<ChatCreateWithoutMembersInput, ChatUncheckedCreateWithoutMembersInput>
   }
 
-  export type UserUpsertWithoutMembershipsInput = {
-    update: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
-    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+  export type UserUpsertWithoutMembersInput = {
+    update: XOR<UserUpdateWithoutMembersInput, UserUncheckedUpdateWithoutMembersInput>
+    create: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
     where?: UserWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutMembershipsInput = {
+  export type UserUpdateToOneWithWhereWithoutMembersInput = {
     where?: UserWhereInput
-    data: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+    data: XOR<UserUpdateWithoutMembersInput, UserUncheckedUpdateWithoutMembersInput>
   }
 
-  export type UserUpdateWithoutMembershipsInput = {
+  export type UserUpdateWithoutMembersInput = {
     id?: StringFieldUpdateOperationsInput | string
     guid?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -16766,7 +16766,7 @@ export namespace Prisma {
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutMembershipsInput = {
+  export type UserUncheckedUpdateWithoutMembersInput = {
     id?: StringFieldUpdateOperationsInput | string
     guid?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -16844,7 +16844,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
@@ -16870,7 +16870,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
@@ -16966,7 +16966,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
@@ -16992,7 +16992,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
@@ -17113,7 +17113,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
@@ -17139,7 +17139,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
@@ -17238,7 +17238,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
@@ -17264,7 +17264,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
@@ -17333,7 +17333,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
@@ -17359,7 +17359,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
@@ -17434,7 +17434,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
@@ -17460,7 +17460,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
@@ -17486,7 +17486,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
@@ -17512,7 +17512,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
@@ -17581,7 +17581,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
@@ -17607,7 +17607,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
@@ -17666,7 +17666,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     parent?: UserCreateNestedOneWithoutChildrenInput
     children?: UserCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberCreateNestedManyWithoutUserInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
@@ -17692,7 +17692,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     children?: UserUncheckedCreateNestedManyWithoutParentInput
-    memberships?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
@@ -17734,7 +17734,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     parent?: UserUpdateOneWithoutChildrenNestedInput
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
@@ -17760,7 +17760,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
@@ -17844,7 +17844,7 @@ export namespace Prisma {
     id?: string
     command: string
     text: string
-    description: string
+    description?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17867,7 +17867,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
@@ -17893,7 +17893,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     children?: UserUncheckedUpdateManyWithoutParentNestedInput
-    memberships?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
@@ -18092,7 +18092,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18101,7 +18101,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18110,7 +18110,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     command?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
-    description?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18149,7 +18149,7 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    user?: UserUpdateOneRequiredWithoutMembersNestedInput
   }
 
   export type ChatMemberUncheckedUpdateWithoutChatInput = {

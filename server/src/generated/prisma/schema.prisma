@@ -53,18 +53,19 @@ enum MessageType {
 // --- Models ---
 
 model User {
-  id           String     @id @default(uuid())
-  guid         String     @unique @default(uuid())
+  id           String @id @default(uuid())
+  guid         String @unique @default(uuid())
   name         String
-  phone        String     @unique
+  phone        String @unique
   passwordHash String
-  email        String?
-  location     String?
-  avatarUrl    String?
-  status       UserStatus @default(OFFLINE)
-  lastSeen     DateTime   @default(now())
-  ipAddress    String     @default("0.0.0.0")
-  isActive     Boolean    @default(false)
+
+  email     String?
+  location  String?
+  avatarUrl String?
+  status    UserStatus @default(OFFLINE)
+  lastSeen  DateTime   @default(now())
+  ipAddress String     @default("0.0.0.0")
+  isActive  Boolean    @default(false)
 
   role       UserRole         @default(USER)
   permission UserPermission[] @default([READ])
@@ -73,7 +74,7 @@ model User {
   parent   User?   @relation("UserHierarchy", fields: [parentId], references: [id])
   children User[]  @relation("UserHierarchy")
 
-  memberships     ChatMember[]
+  members         ChatMember[]
   messages        Message[]        @relation("SentMessages")
   medias          Media[]
   statuses        Status[]
@@ -106,17 +107,17 @@ model Chat {
 }
 
 model ChatMember {
-  id          String   @id @default(uuid())
-  userId      String
-  chatId      String
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
   unreadCount Int      @default(0)
   isPinned    Boolean  @default(false)
   isMuted     Boolean  @default(false)
   isArchived  Boolean  @default(false)
   joinedAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@unique([userId, chatId])
   @@map("chat_members")
@@ -129,9 +130,8 @@ model Message {
 
   senderId String
   sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-
-  chatId String
-  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId   String
+  chat     Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   fileUrl  String?
   fileName String?
@@ -160,9 +160,8 @@ model Status {
 
   mediaId String? @unique
   media   Media?  @relation(fields: [mediaId], references: [id], onDelete: SetNull)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   viewers StatusView[]
 
@@ -175,13 +174,13 @@ model Status {
 }
 
 model StatusView {
-  id       String   @id @default(uuid())
+  id       String @id @default(uuid())
   statusId String
+  status   Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
   userId   String
-  viewedAt DateTime @default(now())
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  status Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
 
   @@unique([statusId, userId])
   @@map("status_views")
@@ -209,10 +208,10 @@ model Media {
 }
 
 model CannedResponse {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   command     String
   text        String
-  description String
+  description String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

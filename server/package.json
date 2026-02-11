@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && cp -r src/generated dist/generated",
+    "build:windows": "tsc && tsc-alias && xcopy /E /I src\\generated dist\\generated",
     "start": "node dist/server.ts",
     "prisma:generate": "npm prisma generate",
     "prisma:migrate": "npm prisma migrate dev",
