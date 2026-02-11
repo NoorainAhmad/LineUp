@@ -17,12 +17,17 @@ export class ChatService {
   // Send a message (Handles Media Handshake if file is provided)
   static async sendMessage(data: any, file?: File) {
     let mediaPayload = {};
+
     if (file) {
+      // Step 1: Get pre-signed URL from your backend
       const ticketResponse = await api.post("/media/upload-url", {
         fileName: file.name.replace(/[^a-zA-Z0-9.]/g, "_"),
         fileType: file.type,
       });
-      const { uploadUrl, mediaId } = ticketResponse.data.data;
+
+      const { uploadUrl, mediaId, fileKey } = ticketResponse.data.data;
+
+      // Step 2: Upload directly to S3
       await api.put(uploadUrl, file, {
         headers: { "Content-Type": file.type },
         transformRequest: [
@@ -35,21 +40,34 @@ export class ChatService {
           },
         ],
       });
+
+      // Step 3: Finalize and get permanent URL from backend
+      const finalizeResponse = await api.post("/media/finalize", {
+        fileKey,
+        fileSize: file.size,
+      });
+
+      // Backend returns the permanent S3 URL
+      const permanentFileUrl = finalizeResponse.data.data.publicUrl;
+
       mediaPayload = {
-        fileUrl: uploadUrl.split("?")[0],
+        fileUrl: permanentFileUrl,
         fileName: file.name,
         fileSize: file.size.toString(),
         mimeType: file.type,
+        mediaId,
       };
     }
+
     const validatedData = sendMessageSchema.parse({
       ...data,
       ...mediaPayload,
     });
+
     const response = await api.post("/chats/messages", validatedData);
     return response.data;
   }
-  
+
   // Toggle an emoji reaction on a message
   static async toggleReaction(messageId: string, emoji: string) {
     const response = await api.post(`/chats/messages/${messageId}/react`, {

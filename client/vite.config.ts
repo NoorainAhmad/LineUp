@@ -7,13 +7,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
   return {
     plugins: [react(), tailwindcss()],
-    define: {
-      "process.env.API_KEY": JSON.stringify(env.GEMINI_API_KEY),
-      "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY),
+    define: { 
+      "process.env.S3_BUCKET_NAME": JSON.stringify(env.VITE_S3_BUCKET),
+      "process.env.AWS_REGION": JSON.stringify(env.VITE_AWS_REGION),
     },
     server: { 
       proxy: {
-        "/api/": {
+        "/api/v1": {
           target: "http://localhost:5000",
           changeOrigin: true,
         },

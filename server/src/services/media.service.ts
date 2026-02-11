@@ -1,3 +1,4 @@
+// services/media.service.ts
 import {
   S3Client,
   PutObjectCommand,
@@ -8,113 +9,144 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../config/db.js";
 import { MediaStatus } from "../generated/prisma/index.js";
 
-// Create an S3 client
+// Initialize S3 client
 const s3Client = new S3Client({
-  endpoint: process.env.MINIO_ENDPOINT,
-  region: "us-east-1",
+  region: process.env.AWS_REGION || "us-east-1",
   credentials: {
-    accessKeyId: process.env.MINIO_ACCESS_KEY!,
-    secretAccessKey: process.env.MINIO_SECRET_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
-  forcePathStyle: true,
 });
 
-// Set the bucket name
-const BUCKET_NAME = process.env.MINIO_BUCKET_NAME;
+const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
-// Media Service
 export class MediaService {
-  // Generates a "Golden Ticket" (Pre-signed URL) for a client to upload a file directly to MinIO.
+  /**
+   * Generate pre-signed URL for direct S3 upload
+   * POST /api/v1/media/upload-url
+   */
   static async generateUploadTicket(
     fileName: string,
     fileType: string,
     userId: string,
   ) {
     try {
-      const fileExtension = fileName.split(".").pop();
+      // Generate unique file key
+      const fileExtension = fileName.split(".").pop() || "bin";
       const uniqueFileName = `${uuidv4()}.${fileExtension}`;
-      // Categorize by mimeType (e.g., uploads/image/uuid.png)
-      const category = fileType.split("/")[0] || "other";
-      const key = `uploads/${category}/${uniqueFileName}`;
-      // Create a record in Postgres with PENDING status
+      const category = fileType.split("/")[0]; // 'image', 'video', 'audio', 'application'
+
+      // Simple, clean key structure
+      const key = `users/${userId}/${category}/${uniqueFileName}`;
+
+      // Create media record
       const media = await prisma.media.create({
         data: {
           fileKey: key,
           originalName: fileName,
           mimeType: fileType,
-          userId: userId,
           mediaStatus: MediaStatus.PENDING,
+          user: {
+            connect: { id: userId },
+          },
         },
       });
-      // Generate the S3 PutObject Pre-signed URL
+
+      // Generate pre-signed URL
       const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: key,
         ContentType: fileType,
       });
-      // URL expires in 5 minutes
+
       const uploadUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 300,
+        expiresIn: 300, // 5 minutes
       });
+
       return {
         mediaId: media.id,
         uploadUrl,
         fileKey: key,
       };
     } catch (error) {
-      console.log(`[Media Service] Error: ${error}`);
-      throw new Error("Media creation failed: " + (error as Error).message);
+      console.error(`[MediaService] generateUploadTicket error:`, error);
+      throw new Error("Failed to generate upload URL");
     }
   }
 
-  // Finalizes the media record when MinIO confirms the file is stored.
-  static async finalizeUpload(fileKey: string, size: number) {
+  /**
+   * Finalize upload after file is in S3
+   * POST /api/v1/media/finalize
+   */
+  static async finalizeUpload(fileKey: string, fileSize: number) {
     try {
-      return await prisma.media.update({
+      const media = await prisma.media.update({
         where: { fileKey },
         data: {
           mediaStatus: MediaStatus.COMPLETED,
-          fileSize: size,
+          fileSize,
         },
       });
+
+      return media;
     } catch (error) {
-      console.log(`[Media Service] Error: ${error}`);
-      throw new Error("Media update failed: " + (error as Error).message);
+      console.error(`[MediaService] finalizeUpload error:`, error);
+      throw new Error("Failed to finalize upload");
     }
   }
 
-  // Generates a temporary viewing link for private files.
+  /**
+   * Generate temporary viewing URL
+   */
   static async getViewingUrl(fileKey: string) {
     try {
       const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: fileKey,
+        ResponseContentDisposition: "inline",
       });
-      // URL valid for 1 hour
-      return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+      return await getSignedUrl(s3Client, command, {
+        expiresIn: 3600, // 1 hour
+      });
     } catch (error) {
-      console.log(`[Media Service] Error: ${error}`);
-      throw new Error("Media update failed: " + (error as Error).message);
+      console.error(`[MediaService] getViewingUrl error:`, error);
+      return null;
     }
   }
 
-  // Fetches all completed media for a user, including temporary view URLs.
+  /**
+   * Get user's media gallery
+   * GET /api/v1/media/my-gallery
+   */
   static async getUserMedia(userId: string) {
     try {
       const mediaItems = await prisma.media.findMany({
-        where: { userId, mediaStatus: MediaStatus.COMPLETED },
-        orderBy: { createdAt: "desc" },
+        where: {
+          userId,
+          mediaStatus: MediaStatus.COMPLETED,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       });
-      // Map through items to add temporary viewing URLs
-      return Promise.all(
+
+      // Generate URLs for each media item
+      const itemsWithUrls = await Promise.all(
         mediaItems.map(async (item) => ({
-          ...item,
+          id: item.id,
+          name: item.originalName,
+          type: item.mimeType,
+          size: item.fileSize,
+          createdAt: item.createdAt,
           url: await this.getViewingUrl(item.fileKey),
         })),
       );
+
+      return itemsWithUrls;
     } catch (error) {
-      console.log(`[Media Service] Error: ${error}`);
-      throw new Error("Media update failed: " + (error as Error).message);
+      console.error(`[MediaService] getUserMedia error:`, error);
+      throw new Error("Failed to fetch gallery");
     }
   }
 }
