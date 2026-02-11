@@ -35,7 +35,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface UserViewProps {
   user: User;
-  onStartChat: (user: User) => void; 
+  onStartChat: (user: User) => void;
   onSelect: (user: User) => void;
   onUpdate: (user: User) => void;
   onBack?: () => void;
@@ -58,7 +58,7 @@ const HierarchyNode = ({
     queryFn: async () => {
       try {
         if (!user.id) return [];
-        const response = await UserService.getUserSubordinates(user?.id); 
+        const response = await UserService.getUserSubordinates(user?.id);
         return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error("Error fetching subordinates:", error);
@@ -106,16 +106,16 @@ const HierarchyNode = ({
           isOpen ? "bg-surface-hover" : ""
         }`}
       >
-        <div className="w-5 h-5 flex items-center justify-center shrink-0">
+        <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
           {hasChildren ? (
             <button
               onClick={handleToggle}
-              className="text-secondary hover:text-text-main transition-colors"
+              className="text-text-main transition-colors cursor-pointer"
             >
-              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
           ) : (
-            <div className="w-1.5 h-1.5 rounded-full bg-border" />
+            <div className="w-3 h-3 rounded-full bg-border" />
           )}
         </div>
 
@@ -353,7 +353,7 @@ export const UserView: React.FC<UserViewProps> = ({
   const handleUserSelect = (selectedUser: User) => {
     onSelect(selectedUser);
     // This would navigate to the selected user's profile
-    // For now, we'll just alert the action 
+    // For now, we'll just alert the action
     // In a real app, you would have navigation or call a callback
   };
 
@@ -505,7 +505,7 @@ export const UserView: React.FC<UserViewProps> = ({
             </div>
 
             {/* Main Action */}
-            {!isEditing && ( user.id !== currentUser?.id ) && (
+            {!isEditing && user.id !== currentUser?.id && (
               <button
                 onClick={handleStartChatWithUser}
                 disabled={!user.isActive}
@@ -526,143 +526,136 @@ export const UserView: React.FC<UserViewProps> = ({
             {/* Left Col: Contact & System */}
             <div className="lg:col-span-2 space-y-6">
               {/* Hierarchy Section */}
-              <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-secondary uppercase tracking-wider flex items-center gap-2">
-                      <Briefcase size={16} /> Team Hierarchy
-                    </h3>
-                    <p className="text-xs font-medium text-secondary mt-1">
-                      {user.role === UserRole.USER
-                        ? "No subordinates"
-                        : "View team structure"}
-                    </p>
+              {user?.role !== UserRole.USER && (
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <Briefcase size={16} /> Team Hierarchy
+                      </h3>
+                      <p className="text-xs font-medium text-secondary mt-1">
+                        View team structure
+                      </p>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative w-full sm:w-64">
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+                        size={14}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search team members..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-surface-hover border border-border rounded-lg pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-text-main"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Search Bar */}
-                  <div className="relative w-full sm:w-64">
-                    <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
-                      size={14}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search team members..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-surface-hover border border-border rounded-lg pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-text-main"
-                      >
-                        <X size={14} />
-                      </button>
+                  <div className="bg-background rounded-xl border border-border p-4 min-h-64 max-h-125 overflow-y-auto custom-scrollbar">
+                    {searchQuery ? (
+                      // Search Results View
+                      <div className="space-y-1">
+                        {searchResults.length > 0 ? (
+                          <>
+                            <p className="text-xs font-bold text-primary uppercase mb-2 px-2">
+                              Search Results ({searchResults.length})
+                            </p>
+                            {searchResults.map((result) => (
+                              <div
+                                key={result.id}
+                                onClick={() => handleUserSelect(result)}
+                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-hover cursor-pointer border border-transparent hover:border-border transition-all"
+                              >
+                                <Avatar user={result} size="sm" showStatus />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-text-main truncate">
+                                      {result.name}
+                                      {!result.isActive && (
+                                        <span className="text-red-500 text-xs ml-1">
+                                          (Inactive)
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span
+                                      className={`text-[9px] px-1.5 py-0.5 rounded-full border uppercase font-bold tracking-wider ${
+                                        result.role === UserRole.BRANCH
+                                          ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                                          : result.role === UserRole.ADMIN
+                                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                            : result.role === UserRole.MASTER
+                                              ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                                              : "bg-surface text-secondary border-border"
+                                      }`}
+                                    >
+                                      {result.role}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-secondary truncate">
+                                    {result.email || "No email"}
+                                  </p>
+                                </div>
+                                <ChevronRight
+                                  size={14}
+                                  className="text-secondary opacity-50"
+                                />
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-10 text-secondary">
+                            <Search size={24} className="mb-2 opacity-50" />
+                            <p className="text-sm">
+                              No members found matching "{searchQuery}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      // Hierarchy Tree View
+                      <>
+                        {subordinates.length > 0 ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50 px-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
+                              <span className="text-xs font-bold text-primary uppercase">
+                                {user.role === UserRole.MASTER
+                                  ? "System Admins"
+                                  : user.role === UserRole.ADMIN
+                                    ? "Managed Branches"
+                                    : "Branch Staff"}
+                              </span>
+                            </div>
+                            {subordinates.map((sub) => (
+                              <HierarchyNode
+                                key={sub.id}
+                                user={sub}
+                                onUserSelect={handleUserSelect}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-secondary py-10 opacity-70">
+                            <Users size={32} className="mb-2" />
+                            <p className="text-sm">No subordinates found.</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
-
-                <div className="bg-background rounded-xl border border-border p-4 min-h-64 max-h-125 overflow-y-auto custom-scrollbar">
-                  {searchQuery ? (
-                    // Search Results View
-                    <div className="space-y-1">
-                      {searchResults.length > 0 ? (
-                        <>
-                          <p className="text-xs font-bold text-primary uppercase mb-2 px-2">
-                            Search Results ({searchResults.length})
-                          </p>
-                          {searchResults.map((result) => (
-                            <div
-                              key={result.id}
-                              onClick={() => handleUserSelect(result)}
-                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-hover cursor-pointer border border-transparent hover:border-border transition-all"
-                            >
-                              <Avatar user={result} size="sm" showStatus />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-sm text-text-main truncate">
-                                    {result.name}
-                                    {!result.isActive && (
-                                      <span className="text-red-500 text-xs ml-1">
-                                        (Inactive)
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span
-                                    className={`text-[9px] px-1.5 py-0.5 rounded-full border uppercase font-bold tracking-wider ${
-                                      result.role === UserRole.BRANCH
-                                        ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
-                                        : result.role === UserRole.ADMIN
-                                          ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                                          : result.role === UserRole.MASTER
-                                            ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                                            : "bg-surface text-secondary border-border"
-                                    }`}
-                                  >
-                                    {result.role}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-secondary truncate">
-                                  {result.email || "No email"}
-                                </p>
-                              </div>
-                              <ChevronRight
-                                size={14}
-                                className="text-secondary opacity-50"
-                              />
-                            </div>
-                          ))}
-                        </>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-10 text-secondary">
-                          <Search size={24} className="mb-2 opacity-50" />
-                          <p className="text-sm">
-                            No members found matching "{searchQuery}"
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    // Hierarchy Tree View
-                    <>
-                      {user.role === UserRole.USER ? (
-                        <div className="flex flex-col items-center justify-center h-full text-secondary py-10 opacity-70">
-                          <Users size={32} className="mb-2" />
-                          <p className="text-sm">
-                            Standard users have no subordinates.
-                          </p>
-                        </div>
-                      ) : subordinates.length > 0 ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50 px-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
-                            <span className="text-xs font-bold text-primary uppercase">
-                              {user.role === UserRole.MASTER
-                                ? "System Admins"
-                                : user.role === UserRole.ADMIN
-                                  ? "Managed Branches"
-                                  : "Branch Staff"}
-                            </span>
-                          </div>
-                          {subordinates.map((sub) => (
-                            <HierarchyNode
-                              key={sub.id}
-                              user={sub}
-                              onUserSelect={handleUserSelect}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-secondary py-10 opacity-70">
-                          <Users size={32} className="mb-2" />
-                          <p className="text-sm">No subordinates found.</p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
+              )}
 
               {/* Contact Info Card */}
               <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm">
