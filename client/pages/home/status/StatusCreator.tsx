@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   X,
   Send,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { StatusType, User } from "../../../types";
 import { StatusService } from "../../../services/status.service";
-import { useAuth } from "@/contexts/AuthContext"; // Use auth context instead of CurrentUser constant
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StatusCreatorProps {
   onClose: () => void;
@@ -34,7 +34,7 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
   onClose,
   onCreate,
 }) => {
-  const { user: currentUser } = useAuth(); // Get current user from auth
+  const { user: currentUser } = useAuth();
   const [type, setType] = useState<StatusType>(StatusType.TEXT);
   const [content, setContent] = useState("");
   const [caption, setCaption] = useState("");
@@ -42,8 +42,20 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isImageMode, setIsImageMode] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto trigger file input when switching to image mode
+  useEffect(() => {
+    if (type === StatusType.IMAGE && !imagePreview && !isUploading) {
+      // Small delay to ensure the input is mounted
+      const timer = setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [type, imagePreview, isUploading]);
 
   const handleSend = async () => {
     if (!currentUser) return;
@@ -100,27 +112,27 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
       setImagePreview(url);
       setType(StatusType.IMAGE);
     }
+    
+    // Clear the input so the same file can be selected again
+    e.target.value = '';
   };
 
   const handleRemoveImage = () => {
     if (imagePreview) {
-      URL.revokeObjectURL(imagePreview); // Clean up memory
+      URL.revokeObjectURL(imagePreview);
     }
     setImagePreview(null);
     setSelectedFile(null);
     setCaption("");
+    setType(StatusType.TEXT);
   };
 
   const handleTypeToggle = (newType: StatusType) => {
     if (isUploading) return;
 
     if (newType === StatusType.IMAGE) {
-      // If switching to image but no image selected yet, trigger file input
-      if (!imagePreview) {
-        fileInputRef.current?.click();
-      } else {
-        setType(StatusType.IMAGE);
-      }
+      setType(StatusType.IMAGE);
+      // The useEffect will trigger file input
     } else {
       handleRemoveImage();
       setType(StatusType.TEXT);
@@ -128,7 +140,6 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
   };
 
   const renderFontFamily = (selectedColor: string) => {
-    // Choose font based on color for better readability
     const darkColors = ["#54656f", "#0b141a", "#3b82f6", "#8b5cf6"];
     return darkColors.includes(selectedColor)
       ? "font-sans font-black"
@@ -137,6 +148,16 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
 
   return (
     <div className="absolute inset-0 z-50 bg-[#0b141a] flex flex-col animate-in slide-in-from-bottom-full duration-300">
+      {/* Hidden file input - ALWAYS rendered */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileSelect}
+        disabled={isUploading}
+      />
+
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-4 z-20 flex items-center justify-between">
         <button
@@ -278,14 +299,6 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
                 <span className="text-xs text-white/30">Max 10MB</span>
               </button>
             )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleFileSelect}
-              disabled={isUploading}
-            />
           </div>
         )}
       </div>

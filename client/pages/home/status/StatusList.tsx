@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Plus, Eye, Clock, Image as ImageIcon } from "lucide-react";
-import { Status, UserStatus as UserStatusType } from "../../../types";
+import { Status, UserRole, UserStatus as UserStatusType } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -36,10 +36,12 @@ export const StatusList: React.FC<StatusListProps> = ({
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "Just now";
-      
+
       const now = new Date();
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-      
+      const diffInMinutes = Math.floor(
+        (now.getTime() - date.getTime()) / (1000 * 60),
+      );
+
       if (diffInMinutes < 1) return "Just now";
       if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -70,56 +72,66 @@ export const StatusList: React.FC<StatusListProps> = ({
       return {
         myStatuses: [],
         recentUpdates: [],
-        viewedUpdates: []
+        viewedUpdates: [],
       };
     }
 
     // Group statuses by user
-    const groupedByUser = statuses.reduce((acc, status) => {
-      const userId = status.user?.id || status.userId || "unknown";
-      
-      if (!acc[userId]) {
-        acc[userId] = {
-          userId,
-          user: status.user || {
-            id: userId,
-            name: "Unknown User",
-            status: "OFFLINE" as UserStatusType,
-          },
-          statuses: [],
-          hasUnseen: false,
-          latestTimestamp: "",
-          viewerCount: 0
-        };
-      }
-      
-      acc[userId].statuses.push(status);
-      
-      // Update latest timestamp
-      const statusTime = new Date(status.createdAt).getTime();
-      const currentLatest = acc[userId].latestTimestamp 
-        ? new Date(acc[userId].latestTimestamp).getTime()
-        : 0;
-      
-      if (statusTime > currentLatest) {
-        acc[userId].latestTimestamp = status.createdAt;
-      }
-      
-      // Check if status has unseen viewers
-      // Assuming viewers is an array of user IDs
-      const viewers = status.viewers || [];
-      const isViewedByCurrentUser = currentUser 
-        ? viewers.some((viewer: any) => viewer.userId === currentUser.id || viewer.user?.id === currentUser.id)
-        : false;
-      
-      if (!isViewedByCurrentUser) {
-        acc[userId].hasUnseen = true;
-      }
-      
-      acc[userId].viewerCount = Math.max(acc[userId].viewerCount, viewers.length);
-      
-      return acc;
-    }, {} as Record<string, GroupedStatus>);
+    const groupedByUser = statuses.reduce(
+      (acc, status) => {
+        const userId = status.user?.id || status.userId || "unknown";
+
+        if (!acc[userId]) {
+          acc[userId] = {
+            userId,
+            user: status.user || {
+              id: userId,
+              name: "Unknown User",
+              status: "OFFLINE" as UserStatusType,
+            },
+            statuses: [],
+            hasUnseen: false,
+            latestTimestamp: "",
+            viewerCount: 0,
+          };
+        }
+
+        acc[userId].statuses.push(status);
+
+        // Update latest timestamp
+        const statusTime = new Date(status.createdAt).getTime();
+        const currentLatest = acc[userId].latestTimestamp
+          ? new Date(acc[userId].latestTimestamp).getTime()
+          : 0;
+
+        if (statusTime > currentLatest) {
+          acc[userId].latestTimestamp = status.createdAt;
+        }
+
+        // Check if status has unseen viewers
+        // Assuming viewers is an array of user IDs
+        const viewers = status.viewers || [];
+        const isViewedByCurrentUser = currentUser
+          ? viewers.some(
+              (viewer: any) =>
+                viewer.userId === currentUser.id ||
+                viewer.user?.id === currentUser.id,
+            )
+          : false;
+
+        if (!isViewedByCurrentUser) {
+          acc[userId].hasUnseen = true;
+        }
+
+        acc[userId].viewerCount = Math.max(
+          acc[userId].viewerCount,
+          viewers.length,
+        );
+
+        return acc;
+      },
+      {} as Record<string, GroupedStatus>,
+    );
 
     const myId = currentUser?.id || "";
     const myGroup = groupedByUser[myId];
@@ -127,22 +139,26 @@ export const StatusList: React.FC<StatusListProps> = ({
 
     // Convert grouped object to array and remove current user
     const otherGroups = Object.values(groupedByUser)
-      .filter(group => group.userId !== myId)
-      .map(group => ({
+      .filter((group) => group.userId !== myId)
+      .map((group) => ({
         ...group,
         formattedTime: formatTime(group.latestTimestamp),
-        displayTime: formatDisplayTime(group.latestTimestamp)
+        displayTime: formatDisplayTime(group.latestTimestamp),
       }))
-      .sort((a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.latestTimestamp).getTime() -
+          new Date(a.latestTimestamp).getTime(),
+      );
 
     // Separate recent (unseen) and viewed updates
-    const recentUpdates = otherGroups.filter(group => group.hasUnseen);
-    const viewedUpdates = otherGroups.filter(group => !group.hasUnseen);
+    const recentUpdates = otherGroups.filter((group) => group.hasUnseen);
+    const viewedUpdates = otherGroups.filter((group) => !group.hasUnseen);
 
     return {
       myStatuses,
       recentUpdates,
-      viewedUpdates
+      viewedUpdates,
     };
   }, [statuses, currentUser]);
 
@@ -150,14 +166,17 @@ export const StatusList: React.FC<StatusListProps> = ({
 
   const getStatusPreview = (statuses: Status[]) => {
     if (statuses.length === 0) return "No updates";
-    
+
     const latestStatus = statuses[statuses.length - 1];
     if (latestStatus.type === "IMAGE") {
       return "📷 Photo";
     } else if (latestStatus.type === "VIDEO") {
       return "🎥 Video";
     } else {
-      return latestStatus.content?.substring(0, 30) + (latestStatus.content?.length > 30 ? "..." : "") || "Status update";
+      return (
+        latestStatus.content?.substring(0, 30) +
+          (latestStatus.content?.length > 30 ? "..." : "") || "Status update"
+      );
     }
   };
 
@@ -168,63 +187,72 @@ export const StatusList: React.FC<StatusListProps> = ({
         <h1 className="text-2xl font-black text-text-main tracking-tight">
           Status
         </h1>
-        <button
-          onClick={onCreateStatus}
-          className="p-2 hover:bg-surface-hover rounded-full transition-colors text-primary bg-primary/5"
-          aria-label="Create new status"
-        >
-          <Plus size={22} />
-        </button>
+        {currentUser.role !== UserRole.USER && (
+          <button
+            onClick={onCreateStatus}
+            className="p-2 hover:bg-surface-hover rounded-full transition-colors text-primary bg-primary/5"
+            aria-label="Create new status"
+          >
+            <Plus size={22} />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 bg-surface">
         {/* My Status Card */}
-        <div
-          className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl transition-all border border-transparent hover:bg-surface-hover hover:border-border active:scale-[0.98]"
-          onClick={() =>
-            hasMyStatus ? onSelectStatus(myStatuses[0].id) : onCreateStatus()
-          }
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              hasMyStatus ? onSelectStatus(myStatuses[0].id) : onCreateStatus();
-            }
-          }}
-        >
-          <div className="relative">
+        {currentUser.role !== UserRole.USER && (
+          <>
             <div
-              className={`p-0.5 rounded-full ${hasMyStatus ? "ring-3 ring-primary ring-offset-1 ring-offset-surface" : "ring-2 ring-border ring-offset-1 ring-offset-surface"}`}
+              className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl transition-all border border-transparent hover:bg-surface-hover hover:border-border active:scale-[0.98]"
+              onClick={() =>
+                hasMyStatus
+                  ? onSelectStatus(myStatuses[0].id)
+                  : onCreateStatus()
+              }
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  hasMyStatus
+                    ? onSelectStatus(myStatuses[0].id)
+                    : onCreateStatus();
+                }
+              }}
             >
-              <Avatar 
-                user={currentUser || undefined} 
-                size="lg" 
-                showStatus={true}
-              />
-            </div>
-            {!hasMyStatus && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-surface shadow-sm">
-                <Plus size={14} strokeWidth={3} />
+              <div className="relative">
+                <div
+                  className={`p-0.5 rounded-full ${hasMyStatus ? "ring-3 ring-primary ring-offset-1 ring-offset-surface" : "ring-2 ring-border ring-offset-1 ring-offset-surface"}`}
+                >
+                  <Avatar
+                    user={currentUser || undefined}
+                    size="lg"
+                    showStatus={true}
+                  />
+                </div>
+                {!hasMyStatus && (
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-surface shadow-sm">
+                    <Plus size={14} strokeWidth={3} />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-text-main">My Status</h3>
-            <p className="text-secondary text-sm truncate">
-              {hasMyStatus
-                ? `${myStatuses.length} ${myStatuses.length === 1 ? 'update' : 'updates'} • ${formatTime(myStatuses[myStatuses.length - 1].createdAt)}`
-                : "Tap to add status update"}
-            </p>
-            {hasMyStatus && (
-              <p className="text-xs text-secondary mt-1">
-                {getStatusPreview(myStatuses)}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="h-px bg-border/50 mx-2"></div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-text-main">My Status</h3>
+                <p className="text-secondary text-sm truncate">
+                  {hasMyStatus
+                    ? `${myStatuses.length} ${myStatuses.length === 1 ? "update" : "updates"} • ${formatTime(myStatuses[myStatuses.length - 1].createdAt)}`
+                    : "Tap to add status update"}
+                </p>
+                {hasMyStatus && (
+                  <p className="text-xs text-secondary mt-1">
+                    {getStatusPreview(myStatuses)}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="h-px bg-border/50 mx-2"></div>
+          </>
+        )}
 
         {/* Recent Updates */}
         <div>
@@ -250,14 +278,16 @@ export const StatusList: React.FC<StatusListProps> = ({
                   <div className="relative">
                     <div className="absolute -inset-0.75 rounded-full bg-linear-to-tr from-primary to-green-400 opacity-80 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative bg-surface rounded-full p-0.5">
-                      <Avatar 
-                        user={item.user as any} 
-                        size="lg" 
+                      <Avatar
+                        user={item.user as any}
+                        size="lg"
                         showStatus={true}
                       />
                       {item.hasUnseen && (
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-surface flex items-center justify-center">
-                          <span className="text-[8px] text-white font-bold">NEW</span>
+                          <span className="text-[8px] text-white font-bold">
+                            NEW
+                          </span>
                         </div>
                       )}
                     </div>
@@ -283,7 +313,8 @@ export const StatusList: React.FC<StatusListProps> = ({
                       )}
                       <span className="flex items-center gap-1 text-xs text-secondary">
                         <Clock size={10} />
-                        {item.statuses.length} {item.statuses.length === 1 ? 'update' : 'updates'}
+                        {item.statuses.length}{" "}
+                        {item.statuses.length === 1 ? "update" : "updates"}
                       </span>
                     </div>
                   </div>
@@ -322,9 +353,9 @@ export const StatusList: React.FC<StatusListProps> = ({
                   <div className="relative">
                     <div className="absolute -inset-0.5 rounded-full border-2 border-border opacity-50"></div>
                     <div className="relative p-0.5">
-                      <Avatar 
-                        user={item.user as any} 
-                        size="lg" 
+                      <Avatar
+                        user={item.user as any}
+                        size="lg"
                         showStatus={true}
                       />
                     </div>
@@ -349,7 +380,8 @@ export const StatusList: React.FC<StatusListProps> = ({
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-xs text-secondary">
-                        {item.statuses.length} {item.statuses.length === 1 ? 'update' : 'updates'}
+                        {item.statuses.length}{" "}
+                        {item.statuses.length === 1 ? "update" : "updates"}
                       </span>
                     </div>
                   </div>
@@ -366,16 +398,20 @@ export const StatusList: React.FC<StatusListProps> = ({
               <ImageIcon size={32} className="text-secondary opacity-50" />
             </div>
             <h3 className="font-bold text-text-main mb-2">No Status Updates</h3>
-            <p className="text-secondary text-sm max-w-xs">
-              Share a photo, video, or text update with your contacts
-            </p>
-            <button
-              onClick={onCreateStatus}
-              className="mt-6 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-            >
-              <Plus size={18} />
-              Create Your First Status
-            </button>
+            {currentUser?.role !== UserRole.USER && (
+              <>
+                <p className="text-secondary text-sm max-w-xs">
+                  Share a photo, video, or text update with your contacts
+                </p>
+                <button
+                  onClick={onCreateStatus}
+                  className="mt-6 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Create Your First Status
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

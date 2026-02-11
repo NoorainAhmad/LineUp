@@ -108,7 +108,9 @@ export const Home: React.FC = () => {
   const { user: currentUser, logout } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(
+    currentUser?.role === UserRole.USER ? "chat" : "dashboard",
+  );
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [selectedStatusId, setSelectedStatusId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -753,6 +755,7 @@ export const Home: React.FC = () => {
       // Invalidate statuses query
       queryClient.invalidateQueries({ queryKey: ["statuses"] });
       if (selectedStatusId === statusId) {
+        StatusService.deleteStatus(statusId);
         setSelectedStatusId(null);
       }
     },

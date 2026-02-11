@@ -1,7 +1,5 @@
 import api from "../api/axios";
-import {
-  statusCreateSchema,
-} from "../validators/status.validator.js";
+import { statusCreateSchema } from "../validators/status.validator.js";
 
 export class StatusService {
   // Get my status
@@ -25,30 +23,64 @@ export class StatusService {
   // Create a status
   static async createStatus(data: any, file?: File) {
     let finalMediaId = data.mediaId;
+    let mediaPayload = {};
+
     if (file && (data.type === "IMAGE" || data.type === "VIDEO")) {
-      const ticketResponse = await api.post("/media/upload-url", {
-        fileName: file.name.replace(/[^a-zA-Z0-9]/g, "_"),
-        fileType: file.type,
-      });
-      const { uploadUrl, mediaId } = ticketResponse.data.data;
-      await api.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type },
-        transformRequest: [
-          (rawData, headers) => {
-            if (headers) {
-              delete headers.common?.["Authorization"];
-              delete headers?.["Authorization"];
-            }
-            return rawData;
-          },
-        ],
-      });
-      finalMediaId = mediaId;
+      try {
+        // Step 1: Get pre-signed URL for upload + public URL
+        const ticketResponse = await api.post("/media/upload-url", {
+          fileName: file.name.replace(/[^a-zA-Z0-9.]/g, "_"),
+          fileType: file.type,
+        });
+
+        const { uploadUrl, mediaId, publicUrl, fileKey } =
+          ticketResponse.data.data;
+
+        // Step 2: Upload directly to S3 using pre-signed URL
+        await api.put(uploadUrl, file, {
+          headers: { "Content-Type": file.type },
+          transformRequest: [
+            (rawData, headers) => {
+              if (headers) {
+                delete headers.common?.["Authorization"];
+                delete headers?.["Authorization"];
+                delete headers?.["Authorization-Bearer"];
+              }
+              return rawData;
+            },
+          ],
+        });
+
+        // Step 3: Finalize upload in database
+        await api.post("/media/finalize", {
+          fileKey,
+          fileSize: file.size,
+        });
+
+        finalMediaId = mediaId;
+
+        // Store the public URL for immediate use
+        mediaPayload = {
+          mediaUrl: publicUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+        };
+
+        console.log(`✅ Status media uploaded: ${publicUrl}`);
+      } catch (error) {
+        console.error("❌ Status media upload failed:", error);
+        throw new Error("Failed to upload status media");
+      }
     }
+
+    // Validate and create status
     const validatedData = statusCreateSchema.parse({
       ...data,
       mediaId: finalMediaId,
+      ...mediaPayload,
     });
+
     const response = await api.post("/statuses", validatedData);
     return response.data;
   }

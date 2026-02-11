@@ -30,16 +30,21 @@ export const StatusView: React.FC<StatusViewProps> = ({
 }) => {
   const { user: CurrentUser } = useAuth();
   const [progress, setProgress] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Filter all statuses that belong to the owner of the current status
-  const userStatuses = allStatuses.filter((s) => s.user.id === status.user.id);
+  const userStatuses = allStatuses.filter((s) => s.user?.id === status.user?.id);
   const currentIndex = userStatuses.findIndex((s) => s.id === status.id);
-  const isMyStatus = status.user.id === CurrentUser?.id;
+  const isMyStatus = status.user?.id === CurrentUser?.id;
 
   // Auto-advance logic
   useEffect(() => {
     setProgress(0);
-    const duration = 5000; // 5 seconds per status
+    setImageLoaded(false);
+    setImageError(false);
+    
+    const duration = status.type === "IMAGE" ? 7000 : 5000; // 7 sec for images, 5 sec for text
     const intervalTime = 50;
     const increment = (intervalTime / duration) * 100;
 
@@ -64,17 +69,23 @@ export const StatusView: React.FC<StatusViewProps> = ({
     }
   };
 
-  // Helper to resolve media URL
+  // ✅ Get public S3 URL
   const getMediaUrl = (fileKey: string) => {
-    // Replace with your actual S3/Cloudfront base URL
-    const baseUrl = "http://localhost:9000/media-uploads";
-    return `${baseUrl}/${fileKey}`;
+    const bucket = process.env.VITE_S3_BUCKET || "lineup-v0-s3-bucket";
+    const region =process.env.VITE_AWS_REGION || "us-east-1";
+    return `https://${bucket}.s3.${region}.amazonaws.com/${fileKey}`;
+  };
+
+  // ✅ Handle image load error
+  const handleImageError = () => {
+    console.error("Failed to load image:", status.media?.fileKey);
+    setImageError(true);
   };
 
   return (
     <div className="flex-1 h-full bg-black relative flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
       {/* Background Blur for Image Content */}
-      {status.type === "IMAGE" && status.media && (
+      {status.type === "IMAGE" && status.media?.fileKey && !imageError && (
         <div
           className="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110 pointer-events-none"
           style={{
@@ -117,13 +128,17 @@ export const StatusView: React.FC<StatusViewProps> = ({
             <Avatar user={status.user} size="md" />
             <div className="flex flex-col text-shadow">
               <span className="text-white font-bold text-sm leading-tight">
-                {status.user.name}
+                {status.user?.name || "Unknown"}
               </span>
               <span className="text-white/70 text-xs">
-                {new Date(status.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {status.createdAt ? (
+                  new Date(status.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                ) : (
+                  "Just now"
+                )}
               </span>
             </div>
           </div>
@@ -158,15 +173,38 @@ export const StatusView: React.FC<StatusViewProps> = ({
           onClick={onNext}
         />
 
-        {status.type === "IMAGE" && status.media ? (
-          <div className="relative flex flex-col items-center">
-            <img
-              src={getMediaUrl(status.media.fileKey)}
-              alt="Status"
-              className="max-h-[85vh] max-w-full object-contain shadow-2xl"
-            />
-            {status.content && (
-              <p className="absolute bottom-10 bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg text-white text-lg">
+        {status.type === "IMAGE" ? (
+          <div className="relative flex flex-col items-center px-4">
+            {status.media?.fileKey ? (
+              <>
+                {!imageLoaded && !imageError && (
+                  <div className="flex items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+                <img
+                  src={getMediaUrl(status.media.fileKey)}
+                  alt="Status"
+                  className={`max-h-[85vh] max-w-full object-contain shadow-2xl transition-opacity duration-300 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={handleImageError}
+                />
+                {imageError && (
+                  <div className="text-center text-white/70 p-8">
+                    <p className="text-lg">Failed to load image</p>
+                    <p className="text-sm mt-2">The image may have been deleted</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center text-white/70 p-8">
+                <p className="text-lg">No image available</p>
+              </div>
+            )}
+            {status.content && imageLoaded && (
+              <p className="absolute bottom-10 bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg text-white text-lg max-w-[80%] text-center">
                 {status.content}
               </p>
             )}
@@ -177,14 +215,14 @@ export const StatusView: React.FC<StatusViewProps> = ({
             style={{ backgroundColor: status.color || "#00a884" }}
           >
             <p className="text-white text-3xl md:text-5xl font-bold leading-tight drop-shadow-xl max-w-2xl whitespace-pre-wrap">
-              {status.content}
+              {status.content || "No content"}
             </p>
           </div>
         )}
       </div>
 
       {/* Footer Actions */}
-      <div className="absolute bottom-0 left-0 right-0 p-8 bg-linear-to-t from-black/90 to-transparent z-30 flex flex-col items-center">
+      {/* <div className="absolute bottom-0 left-0 right-0 p-8 bg-linear-to-t from-black/90 to-transparent z-30 flex flex-col items-center">
         {isMyStatus ? (
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-center gap-1 group">
@@ -192,7 +230,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
                 <Eye size={24} className="text-white" />
               </div>
               <span className="text-white text-xs font-semibold">
-                {status._count?.viewers || 0} views
+                {status._count?.viewers || status.viewers?.length || 0} views
               </span>
             </div>
             <div className="flex flex-col items-center gap-1 group">
@@ -222,7 +260,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
             </div>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

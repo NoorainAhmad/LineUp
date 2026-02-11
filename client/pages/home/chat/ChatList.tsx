@@ -11,8 +11,9 @@ import {
   MessageSquare,
   Loader2,
 } from "lucide-react";
-import { Chat, User, UserStatus } from "../../../types";
+import { Chat, User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatListProps {
   chats: Chat[];
@@ -263,6 +264,8 @@ export const ChatList: React.FC<ChatListProps> = ({
   onArchive,
   isLoading = false,
 }) => {
+  const { user: currentUser } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
@@ -446,22 +449,28 @@ export const ChatList: React.FC<ChatListProps> = ({
               >
                 <Archive size={20} aria-hidden="true" />
               </button>
-              <button
-                onClick={handleAddContact}
-                className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
-                title="Add new contact"
-                aria-label="Add new contact"
-              >
-                <UserPlus size={20} aria-hidden="true" />
-              </button>
-              <button
-                onClick={handleCreateGroup}
-                className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
-                title="Create new group"
-                aria-label="Create new group"
-              >
-                <Users size={20} aria-hidden="true" />
-              </button>
+              {
+                currentUser.role !== UserRole.USER &&
+                <button
+                  onClick={handleAddContact}
+                  className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
+                  title="Add new contact"
+                  aria-label="Add new contact"
+                >
+                  <UserPlus size={20} aria-hidden="true" />
+                </button>
+              }
+              {
+                currentUser.role !== UserRole.USER && currentUser.role !== UserRole.BRANCH &&
+                <button
+                  onClick={handleCreateGroup}
+                  className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
+                  title="Create new group"
+                  aria-label="Create new group"
+                >
+                  <Users size={20} aria-hidden="true" />
+                </button>
+              }
             </>
           )}
         </div>

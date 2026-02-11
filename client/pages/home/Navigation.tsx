@@ -42,8 +42,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH,
-      UserRole.USER,
+      UserRole.BRANCH 
     ],
   },
   {
