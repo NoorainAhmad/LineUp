@@ -16,6 +16,7 @@ import {
 import { UserRole, User } from "../../types";
 import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationItem {
   id: string;
@@ -96,8 +97,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
     icon: Settings,
     label: "Settings",
     roles: [
-      UserRole.DEVELOPER,
-      UserRole.MASTER 
+      UserRole.DEVELOPER 
     ],
   },
 ];
@@ -227,6 +227,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   onToggleTheme,
   onLogout,
 }) => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -333,13 +334,13 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="mb-6">
           <div
             className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl cursor-pointer"
-            onClick={() => onTabChange("home")}
+            onClick={() => navigate("/")}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onTabChange("home");
+                navigate("/");
               }
             }}
             aria-label="Home"

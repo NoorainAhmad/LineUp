@@ -20,10 +20,12 @@ app.use(cors());
 // Routes
 import authRoutes from "./routes/auth.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+import statusRoutes from "./routes/status.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import cannedRoutes from "./routes/canned.routes.js";
-import statusRoutes from "./routes/status.routes.js";
-import chatRoutes from "./routes/chat.routes.js";
+import systemRoutes from "./routes/system.routes.js";
+
 
 // API Prefix
 const API_PREFIX = "/api/v1";
@@ -31,10 +33,11 @@ const API_PREFIX = "/api/v1";
 // Routes Registration
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/media`, mediaRoutes);
+app.use(`${API_PREFIX}/chats`, chatRoutes);
+app.use(`${API_PREFIX}/statuses`, statusRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
-app.use(`${API_PREFIX}/statuses`, statusRoutes);
-app.use(`${API_PREFIX}/chats`, chatRoutes);
+app.use(`${API_PREFIX}/system`, systemRoutes);
 
 // Health Check
 app.get("/health", (_req, res) => {

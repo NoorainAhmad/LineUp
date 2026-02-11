@@ -53,19 +53,19 @@ enum MessageType {
 // --- Models ---
 
 model User {
-  id           String     @id @default(uuid())
-  guid         String     @unique @default(uuid())
+  id           String @id @default(uuid())
+  guid         String @unique @default(uuid())
   name         String
-  phone        String     @unique
+  phone        String @unique
   passwordHash String
 
-  email        String?
-  location     String?
-  avatarUrl    String?
-  status       UserStatus @default(OFFLINE)
-  lastSeen     DateTime   @default(now())
-  ipAddress    String     @default("0.0.0.0")
-  isActive     Boolean    @default(false)
+  email     String?
+  location  String?
+  avatarUrl String?
+  status    UserStatus @default(OFFLINE)
+  lastSeen  DateTime   @default(now())
+  ipAddress String     @default("0.0.0.0")
+  isActive  Boolean    @default(false)
 
   role       UserRole         @default(USER)
   permission UserPermission[] @default([READ])
@@ -83,6 +83,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  systems   System[]
 
   @@index([guid, name, phone])
   @@map("users")
@@ -208,7 +209,7 @@ model Media {
 }
 
 model CannedResponse {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   command     String
   text        String
   description String?
@@ -233,4 +234,24 @@ model Otp {
 
   @@index([phone])
   @@map("otp")
+}
+
+model System {
+  id String @id @default(uuid())
+
+  activeBranchId String?
+  activeBranch   User?   @relation(fields: [activeBranchId], references: [id])
+
+  workspaceName     String?
+  systemVersion       String?
+  systemEmail       String?
+  systemPhone       String?
+
+  systemTimezone    String?
+  systemLanguage    String?
+  systemMaintenance Boolean?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("system")
 }

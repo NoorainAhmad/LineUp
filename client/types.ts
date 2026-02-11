@@ -184,6 +184,20 @@ export interface Otp {
   createdAt: string;
 }
 
+export interface System {
+  id: string; 
+  activeBranchId: string;
+  activeBranch: User;
+  workspaceName: string;
+  systemVersion: string;
+  systemEmail: string;
+  systemPhone: string;
+  systemTimezone: string;
+  systemLanguage: string;
+  systemMaintenance: boolean;
+  updatedAt: string;
+}
+
 export interface SystemLog {
   id: string;
   timestamp: string;

@@ -227,6 +227,19 @@ exports.Prisma.OtpScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.SystemScalarFieldEnum = {
+  id: 'id',
+  activeBranchId: 'activeBranchId',
+  workspaceName: 'workspaceName',
+  systemVersion: 'systemVersion',
+  systemEmail: 'systemEmail',
+  systemPhone: 'systemPhone',
+  systemTimezone: 'systemTimezone',
+  systemLanguage: 'systemLanguage',
+  systemMaintenance: 'systemMaintenance',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -302,7 +315,8 @@ exports.Prisma.ModelName = {
   StatusView: 'StatusView',
   Media: 'Media',
   CannedResponse: 'CannedResponse',
-  Otp: 'Otp'
+  Otp: 'Otp',
+  System: 'System'
 };
 
 /**

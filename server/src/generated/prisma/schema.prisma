@@ -83,6 +83,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  systems   System[]
 
   @@index([guid, name, phone])
   @@map("users")
@@ -233,4 +234,24 @@ model Otp {
 
   @@index([phone])
   @@map("otp")
+}
+
+model System {
+  id String @id @default(uuid())
+
+  activeBranchId String?
+  activeBranch   User?   @relation(fields: [activeBranchId], references: [id])
+
+  workspaceName String?
+  systemVersion String?
+  systemEmail   String?
+  systemPhone   String?
+
+  systemTimezone    String?
+  systemLanguage    String?
+  systemMaintenance Boolean?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("system")
 }

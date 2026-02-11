@@ -58,6 +58,11 @@ export type CannedResponse = $Result.DefaultSelection<Prisma.$CannedResponsePayl
  * 
  */
 export type Otp = $Result.DefaultSelection<Prisma.$OtpPayload>
+/**
+ * Model System
+ * 
+ */
+export type System = $Result.DefaultSelection<Prisma.$SystemPayload>
 
 /**
  * Enums
@@ -353,6 +358,16 @@ export class PrismaClient<
     * ```
     */
   get otp(): Prisma.OtpDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.system`: Exposes CRUD operations for the **System** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Systems
+    * const systems = await prisma.system.findMany()
+    * ```
+    */
+  get system(): Prisma.SystemDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -795,7 +810,8 @@ export namespace Prisma {
     StatusView: 'StatusView',
     Media: 'Media',
     CannedResponse: 'CannedResponse',
-    Otp: 'Otp'
+    Otp: 'Otp',
+    System: 'System'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -811,7 +827,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "chat" | "chatMember" | "message" | "status" | "statusView" | "media" | "cannedResponse" | "otp"
+      modelProps: "user" | "chat" | "chatMember" | "message" | "status" | "statusView" | "media" | "cannedResponse" | "otp" | "system"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1481,6 +1497,80 @@ export namespace Prisma {
           }
         }
       }
+      System: {
+        payload: Prisma.$SystemPayload<ExtArgs>
+        fields: Prisma.SystemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SystemFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SystemFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          findFirst: {
+            args: Prisma.SystemFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SystemFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          findMany: {
+            args: Prisma.SystemFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>[]
+          }
+          create: {
+            args: Prisma.SystemCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          createMany: {
+            args: Prisma.SystemCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SystemCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>[]
+          }
+          delete: {
+            args: Prisma.SystemDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          update: {
+            args: Prisma.SystemUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          deleteMany: {
+            args: Prisma.SystemDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SystemUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SystemUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>[]
+          }
+          upsert: {
+            args: Prisma.SystemUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemPayload>
+          }
+          aggregate: {
+            args: Prisma.SystemAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSystem>
+          }
+          groupBy: {
+            args: Prisma.SystemGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SystemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SystemCountArgs<ExtArgs>
+            result: $Utils.Optional<SystemCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1598,6 +1688,7 @@ export namespace Prisma {
     media?: MediaOmit
     cannedResponse?: CannedResponseOmit
     otp?: OtpOmit
+    system?: SystemOmit
   }
 
   /* Types for Logging */
@@ -1685,6 +1776,7 @@ export namespace Prisma {
     statuses: number
     statusViews: number
     cannedResponses: number
+    systems: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1695,6 +1787,7 @@ export namespace Prisma {
     statuses?: boolean | UserCountOutputTypeCountStatusesArgs
     statusViews?: boolean | UserCountOutputTypeCountStatusViewsArgs
     cannedResponses?: boolean | UserCountOutputTypeCountCannedResponsesArgs
+    systems?: boolean | UserCountOutputTypeCountSystemsArgs
   }
 
   // Custom InputTypes
@@ -1755,6 +1848,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCannedResponsesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CannedResponseWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountSystemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SystemWhereInput
   }
 
 
@@ -2097,6 +2197,7 @@ export namespace Prisma {
     statuses?: boolean | User$statusesArgs<ExtArgs>
     statusViews?: boolean | User$statusViewsArgs<ExtArgs>
     cannedResponses?: boolean | User$cannedResponsesArgs<ExtArgs>
+    systems?: boolean | User$systemsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2172,6 +2273,7 @@ export namespace Prisma {
     statuses?: boolean | User$statusesArgs<ExtArgs>
     statusViews?: boolean | User$statusViewsArgs<ExtArgs>
     cannedResponses?: boolean | User$cannedResponsesArgs<ExtArgs>
+    systems?: boolean | User$systemsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2192,6 +2294,7 @@ export namespace Prisma {
       statuses: Prisma.$StatusPayload<ExtArgs>[]
       statusViews: Prisma.$StatusViewPayload<ExtArgs>[]
       cannedResponses: Prisma.$CannedResponsePayload<ExtArgs>[]
+      systems: Prisma.$SystemPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2613,6 +2716,7 @@ export namespace Prisma {
     statuses<T extends User$statusesArgs<ExtArgs> = {}>(args?: Subset<T, User$statusesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     statusViews<T extends User$statusViewsArgs<ExtArgs> = {}>(args?: Subset<T, User$statusViewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StatusViewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cannedResponses<T extends User$cannedResponsesArgs<ExtArgs> = {}>(args?: Subset<T, User$cannedResponsesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CannedResponsePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    systems<T extends User$systemsArgs<ExtArgs> = {}>(args?: Subset<T, User$systemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3239,6 +3343,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CannedResponseScalarFieldEnum | CannedResponseScalarFieldEnum[]
+  }
+
+  /**
+   * User.systems
+   */
+  export type User$systemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    where?: SystemWhereInput
+    orderBy?: SystemOrderByWithRelationInput | SystemOrderByWithRelationInput[]
+    cursor?: SystemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SystemScalarFieldEnum | SystemScalarFieldEnum[]
   }
 
   /**
@@ -12229,6 +12357,1148 @@ export namespace Prisma {
 
 
   /**
+   * Model System
+   */
+
+  export type AggregateSystem = {
+    _count: SystemCountAggregateOutputType | null
+    _min: SystemMinAggregateOutputType | null
+    _max: SystemMaxAggregateOutputType | null
+  }
+
+  export type SystemMinAggregateOutputType = {
+    id: string | null
+    activeBranchId: string | null
+    workspaceName: string | null
+    systemVersion: string | null
+    systemEmail: string | null
+    systemPhone: string | null
+    systemTimezone: string | null
+    systemLanguage: string | null
+    systemMaintenance: boolean | null
+    updatedAt: Date | null
+  }
+
+  export type SystemMaxAggregateOutputType = {
+    id: string | null
+    activeBranchId: string | null
+    workspaceName: string | null
+    systemVersion: string | null
+    systemEmail: string | null
+    systemPhone: string | null
+    systemTimezone: string | null
+    systemLanguage: string | null
+    systemMaintenance: boolean | null
+    updatedAt: Date | null
+  }
+
+  export type SystemCountAggregateOutputType = {
+    id: number
+    activeBranchId: number
+    workspaceName: number
+    systemVersion: number
+    systemEmail: number
+    systemPhone: number
+    systemTimezone: number
+    systemLanguage: number
+    systemMaintenance: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SystemMinAggregateInputType = {
+    id?: true
+    activeBranchId?: true
+    workspaceName?: true
+    systemVersion?: true
+    systemEmail?: true
+    systemPhone?: true
+    systemTimezone?: true
+    systemLanguage?: true
+    systemMaintenance?: true
+    updatedAt?: true
+  }
+
+  export type SystemMaxAggregateInputType = {
+    id?: true
+    activeBranchId?: true
+    workspaceName?: true
+    systemVersion?: true
+    systemEmail?: true
+    systemPhone?: true
+    systemTimezone?: true
+    systemLanguage?: true
+    systemMaintenance?: true
+    updatedAt?: true
+  }
+
+  export type SystemCountAggregateInputType = {
+    id?: true
+    activeBranchId?: true
+    workspaceName?: true
+    systemVersion?: true
+    systemEmail?: true
+    systemPhone?: true
+    systemTimezone?: true
+    systemLanguage?: true
+    systemMaintenance?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SystemAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which System to aggregate.
+     */
+    where?: SystemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Systems to fetch.
+     */
+    orderBy?: SystemOrderByWithRelationInput | SystemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SystemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Systems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Systems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Systems
+    **/
+    _count?: true | SystemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SystemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SystemMaxAggregateInputType
+  }
+
+  export type GetSystemAggregateType<T extends SystemAggregateArgs> = {
+        [P in keyof T & keyof AggregateSystem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSystem[P]>
+      : GetScalarType<T[P], AggregateSystem[P]>
+  }
+
+
+
+
+  export type SystemGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SystemWhereInput
+    orderBy?: SystemOrderByWithAggregationInput | SystemOrderByWithAggregationInput[]
+    by: SystemScalarFieldEnum[] | SystemScalarFieldEnum
+    having?: SystemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SystemCountAggregateInputType | true
+    _min?: SystemMinAggregateInputType
+    _max?: SystemMaxAggregateInputType
+  }
+
+  export type SystemGroupByOutputType = {
+    id: string
+    activeBranchId: string | null
+    workspaceName: string | null
+    systemVersion: string | null
+    systemEmail: string | null
+    systemPhone: string | null
+    systemTimezone: string | null
+    systemLanguage: string | null
+    systemMaintenance: boolean | null
+    updatedAt: Date
+    _count: SystemCountAggregateOutputType | null
+    _min: SystemMinAggregateOutputType | null
+    _max: SystemMaxAggregateOutputType | null
+  }
+
+  type GetSystemGroupByPayload<T extends SystemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SystemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SystemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SystemGroupByOutputType[P]>
+            : GetScalarType<T[P], SystemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SystemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    activeBranchId?: boolean
+    workspaceName?: boolean
+    systemVersion?: boolean
+    systemEmail?: boolean
+    systemPhone?: boolean
+    systemTimezone?: boolean
+    systemLanguage?: boolean
+    systemMaintenance?: boolean
+    updatedAt?: boolean
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }, ExtArgs["result"]["system"]>
+
+  export type SystemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    activeBranchId?: boolean
+    workspaceName?: boolean
+    systemVersion?: boolean
+    systemEmail?: boolean
+    systemPhone?: boolean
+    systemTimezone?: boolean
+    systemLanguage?: boolean
+    systemMaintenance?: boolean
+    updatedAt?: boolean
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }, ExtArgs["result"]["system"]>
+
+  export type SystemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    activeBranchId?: boolean
+    workspaceName?: boolean
+    systemVersion?: boolean
+    systemEmail?: boolean
+    systemPhone?: boolean
+    systemTimezone?: boolean
+    systemLanguage?: boolean
+    systemMaintenance?: boolean
+    updatedAt?: boolean
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }, ExtArgs["result"]["system"]>
+
+  export type SystemSelectScalar = {
+    id?: boolean
+    activeBranchId?: boolean
+    workspaceName?: boolean
+    systemVersion?: boolean
+    systemEmail?: boolean
+    systemPhone?: boolean
+    systemTimezone?: boolean
+    systemLanguage?: boolean
+    systemMaintenance?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SystemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "activeBranchId" | "workspaceName" | "systemVersion" | "systemEmail" | "systemPhone" | "systemTimezone" | "systemLanguage" | "systemMaintenance" | "updatedAt", ExtArgs["result"]["system"]>
+  export type SystemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }
+  export type SystemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }
+  export type SystemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    activeBranch?: boolean | System$activeBranchArgs<ExtArgs>
+  }
+
+  export type $SystemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "System"
+    objects: {
+      activeBranch: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      activeBranchId: string | null
+      workspaceName: string | null
+      systemVersion: string | null
+      systemEmail: string | null
+      systemPhone: string | null
+      systemTimezone: string | null
+      systemLanguage: string | null
+      systemMaintenance: boolean | null
+      updatedAt: Date
+    }, ExtArgs["result"]["system"]>
+    composites: {}
+  }
+
+  type SystemGetPayload<S extends boolean | null | undefined | SystemDefaultArgs> = $Result.GetResult<Prisma.$SystemPayload, S>
+
+  type SystemCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SystemFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SystemCountAggregateInputType | true
+    }
+
+  export interface SystemDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['System'], meta: { name: 'System' } }
+    /**
+     * Find zero or one System that matches the filter.
+     * @param {SystemFindUniqueArgs} args - Arguments to find a System
+     * @example
+     * // Get one System
+     * const system = await prisma.system.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SystemFindUniqueArgs>(args: SelectSubset<T, SystemFindUniqueArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one System that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SystemFindUniqueOrThrowArgs} args - Arguments to find a System
+     * @example
+     * // Get one System
+     * const system = await prisma.system.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SystemFindUniqueOrThrowArgs>(args: SelectSubset<T, SystemFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first System that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemFindFirstArgs} args - Arguments to find a System
+     * @example
+     * // Get one System
+     * const system = await prisma.system.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SystemFindFirstArgs>(args?: SelectSubset<T, SystemFindFirstArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first System that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemFindFirstOrThrowArgs} args - Arguments to find a System
+     * @example
+     * // Get one System
+     * const system = await prisma.system.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SystemFindFirstOrThrowArgs>(args?: SelectSubset<T, SystemFindFirstOrThrowArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Systems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Systems
+     * const systems = await prisma.system.findMany()
+     * 
+     * // Get first 10 Systems
+     * const systems = await prisma.system.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const systemWithIdOnly = await prisma.system.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SystemFindManyArgs>(args?: SelectSubset<T, SystemFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a System.
+     * @param {SystemCreateArgs} args - Arguments to create a System.
+     * @example
+     * // Create one System
+     * const System = await prisma.system.create({
+     *   data: {
+     *     // ... data to create a System
+     *   }
+     * })
+     * 
+     */
+    create<T extends SystemCreateArgs>(args: SelectSubset<T, SystemCreateArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Systems.
+     * @param {SystemCreateManyArgs} args - Arguments to create many Systems.
+     * @example
+     * // Create many Systems
+     * const system = await prisma.system.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SystemCreateManyArgs>(args?: SelectSubset<T, SystemCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Systems and returns the data saved in the database.
+     * @param {SystemCreateManyAndReturnArgs} args - Arguments to create many Systems.
+     * @example
+     * // Create many Systems
+     * const system = await prisma.system.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Systems and only return the `id`
+     * const systemWithIdOnly = await prisma.system.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SystemCreateManyAndReturnArgs>(args?: SelectSubset<T, SystemCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a System.
+     * @param {SystemDeleteArgs} args - Arguments to delete one System.
+     * @example
+     * // Delete one System
+     * const System = await prisma.system.delete({
+     *   where: {
+     *     // ... filter to delete one System
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SystemDeleteArgs>(args: SelectSubset<T, SystemDeleteArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one System.
+     * @param {SystemUpdateArgs} args - Arguments to update one System.
+     * @example
+     * // Update one System
+     * const system = await prisma.system.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SystemUpdateArgs>(args: SelectSubset<T, SystemUpdateArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Systems.
+     * @param {SystemDeleteManyArgs} args - Arguments to filter Systems to delete.
+     * @example
+     * // Delete a few Systems
+     * const { count } = await prisma.system.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SystemDeleteManyArgs>(args?: SelectSubset<T, SystemDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Systems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Systems
+     * const system = await prisma.system.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SystemUpdateManyArgs>(args: SelectSubset<T, SystemUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Systems and returns the data updated in the database.
+     * @param {SystemUpdateManyAndReturnArgs} args - Arguments to update many Systems.
+     * @example
+     * // Update many Systems
+     * const system = await prisma.system.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Systems and only return the `id`
+     * const systemWithIdOnly = await prisma.system.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SystemUpdateManyAndReturnArgs>(args: SelectSubset<T, SystemUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one System.
+     * @param {SystemUpsertArgs} args - Arguments to update or create a System.
+     * @example
+     * // Update or create a System
+     * const system = await prisma.system.upsert({
+     *   create: {
+     *     // ... data to create a System
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the System we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SystemUpsertArgs>(args: SelectSubset<T, SystemUpsertArgs<ExtArgs>>): Prisma__SystemClient<$Result.GetResult<Prisma.$SystemPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Systems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemCountArgs} args - Arguments to filter Systems to count.
+     * @example
+     * // Count the number of Systems
+     * const count = await prisma.system.count({
+     *   where: {
+     *     // ... the filter for the Systems we want to count
+     *   }
+     * })
+    **/
+    count<T extends SystemCountArgs>(
+      args?: Subset<T, SystemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SystemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a System.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SystemAggregateArgs>(args: Subset<T, SystemAggregateArgs>): Prisma.PrismaPromise<GetSystemAggregateType<T>>
+
+    /**
+     * Group by System.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SystemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SystemGroupByArgs['orderBy'] }
+        : { orderBy?: SystemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SystemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSystemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the System model
+   */
+  readonly fields: SystemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for System.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SystemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    activeBranch<T extends System$activeBranchArgs<ExtArgs> = {}>(args?: Subset<T, System$activeBranchArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the System model
+   */
+  interface SystemFieldRefs {
+    readonly id: FieldRef<"System", 'String'>
+    readonly activeBranchId: FieldRef<"System", 'String'>
+    readonly workspaceName: FieldRef<"System", 'String'>
+    readonly systemVersion: FieldRef<"System", 'String'>
+    readonly systemEmail: FieldRef<"System", 'String'>
+    readonly systemPhone: FieldRef<"System", 'String'>
+    readonly systemTimezone: FieldRef<"System", 'String'>
+    readonly systemLanguage: FieldRef<"System", 'String'>
+    readonly systemMaintenance: FieldRef<"System", 'Boolean'>
+    readonly updatedAt: FieldRef<"System", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * System findUnique
+   */
+  export type SystemFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter, which System to fetch.
+     */
+    where: SystemWhereUniqueInput
+  }
+
+  /**
+   * System findUniqueOrThrow
+   */
+  export type SystemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter, which System to fetch.
+     */
+    where: SystemWhereUniqueInput
+  }
+
+  /**
+   * System findFirst
+   */
+  export type SystemFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter, which System to fetch.
+     */
+    where?: SystemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Systems to fetch.
+     */
+    orderBy?: SystemOrderByWithRelationInput | SystemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Systems.
+     */
+    cursor?: SystemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Systems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Systems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Systems.
+     */
+    distinct?: SystemScalarFieldEnum | SystemScalarFieldEnum[]
+  }
+
+  /**
+   * System findFirstOrThrow
+   */
+  export type SystemFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter, which System to fetch.
+     */
+    where?: SystemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Systems to fetch.
+     */
+    orderBy?: SystemOrderByWithRelationInput | SystemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Systems.
+     */
+    cursor?: SystemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Systems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Systems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Systems.
+     */
+    distinct?: SystemScalarFieldEnum | SystemScalarFieldEnum[]
+  }
+
+  /**
+   * System findMany
+   */
+  export type SystemFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter, which Systems to fetch.
+     */
+    where?: SystemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Systems to fetch.
+     */
+    orderBy?: SystemOrderByWithRelationInput | SystemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Systems.
+     */
+    cursor?: SystemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Systems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Systems.
+     */
+    skip?: number
+    distinct?: SystemScalarFieldEnum | SystemScalarFieldEnum[]
+  }
+
+  /**
+   * System create
+   */
+  export type SystemCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * The data needed to create a System.
+     */
+    data: XOR<SystemCreateInput, SystemUncheckedCreateInput>
+  }
+
+  /**
+   * System createMany
+   */
+  export type SystemCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Systems.
+     */
+    data: SystemCreateManyInput | SystemCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * System createManyAndReturn
+   */
+  export type SystemCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * The data used to create many Systems.
+     */
+    data: SystemCreateManyInput | SystemCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * System update
+   */
+  export type SystemUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * The data needed to update a System.
+     */
+    data: XOR<SystemUpdateInput, SystemUncheckedUpdateInput>
+    /**
+     * Choose, which System to update.
+     */
+    where: SystemWhereUniqueInput
+  }
+
+  /**
+   * System updateMany
+   */
+  export type SystemUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Systems.
+     */
+    data: XOR<SystemUpdateManyMutationInput, SystemUncheckedUpdateManyInput>
+    /**
+     * Filter which Systems to update
+     */
+    where?: SystemWhereInput
+    /**
+     * Limit how many Systems to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * System updateManyAndReturn
+   */
+  export type SystemUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * The data used to update Systems.
+     */
+    data: XOR<SystemUpdateManyMutationInput, SystemUncheckedUpdateManyInput>
+    /**
+     * Filter which Systems to update
+     */
+    where?: SystemWhereInput
+    /**
+     * Limit how many Systems to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * System upsert
+   */
+  export type SystemUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * The filter to search for the System to update in case it exists.
+     */
+    where: SystemWhereUniqueInput
+    /**
+     * In case the System found by the `where` argument doesn't exist, create a new System with this data.
+     */
+    create: XOR<SystemCreateInput, SystemUncheckedCreateInput>
+    /**
+     * In case the System was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SystemUpdateInput, SystemUncheckedUpdateInput>
+  }
+
+  /**
+   * System delete
+   */
+  export type SystemDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+    /**
+     * Filter which System to delete.
+     */
+    where: SystemWhereUniqueInput
+  }
+
+  /**
+   * System deleteMany
+   */
+  export type SystemDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Systems to delete
+     */
+    where?: SystemWhereInput
+    /**
+     * Limit how many Systems to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * System.activeBranch
+   */
+  export type System$activeBranchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * System without action
+   */
+  export type SystemDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the System
+     */
+    select?: SystemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the System
+     */
+    omit?: SystemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SystemInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -12374,6 +13644,22 @@ export namespace Prisma {
   };
 
   export type OtpScalarFieldEnum = (typeof OtpScalarFieldEnum)[keyof typeof OtpScalarFieldEnum]
+
+
+  export const SystemScalarFieldEnum: {
+    id: 'id',
+    activeBranchId: 'activeBranchId',
+    workspaceName: 'workspaceName',
+    systemVersion: 'systemVersion',
+    systemEmail: 'systemEmail',
+    systemPhone: 'systemPhone',
+    systemTimezone: 'systemTimezone',
+    systemLanguage: 'systemLanguage',
+    systemMaintenance: 'systemMaintenance',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SystemScalarFieldEnum = (typeof SystemScalarFieldEnum)[keyof typeof SystemScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -12615,6 +13901,7 @@ export namespace Prisma {
     statuses?: StatusListRelationFilter
     statusViews?: StatusViewListRelationFilter
     cannedResponses?: CannedResponseListRelationFilter
+    systems?: SystemListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -12643,6 +13930,7 @@ export namespace Prisma {
     statuses?: StatusOrderByRelationAggregateInput
     statusViews?: StatusViewOrderByRelationAggregateInput
     cannedResponses?: CannedResponseOrderByRelationAggregateInput
+    systems?: SystemOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -12674,6 +13962,7 @@ export namespace Prisma {
     statuses?: StatusListRelationFilter
     statusViews?: StatusViewListRelationFilter
     cannedResponses?: CannedResponseListRelationFilter
+    systems?: SystemListRelationFilter
   }, "id" | "guid" | "phone">
 
   export type UserOrderByWithAggregationInput = {
@@ -13307,6 +14596,86 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Otp"> | Date | string
   }
 
+  export type SystemWhereInput = {
+    AND?: SystemWhereInput | SystemWhereInput[]
+    OR?: SystemWhereInput[]
+    NOT?: SystemWhereInput | SystemWhereInput[]
+    id?: StringFilter<"System"> | string
+    activeBranchId?: StringNullableFilter<"System"> | string | null
+    workspaceName?: StringNullableFilter<"System"> | string | null
+    systemVersion?: StringNullableFilter<"System"> | string | null
+    systemEmail?: StringNullableFilter<"System"> | string | null
+    systemPhone?: StringNullableFilter<"System"> | string | null
+    systemTimezone?: StringNullableFilter<"System"> | string | null
+    systemLanguage?: StringNullableFilter<"System"> | string | null
+    systemMaintenance?: BoolNullableFilter<"System"> | boolean | null
+    updatedAt?: DateTimeFilter<"System"> | Date | string
+    activeBranch?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type SystemOrderByWithRelationInput = {
+    id?: SortOrder
+    activeBranchId?: SortOrderInput | SortOrder
+    workspaceName?: SortOrderInput | SortOrder
+    systemVersion?: SortOrderInput | SortOrder
+    systemEmail?: SortOrderInput | SortOrder
+    systemPhone?: SortOrderInput | SortOrder
+    systemTimezone?: SortOrderInput | SortOrder
+    systemLanguage?: SortOrderInput | SortOrder
+    systemMaintenance?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    activeBranch?: UserOrderByWithRelationInput
+  }
+
+  export type SystemWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SystemWhereInput | SystemWhereInput[]
+    OR?: SystemWhereInput[]
+    NOT?: SystemWhereInput | SystemWhereInput[]
+    activeBranchId?: StringNullableFilter<"System"> | string | null
+    workspaceName?: StringNullableFilter<"System"> | string | null
+    systemVersion?: StringNullableFilter<"System"> | string | null
+    systemEmail?: StringNullableFilter<"System"> | string | null
+    systemPhone?: StringNullableFilter<"System"> | string | null
+    systemTimezone?: StringNullableFilter<"System"> | string | null
+    systemLanguage?: StringNullableFilter<"System"> | string | null
+    systemMaintenance?: BoolNullableFilter<"System"> | boolean | null
+    updatedAt?: DateTimeFilter<"System"> | Date | string
+    activeBranch?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type SystemOrderByWithAggregationInput = {
+    id?: SortOrder
+    activeBranchId?: SortOrderInput | SortOrder
+    workspaceName?: SortOrderInput | SortOrder
+    systemVersion?: SortOrderInput | SortOrder
+    systemEmail?: SortOrderInput | SortOrder
+    systemPhone?: SortOrderInput | SortOrder
+    systemTimezone?: SortOrderInput | SortOrder
+    systemLanguage?: SortOrderInput | SortOrder
+    systemMaintenance?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: SystemCountOrderByAggregateInput
+    _max?: SystemMaxOrderByAggregateInput
+    _min?: SystemMinOrderByAggregateInput
+  }
+
+  export type SystemScalarWhereWithAggregatesInput = {
+    AND?: SystemScalarWhereWithAggregatesInput | SystemScalarWhereWithAggregatesInput[]
+    OR?: SystemScalarWhereWithAggregatesInput[]
+    NOT?: SystemScalarWhereWithAggregatesInput | SystemScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"System"> | string
+    activeBranchId?: StringNullableWithAggregatesFilter<"System"> | string | null
+    workspaceName?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemVersion?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemEmail?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemPhone?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemTimezone?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemLanguage?: StringNullableWithAggregatesFilter<"System"> | string | null
+    systemMaintenance?: BoolNullableWithAggregatesFilter<"System"> | boolean | null
+    updatedAt?: DateTimeWithAggregatesFilter<"System"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     guid?: string
@@ -13332,6 +14701,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -13359,6 +14729,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUpdateInput = {
@@ -13386,6 +14757,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -13413,6 +14785,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -14092,6 +15465,96 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type SystemCreateInput = {
+    id?: string
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+    activeBranch?: UserCreateNestedOneWithoutSystemsInput
+  }
+
+  export type SystemUncheckedCreateInput = {
+    id?: string
+    activeBranchId?: string | null
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+  }
+
+  export type SystemUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    activeBranch?: UserUpdateOneWithoutSystemsNestedInput
+  }
+
+  export type SystemUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    activeBranchId?: NullableStringFieldUpdateOperationsInput | string | null
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemCreateManyInput = {
+    id?: string
+    activeBranchId?: string | null
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+  }
+
+  export type SystemUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    activeBranchId?: NullableStringFieldUpdateOperationsInput | string | null
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -14207,6 +15670,12 @@ export namespace Prisma {
     none?: CannedResponseWhereInput
   }
 
+  export type SystemListRelationFilter = {
+    every?: SystemWhereInput
+    some?: SystemWhereInput
+    none?: SystemWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -14237,6 +15706,10 @@ export namespace Prisma {
   }
 
   export type CannedResponseOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SystemOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -14850,6 +16323,58 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type SystemCountOrderByAggregateInput = {
+    id?: SortOrder
+    activeBranchId?: SortOrder
+    workspaceName?: SortOrder
+    systemVersion?: SortOrder
+    systemEmail?: SortOrder
+    systemPhone?: SortOrder
+    systemTimezone?: SortOrder
+    systemLanguage?: SortOrder
+    systemMaintenance?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SystemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    activeBranchId?: SortOrder
+    workspaceName?: SortOrder
+    systemVersion?: SortOrder
+    systemEmail?: SortOrder
+    systemPhone?: SortOrder
+    systemTimezone?: SortOrder
+    systemLanguage?: SortOrder
+    systemMaintenance?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SystemMinOrderByAggregateInput = {
+    id?: SortOrder
+    activeBranchId?: SortOrder
+    workspaceName?: SortOrder
+    systemVersion?: SortOrder
+    systemEmail?: SortOrder
+    systemPhone?: SortOrder
+    systemTimezone?: SortOrder
+    systemLanguage?: SortOrder
+    systemMaintenance?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type UserCreatepermissionInput = {
     set: $Enums.UserPermission[]
   }
@@ -14909,6 +16434,13 @@ export namespace Prisma {
     connect?: CannedResponseWhereUniqueInput | CannedResponseWhereUniqueInput[]
   }
 
+  export type SystemCreateNestedManyWithoutActiveBranchInput = {
+    create?: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput> | SystemCreateWithoutActiveBranchInput[] | SystemUncheckedCreateWithoutActiveBranchInput[]
+    connectOrCreate?: SystemCreateOrConnectWithoutActiveBranchInput | SystemCreateOrConnectWithoutActiveBranchInput[]
+    createMany?: SystemCreateManyActiveBranchInputEnvelope
+    connect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+  }
+
   export type UserUncheckedCreateNestedManyWithoutParentInput = {
     create?: XOR<UserCreateWithoutParentInput, UserUncheckedCreateWithoutParentInput> | UserCreateWithoutParentInput[] | UserUncheckedCreateWithoutParentInput[]
     connectOrCreate?: UserCreateOrConnectWithoutParentInput | UserCreateOrConnectWithoutParentInput[]
@@ -14956,6 +16488,13 @@ export namespace Prisma {
     connectOrCreate?: CannedResponseCreateOrConnectWithoutUserInput | CannedResponseCreateOrConnectWithoutUserInput[]
     createMany?: CannedResponseCreateManyUserInputEnvelope
     connect?: CannedResponseWhereUniqueInput | CannedResponseWhereUniqueInput[]
+  }
+
+  export type SystemUncheckedCreateNestedManyWithoutActiveBranchInput = {
+    create?: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput> | SystemCreateWithoutActiveBranchInput[] | SystemUncheckedCreateWithoutActiveBranchInput[]
+    connectOrCreate?: SystemCreateOrConnectWithoutActiveBranchInput | SystemCreateOrConnectWithoutActiveBranchInput[]
+    createMany?: SystemCreateManyActiveBranchInputEnvelope
+    connect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -15095,6 +16634,20 @@ export namespace Prisma {
     deleteMany?: CannedResponseScalarWhereInput | CannedResponseScalarWhereInput[]
   }
 
+  export type SystemUpdateManyWithoutActiveBranchNestedInput = {
+    create?: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput> | SystemCreateWithoutActiveBranchInput[] | SystemUncheckedCreateWithoutActiveBranchInput[]
+    connectOrCreate?: SystemCreateOrConnectWithoutActiveBranchInput | SystemCreateOrConnectWithoutActiveBranchInput[]
+    upsert?: SystemUpsertWithWhereUniqueWithoutActiveBranchInput | SystemUpsertWithWhereUniqueWithoutActiveBranchInput[]
+    createMany?: SystemCreateManyActiveBranchInputEnvelope
+    set?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    disconnect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    delete?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    connect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    update?: SystemUpdateWithWhereUniqueWithoutActiveBranchInput | SystemUpdateWithWhereUniqueWithoutActiveBranchInput[]
+    updateMany?: SystemUpdateManyWithWhereWithoutActiveBranchInput | SystemUpdateManyWithWhereWithoutActiveBranchInput[]
+    deleteMany?: SystemScalarWhereInput | SystemScalarWhereInput[]
+  }
+
   export type UserUncheckedUpdateManyWithoutParentNestedInput = {
     create?: XOR<UserCreateWithoutParentInput, UserUncheckedCreateWithoutParentInput> | UserCreateWithoutParentInput[] | UserUncheckedCreateWithoutParentInput[]
     connectOrCreate?: UserCreateOrConnectWithoutParentInput | UserCreateOrConnectWithoutParentInput[]
@@ -15191,6 +16744,20 @@ export namespace Prisma {
     update?: CannedResponseUpdateWithWhereUniqueWithoutUserInput | CannedResponseUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: CannedResponseUpdateManyWithWhereWithoutUserInput | CannedResponseUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: CannedResponseScalarWhereInput | CannedResponseScalarWhereInput[]
+  }
+
+  export type SystemUncheckedUpdateManyWithoutActiveBranchNestedInput = {
+    create?: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput> | SystemCreateWithoutActiveBranchInput[] | SystemUncheckedCreateWithoutActiveBranchInput[]
+    connectOrCreate?: SystemCreateOrConnectWithoutActiveBranchInput | SystemCreateOrConnectWithoutActiveBranchInput[]
+    upsert?: SystemUpsertWithWhereUniqueWithoutActiveBranchInput | SystemUpsertWithWhereUniqueWithoutActiveBranchInput[]
+    createMany?: SystemCreateManyActiveBranchInputEnvelope
+    set?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    disconnect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    delete?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    connect?: SystemWhereUniqueInput | SystemWhereUniqueInput[]
+    update?: SystemUpdateWithWhereUniqueWithoutActiveBranchInput | SystemUpdateWithWhereUniqueWithoutActiveBranchInput[]
+    updateMany?: SystemUpdateManyWithWhereWithoutActiveBranchInput | SystemUpdateManyWithWhereWithoutActiveBranchInput[]
+    deleteMany?: SystemScalarWhereInput | SystemScalarWhereInput[]
   }
 
   export type ChatMemberCreateNestedManyWithoutChatInput = {
@@ -15569,6 +17136,26 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCannedResponsesInput, UserUpdateWithoutCannedResponsesInput>, UserUncheckedUpdateWithoutCannedResponsesInput>
   }
 
+  export type UserCreateNestedOneWithoutSystemsInput = {
+    create?: XOR<UserCreateWithoutSystemsInput, UserUncheckedCreateWithoutSystemsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSystemsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
+  export type UserUpdateOneWithoutSystemsNestedInput = {
+    create?: XOR<UserCreateWithoutSystemsInput, UserUncheckedCreateWithoutSystemsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSystemsInput
+    upsert?: UserUpsertWithoutSystemsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSystemsInput, UserUpdateWithoutSystemsInput>, UserUncheckedUpdateWithoutSystemsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -15853,6 +17440,19 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type UserCreateWithoutChildrenInput = {
     id?: string
     guid?: string
@@ -15877,6 +17477,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutChildrenInput = {
@@ -15903,6 +17504,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutChildrenInput = {
@@ -15934,6 +17536,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutParentInput = {
@@ -15960,6 +17563,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutParentInput = {
@@ -16164,6 +17768,40 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type SystemCreateWithoutActiveBranchInput = {
+    id?: string
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+  }
+
+  export type SystemUncheckedCreateWithoutActiveBranchInput = {
+    id?: string
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+  }
+
+  export type SystemCreateOrConnectWithoutActiveBranchInput = {
+    where: SystemWhereUniqueInput
+    create: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput>
+  }
+
+  export type SystemCreateManyActiveBranchInputEnvelope = {
+    data: SystemCreateManyActiveBranchInput | SystemCreateManyActiveBranchInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserUpsertWithoutChildrenInput = {
     update: XOR<UserUpdateWithoutChildrenInput, UserUncheckedUpdateWithoutChildrenInput>
     create: XOR<UserCreateWithoutChildrenInput, UserUncheckedCreateWithoutChildrenInput>
@@ -16199,6 +17837,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutChildrenInput = {
@@ -16225,6 +17864,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutParentInput = {
@@ -16449,6 +18089,38 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"CannedResponse"> | Date | string
   }
 
+  export type SystemUpsertWithWhereUniqueWithoutActiveBranchInput = {
+    where: SystemWhereUniqueInput
+    update: XOR<SystemUpdateWithoutActiveBranchInput, SystemUncheckedUpdateWithoutActiveBranchInput>
+    create: XOR<SystemCreateWithoutActiveBranchInput, SystemUncheckedCreateWithoutActiveBranchInput>
+  }
+
+  export type SystemUpdateWithWhereUniqueWithoutActiveBranchInput = {
+    where: SystemWhereUniqueInput
+    data: XOR<SystemUpdateWithoutActiveBranchInput, SystemUncheckedUpdateWithoutActiveBranchInput>
+  }
+
+  export type SystemUpdateManyWithWhereWithoutActiveBranchInput = {
+    where: SystemScalarWhereInput
+    data: XOR<SystemUpdateManyMutationInput, SystemUncheckedUpdateManyWithoutActiveBranchInput>
+  }
+
+  export type SystemScalarWhereInput = {
+    AND?: SystemScalarWhereInput | SystemScalarWhereInput[]
+    OR?: SystemScalarWhereInput[]
+    NOT?: SystemScalarWhereInput | SystemScalarWhereInput[]
+    id?: StringFilter<"System"> | string
+    activeBranchId?: StringNullableFilter<"System"> | string | null
+    workspaceName?: StringNullableFilter<"System"> | string | null
+    systemVersion?: StringNullableFilter<"System"> | string | null
+    systemEmail?: StringNullableFilter<"System"> | string | null
+    systemPhone?: StringNullableFilter<"System"> | string | null
+    systemTimezone?: StringNullableFilter<"System"> | string | null
+    systemLanguage?: StringNullableFilter<"System"> | string | null
+    systemMaintenance?: BoolNullableFilter<"System"> | boolean | null
+    updatedAt?: DateTimeFilter<"System"> | Date | string
+  }
+
   export type ChatMemberCreateWithoutChatInput = {
     id?: string
     unreadCount?: number
@@ -16669,6 +18341,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutMembersInput = {
@@ -16695,6 +18368,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutMembersInput = {
@@ -16764,6 +18438,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMembersInput = {
@@ -16790,6 +18465,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type ChatUpsertWithoutMembersInput = {
@@ -16849,6 +18525,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutMessagesInput = {
@@ -16875,6 +18552,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutMessagesInput = {
@@ -16971,6 +18649,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMessagesInput = {
@@ -16997,6 +18676,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type ChatUpsertWithoutMessagesInput = {
@@ -17118,6 +18798,7 @@ export namespace Prisma {
     medias?: MediaCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutStatusesInput = {
@@ -17144,6 +18825,7 @@ export namespace Prisma {
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutStatusesInput = {
@@ -17243,6 +18925,7 @@ export namespace Prisma {
     medias?: MediaUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStatusesInput = {
@@ -17269,6 +18952,7 @@ export namespace Prisma {
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type StatusViewUpsertWithWhereUniqueWithoutStatusInput = {
@@ -17338,6 +19022,7 @@ export namespace Prisma {
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutStatusViewsInput = {
@@ -17364,6 +19049,7 @@ export namespace Prisma {
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutStatusViewsInput = {
@@ -17439,6 +19125,7 @@ export namespace Prisma {
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStatusViewsInput = {
@@ -17465,6 +19152,7 @@ export namespace Prisma {
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserCreateWithoutMediasInput = {
@@ -17491,6 +19179,7 @@ export namespace Prisma {
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutMediasInput = {
@@ -17517,6 +19206,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
     cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutMediasInput = {
@@ -17586,6 +19276,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMediasInput = {
@@ -17612,6 +19303,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type StatusUpsertWithoutMediaInput = {
@@ -17671,6 +19363,7 @@ export namespace Prisma {
     medias?: MediaCreateNestedManyWithoutUserInput
     statuses?: StatusCreateNestedManyWithoutUserInput
     statusViews?: StatusViewCreateNestedManyWithoutUserInput
+    systems?: SystemCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserUncheckedCreateWithoutCannedResponsesInput = {
@@ -17697,6 +19390,7 @@ export namespace Prisma {
     medias?: MediaUncheckedCreateNestedManyWithoutUserInput
     statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
     statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
+    systems?: SystemUncheckedCreateNestedManyWithoutActiveBranchInput
   }
 
   export type UserCreateOrConnectWithoutCannedResponsesInput = {
@@ -17739,6 +19433,7 @@ export namespace Prisma {
     medias?: MediaUpdateManyWithoutUserNestedInput
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCannedResponsesInput = {
@@ -17765,6 +19460,131 @@ export namespace Prisma {
     medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
+  }
+
+  export type UserCreateWithoutSystemsInput = {
+    id?: string
+    guid?: string
+    name: string
+    phone: string
+    passwordHash: string
+    email?: string | null
+    location?: string | null
+    avatarUrl?: string | null
+    status?: $Enums.UserStatus
+    lastSeen?: Date | string
+    ipAddress?: string
+    isActive?: boolean
+    role?: $Enums.UserRole
+    permission?: UserCreatepermissionInput | $Enums.UserPermission[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    parent?: UserCreateNestedOneWithoutChildrenInput
+    children?: UserCreateNestedManyWithoutParentInput
+    members?: ChatMemberCreateNestedManyWithoutUserInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    medias?: MediaCreateNestedManyWithoutUserInput
+    statuses?: StatusCreateNestedManyWithoutUserInput
+    statusViews?: StatusViewCreateNestedManyWithoutUserInput
+    cannedResponses?: CannedResponseCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutSystemsInput = {
+    id?: string
+    guid?: string
+    name: string
+    phone: string
+    passwordHash: string
+    email?: string | null
+    location?: string | null
+    avatarUrl?: string | null
+    status?: $Enums.UserStatus
+    lastSeen?: Date | string
+    ipAddress?: string
+    isActive?: boolean
+    role?: $Enums.UserRole
+    permission?: UserCreatepermissionInput | $Enums.UserPermission[]
+    parentId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    children?: UserUncheckedCreateNestedManyWithoutParentInput
+    members?: ChatMemberUncheckedCreateNestedManyWithoutUserInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    medias?: MediaUncheckedCreateNestedManyWithoutUserInput
+    statuses?: StatusUncheckedCreateNestedManyWithoutUserInput
+    statusViews?: StatusViewUncheckedCreateNestedManyWithoutUserInput
+    cannedResponses?: CannedResponseUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutSystemsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutSystemsInput, UserUncheckedCreateWithoutSystemsInput>
+  }
+
+  export type UserUpsertWithoutSystemsInput = {
+    update: XOR<UserUpdateWithoutSystemsInput, UserUncheckedUpdateWithoutSystemsInput>
+    create: XOR<UserCreateWithoutSystemsInput, UserUncheckedCreateWithoutSystemsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutSystemsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutSystemsInput, UserUncheckedUpdateWithoutSystemsInput>
+  }
+
+  export type UserUpdateWithoutSystemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    guid?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    lastSeen?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    permission?: UserUpdatepermissionInput | $Enums.UserPermission[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    parent?: UserUpdateOneWithoutChildrenNestedInput
+    children?: UserUpdateManyWithoutParentNestedInput
+    members?: ChatMemberUpdateManyWithoutUserNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    medias?: MediaUpdateManyWithoutUserNestedInput
+    statuses?: StatusUpdateManyWithoutUserNestedInput
+    statusViews?: StatusViewUpdateManyWithoutUserNestedInput
+    cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutSystemsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    guid?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+    lastSeen?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    permission?: UserUpdatepermissionInput | $Enums.UserPermission[]
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: UserUncheckedUpdateManyWithoutParentNestedInput
+    members?: ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    medias?: MediaUncheckedUpdateManyWithoutUserNestedInput
+    statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
+    statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
+    cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyParentInput = {
@@ -17849,6 +19669,18 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type SystemCreateManyActiveBranchInput = {
+    id?: string
+    workspaceName?: string | null
+    systemVersion?: string | null
+    systemEmail?: string | null
+    systemPhone?: string | null
+    systemTimezone?: string | null
+    systemLanguage?: string | null
+    systemMaintenance?: boolean | null
+    updatedAt?: Date | string
+  }
+
   export type UserUpdateWithoutParentInput = {
     id?: StringFieldUpdateOperationsInput | string
     guid?: StringFieldUpdateOperationsInput | string
@@ -17873,6 +19705,7 @@ export namespace Prisma {
     statuses?: StatusUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUpdateManyWithoutUserNestedInput
+    systems?: SystemUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateWithoutParentInput = {
@@ -17899,6 +19732,7 @@ export namespace Prisma {
     statuses?: StatusUncheckedUpdateManyWithoutUserNestedInput
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
+    systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutParentInput = {
@@ -18112,6 +19946,42 @@ export namespace Prisma {
     text?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemUpdateWithoutActiveBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemUncheckedUpdateWithoutActiveBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemUncheckedUpdateManyWithoutActiveBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    workspaceName?: NullableStringFieldUpdateOperationsInput | string | null
+    systemVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    systemEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    systemPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemTimezone?: NullableStringFieldUpdateOperationsInput | string | null
+    systemLanguage?: NullableStringFieldUpdateOperationsInput | string | null
+    systemMaintenance?: NullableBoolFieldUpdateOperationsInput | boolean | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
