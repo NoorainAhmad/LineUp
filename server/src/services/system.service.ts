@@ -28,7 +28,7 @@ export class SystemService {
       return system;
     } catch (error) {
       console.error(`[System] Error getting settings:`, error);
-      throw new Error(`System settings not found: ${(error as Error).message}`);
+      return await this.createDefaultSystemSettings(); 
     }
   }
 
