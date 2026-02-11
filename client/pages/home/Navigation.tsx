@@ -78,8 +78,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH,
-      UserRole.USER,
+      UserRole.BRANCH, 
     ],
   },
   {
@@ -90,8 +89,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH,
-      UserRole.USER,
+      UserRole.BRANCH, 
     ],
   },
   {
@@ -100,10 +98,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
     label: "Settings",
     roles: [
       UserRole.DEVELOPER,
-      UserRole.MASTER,
-      UserRole.ADMIN,
-      UserRole.BRANCH,
-      UserRole.USER,
+      UserRole.MASTER 
     ],
   },
 ];
