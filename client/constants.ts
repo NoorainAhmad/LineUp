@@ -22,7 +22,7 @@ export const CurrentUser: User = {
   status: UserStatus.ONLINE,
   role: UserRole.MASTER,
   lastSeen: "Now",
-  email: "dev@cortix.ai",
+  email: "dev@lineup24x7.com",
 };
 
 export const MOCK_USERS: User[] = [
@@ -45,7 +45,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.ONLINE,
     role: UserRole.MASTER,
     lastSeen: "Always",
-    email: "bot@cortix.ai",
+    email: "bot@lineup24x7.com",
     location: "Cloud Region us-east-1",
   },
   {
@@ -55,7 +55,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.BUSY,
     role: UserRole.ADMIN,
     lastSeen: "10m ago",
-    email: "netops@cortix.ai",
+    email: "netops@lineup24x7.com",
     location: "San Francisco, HQ",
     phone: "+1 (555) 002-2020",
   },
@@ -66,7 +66,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.OFFLINE,
     role: UserRole.ADMIN,
     lastSeen: "Yesterday",
-    email: "sec@cortix.ai",
+    email: "sec@lineup24x7.com",
     location: "Remote",
     phone: "+1 (555) 003-3030",
   }, 
@@ -77,7 +77,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.ONLINE,
     role: UserRole.BRANCH,
     lastSeen: "Now",
-    email: "north.mgr@cortix.ai",
+    email: "north.mgr@lineup24x7.com",
     location: "Chicago, IL",
     phone: "+1 (555) 100-1000",
   },
@@ -88,7 +88,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.BUSY,
     role: UserRole.BRANCH,
     lastSeen: "1h ago",
-    email: "east.hub@cortix.ai",
+    email: "east.hub@lineup24x7.com",
     location: "Boston, MA",
     phone: "+1 (555) 100-2000",
   }, 
@@ -99,7 +99,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.ONLINE,
     role: UserRole.USER,
     lastSeen: "Now",
-    email: "mike.field@cortix.ai",
+    email: "mike.field@lineup24x7.com",
     location: "Mobile - NY",
   },
   {
@@ -109,7 +109,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.BUSY,
     role: UserRole.USER,
     lastSeen: "15m ago",
-    email: "support.staff@cortix.ai",
+    email: "support.staff@lineup24x7.com",
     location: "Austin, TX",
   },
   {
@@ -119,7 +119,7 @@ export const MOCK_USERS: User[] = [
     status: UserStatus.OFFLINE,
     role: UserRole.USER,
     lastSeen: "2 days ago",
-    email: "logistics@cortix.ai",
+    email: "logistics@lineup24x7.com",
     location: "Denver, CO",
   },
 ];

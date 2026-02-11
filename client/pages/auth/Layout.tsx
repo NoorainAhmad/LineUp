@@ -1,5 +1,5 @@
 import React from "react";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, MessageCircleCodeIcon } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -38,7 +38,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="bg-surface border border-border rounded-3xl shadow-2xl overflow-hidden p-8 md:p-10">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-primary/30 mb-6">
-              C
+              <MessageCircleCodeIcon size={24} />
             </div>
             <h1 className="text-2xl font-bold text-text-main mb-2 tracking-tight">
               {title}
@@ -49,7 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({
         </div>
         {/* Footer - Aligned with your SaaS aesthetic */}
         <div className="mt-8 text-center text-xs text-secondary/60 font-medium tracking-wide">
-          &copy; {new Date().getFullYear()} CORTIX INC. &bull; ALL RIGHTS
+          &copy; {new Date().getFullYear()} LINEUP INC. &bull; ALL RIGHTS
           RESERVED
         </div>
       </div>

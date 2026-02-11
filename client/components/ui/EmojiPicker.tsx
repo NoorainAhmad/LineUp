@@ -218,7 +218,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       </div>
       <div className="p-2 bg-surface-hover border-t border-border">
         <div className="text-[10px] text-center text-secondary">
-          Cortix Emoji Pack
+          LineUp Emoji Pack
         </div>
       </div>
     </div>

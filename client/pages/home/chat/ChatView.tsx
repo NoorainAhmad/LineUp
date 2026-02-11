@@ -32,6 +32,7 @@ import {
   ArrowDown,
   Search,
   RefreshCw,
+  MessageCircleCodeIcon,
 } from "lucide-react";
 import {
   Chat,
@@ -954,7 +955,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div className="z-10 text-center p-8 animate-in zoom-in-95 duration-500">
           <div className="w-32 h-32 rounded-3xl bg-surface border border-border shadow-2xl flex items-center justify-center mb-8 mx-auto rotate-12 hover:rotate-0 transition-transform duration-500">
             <div className="w-24 h-24 bg-linear-to-tr from-primary to-green-300 rounded-2xl flex items-center justify-center text-white shadow-inner">
-              <span className="text-5xl font-black">S</span>
+              <span className="text-5xl font-black"><MessageCircleCodeIcon size={48} /></span>
             </div>
           </div>
           <h2 className="text-4xl font-black text-text-main mb-4 tracking-tight">
