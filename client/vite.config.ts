@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     },
     server: { 
       proxy: {
-        "/api/v1": {
+        "/api/": {
           target: "http://localhost:5000",
           changeOrigin: true,
         },
