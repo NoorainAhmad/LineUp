@@ -425,6 +425,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   };
 
+  const markAsRead = async () => {
+    if (chat) {
+      await ChatService.markAsRead(chat.id);
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    }
+  };
+
   // Effects
   useEffect(() => {
     if (chat) {
@@ -450,6 +457,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       // Clear pending messages
       queryClient.setQueryData(["pending-messages", chat.id], []);
+
+      // Mark as read
+      markAsRead();
 
       // Scroll to bottom
       setTimeout(() => {
