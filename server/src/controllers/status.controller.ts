@@ -1,7 +1,7 @@
 import { Response } from "express";
-import { StatusService } from "@/services/status.service.js";
-import { statusCreateSchema } from "@/validators/status.validator.js";
-import { AuthRequest } from "@/middlewares/auth.middleware.js";
+import { StatusService } from "../services/status.service.js";
+import { statusCreateSchema } from "../validators/status.validator.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class StatusController {
   // Get statuses by User ID

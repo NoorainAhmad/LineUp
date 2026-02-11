@@ -19,6 +19,24 @@ export class UserService {
     return response.data;
   }
 
+  // Get User's subordinates
+  static async getUserSubordinates(userId: string) {
+    const response = await api.get(`/users/${userId}/subordinates`);
+    return response.data;
+  }
+
+  // Search users
+  static async searchUsers(query: string) {  
+    const response = await api.get(`/users/search?q=${query}`);
+    return response.data;
+  }
+
+  // Get User's stats
+  static async getUserStats(userId: string) { 
+    console.log(userId);
+    return null;
+  }
+
   // Create a new user
   static async createUser(data: UserCreateInput) {
     const validatedData = userCreateSchema.parse(data);

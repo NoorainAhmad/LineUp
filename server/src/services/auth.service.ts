@@ -1,7 +1,7 @@
 import z from "zod";
 import bcrypt from "bcrypt";
-import { prisma } from "@/config/db.js";
-import { jwtUtil } from "@/utils/jwt.js";
+import { prisma } from "../config/db.js";
+import { jwtUtil } from "../utils/jwt.js";
 import {
   loginSchema,
   registerSchema,

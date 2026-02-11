@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { prisma } from "@/config/db.js";
-import { statusCreateSchema } from "@/validators/status.validator.js";
+import { prisma } from "../config/db.js";
+import { statusCreateSchema } from "../validators/status.validator.js";
 
 export class StatusService {
   private static statusSelection = {

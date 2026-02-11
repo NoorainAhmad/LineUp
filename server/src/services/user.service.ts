@@ -1,10 +1,10 @@
 import z from "zod";
 import bcrypt from "bcrypt";
-import { prisma } from "@/config/db.js";
+import { prisma } from "../config/db.js";
 import type {
   userCreateSchema,
   userUpdateSchema,
-} from "@/validators/user.validator.js";
+} from "../validators/user.validator.js";
 
 export class UserService {
   private static userSelection = {
@@ -51,6 +51,43 @@ export class UserService {
     } catch (error) {
       console.log(`[Users] Error: ${error}`);
       throw new Error("Users not found: " + (error as Error).message);
+    }
+  }
+
+  // Get User's subordinates
+  static async getUserSubordinates(userId: string) {
+    try {
+      return prisma.user.findMany({
+        where: { parentId: userId },
+        orderBy: { createdAt: "desc" },
+        select: this.userSelection,
+      });
+    } catch (error) {
+      console.log(`[Subordinates] Error: ${error}`);
+      throw new Error("Subordinates not found: " + (error as Error).message);
+    }
+  }
+
+  // Search Users 
+  static async searchUsers(query: string) {
+    query = query.trim();
+    console.log(query);
+    try {
+      return prisma.user.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+            { phone: { contains: query, mode: "insensitive" } },
+            { guid: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        select: this.userSelection,
+      });
+    } catch (error) {
+      console.log(`[Search Users] Error: ${error}`);
+      throw new Error("Search users failed: " + (error as Error).message);
     }
   }
 

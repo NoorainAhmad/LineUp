@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { CannedResponseService } from "@/services/canned.service.js";
-import { cannedResponseCreateSchema } from "@/validators/canned.validator.js";
-import { AuthRequest } from "@/middlewares/auth.middleware.js";
+import { CannedResponseService } from "../services/canned.service.js";
+import { cannedResponseCreateSchema } from "../validators/canned.validator.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class CannedResponseController {
   // Get a canned response by ID

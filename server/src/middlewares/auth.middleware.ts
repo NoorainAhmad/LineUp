@@ -1,4 +1,4 @@
-import { JwtPayload } from "@/utils/jwt.js";
+import { JwtPayload } from "../utils/jwt.js";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 

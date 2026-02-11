@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { MediaController } from "../controllers/media.controller.js";
-import { authMiddleware } from "@/middlewares/auth.middleware.js";
-import { validateMediaTypes } from "@/middlewares/media.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { validateMediaTypes } from "../middlewares/media.middleware.js";
 
 const router = Router(); 
 

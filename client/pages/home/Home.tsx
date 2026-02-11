@@ -137,6 +137,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeChatData);
     },
     refetchOnWindowFocus: false,
+    refetchInterval: 1000,
   });
 
   const {
@@ -150,6 +151,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeStatusData);
     },
     refetchOnWindowFocus: false,
+    refetchInterval: 2000,
   });
 
   const {
@@ -163,6 +165,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeUserData);
     },
     refetchOnWindowFocus: false,
+    refetchInterval: 3000,
   });
 
   const {
@@ -176,6 +179,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeCannedResponseData);
     },
     refetchOnWindowFocus: false,
+    refetchInterval: 4000,
   });
 
   // Derived data
@@ -613,27 +617,65 @@ export const Home: React.FC = () => {
   );
 
   const handleStartChat = useCallback(
-    (targetUser: User) => {
-      // Check if chat already exists
-      const existingChat = chatsData.find(
-        (chat) =>
-          !chat.isGroup &&
-          chat.members.some((member) => member.user.id === targetUser.id),
-      );
+    async (targetUser: User) => {
+      try {
+        // Check if chat already exists locally
+        const existingChat = chatsData.find(
+          (chat) =>
+            !chat.isGroup &&
+            chat.members.length === 2 &&
+            chat.members.some((member) => member.user.id === targetUser.id) &&
+            chat.members.some((member) => member.user.id === currentUser.id),
+        );
 
-      if (existingChat) {
-        setSelectedChat(existingChat);
-      } else {
-        // Create a new chat
-        const newChat: Chat = {
-          id: `temp-chat-${Date.now()}`,
+        if (existingChat) {
+          setSelectedChat(existingChat);
+          setActiveTab("chat");
+          setSelectedUser(null);
+          return;
+        }
+
+        // Create the chat via API
+        const response = await ChatService.createChat({
+          isGroup: false,
+          memberIds: [currentUser.id, targetUser.id],
+          groupName: null,
+          groupImage: null,
+        });
+
+        // Normalize the response data
+        const newChat = normalizeChatData(response.data || response);
+
+        // Update the chats cache
+        queryClient.setQueryData(["chats"], (old: Chat[] = []) => {
+          // Check if already exists
+          const existing = old.find((chat) => chat.id === newChat.id);
+          if (existing) return old;
+          return [newChat, ...old];
+        });
+
+        // Select the new chat
+        setSelectedChat(newChat);
+        setActiveTab("chat");
+        setSelectedUser(null);
+
+        // Force refresh of chats list
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["chats"] });
+        }, 500);
+      } catch (error: any) {
+        console.error("Error creating chat:", error);
+
+        // Fallback: Create a temporary local chat
+        const tempChat: Chat = {
+          id: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
           isGroup: false,
           members: [
             {
-              id: `temp-member-${Date.now()}`,
+              id: `member-${currentUser.id}-${Date.now()}`,
               userId: currentUser.id,
               user: currentUser,
-              chatId: `temp-chat-${Date.now()}`,
+              chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
               chat: {} as Chat,
               unreadCount: 0,
               isPinned: false,
@@ -642,10 +684,10 @@ export const Home: React.FC = () => {
               joinedAt: new Date().toISOString(),
             },
             {
-              id: `temp-member-${Date.now()}-2`,
+              id: `member-${targetUser.id}-${Date.now()}`,
               userId: targetUser.id,
               user: targetUser,
-              chatId: `temp-chat-${Date.now()}`,
+              chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
               chat: {} as Chat,
               unreadCount: 0,
               isPinned: false,
@@ -656,26 +698,12 @@ export const Home: React.FC = () => {
           ],
           messages: [],
           lastMessage: {
-            id: `m-init-${Date.now()}`,
-            senderId: "system",
-            content: "Start of conversation",
+            id: `welcome-${Date.now()}`,
+            senderId: currentUser.id,
+            content: "Chat started",
             type: MessageType.TEXT,
-            sender: {
-              id: "system",
-              guid: "system",
-              name: "System",
-              phone: "",
-              status: UserStatus.OFFLINE,
-              lastSeen: "Just now",
-              ipAddress: "0.0.0.0",
-              isActive: true,
-              role: UserRole.DEVELOPER,
-              permission: [],
-              children: [],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            chatId: `temp-chat-${Date.now()}`,
+            sender: currentUser,
+            chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
             chat: {} as Chat,
             isEdited: false,
             isDeleted: false,
@@ -686,13 +714,30 @@ export const Home: React.FC = () => {
           updatedAt: new Date().toISOString(),
         };
 
-        setSelectedChat(newChat);
-      }
+        // Add to local cache
+        queryClient.setQueryData(["chats"], (old: Chat[] = []) => {
+          const existing = old.find(
+            (chat) =>
+              !chat.isGroup &&
+              chat.members.length === 2 &&
+              chat.members.some((m) => m.user.id === currentUser.id) &&
+              chat.members.some((m) => m.user.id === targetUser.id),
+          );
+          if (existing) return old;
+          return [tempChat, ...old];
+        });
 
-      setActiveTab("chat");
-      setSelectedUser(null);
+        setSelectedChat(tempChat);
+        setActiveTab("chat");
+        setSelectedUser(null);
+
+        // Show error message
+        alert(
+          "Note: This chat is created locally. It may not sync across devices.",
+        );
+      }
     },
-    [chatsData, currentUser],
+    [chatsData, currentUser, queryClient],
   );
 
   const handleCreateStatus = useCallback(

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { CannedResponseController } from "@/controllers/canned.controller.js";
-import { authMiddleware } from "@/middlewares/auth.middleware.js";
+import { CannedResponseController } from "../controllers/canned.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.use(authMiddleware); // All routes below this line require a valid JWT

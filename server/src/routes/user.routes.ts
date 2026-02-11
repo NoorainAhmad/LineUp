@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { UserController } from "@/controllers/user.controller.js";
-import { authMiddleware } from "@/middlewares/auth.middleware.js";
+import { UserController } from "../controllers/user.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.use(authMiddleware); // All routes below this line require a valid JWT
@@ -10,6 +10,12 @@ router.get("/:id", UserController.getUserById);
 
 // List: All Users
 router.get("/", UserController.getAllUsers);
+
+// List: User's subordinates
+router.get("/:id/subordinates", UserController.getUserSubordinates);
+
+// Search: Users
+router.get("/search", UserController.searchUsers);
 
 // Create: New User
 router.post("/", UserController.createUser);

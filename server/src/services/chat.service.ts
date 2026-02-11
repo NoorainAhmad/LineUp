@@ -1,9 +1,9 @@
 import { file, z } from "zod";
-import { prisma } from "@/config/db.js";
+import { prisma } from "../config/db.js";
 import {
   sendMessageSchema,
   chatCreateSchema,
-} from "@/validators/chat.validator.js";
+} from "../validators/chat.validator.js";
 
 export class ChatService {
   private static chatSelection = {

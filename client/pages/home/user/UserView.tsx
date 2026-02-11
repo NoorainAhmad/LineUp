@@ -25,103 +25,51 @@ import {
   Briefcase,
   Search,
   Code2Icon,
+  User as UserIcon,
 } from "lucide-react";
 import { User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
+import { useQuery } from "@tanstack/react-query";
+import { UserService } from "@/services/user.service";
 
 interface UserViewProps {
   user: User;
   onStartChat: (user: User) => void;
   onUpdate: (user: User) => void;
-  onBack?: () => void; // Optional back handler for mobile
+  onBack?: () => void;
 }
 
-// Mock Data Generator for Hierarchy
-const getMockSubordinates = (role: UserRole, parentId: string): User[] => {
-  const count = Math.floor(Math.random() * 3) + 2; // 2-4 items
-  let nextRole = UserRole.USER;
-  let prefix = "u";
-
-  if (role === UserRole.DEVELOPER) {
-    nextRole = UserRole.MASTER;
-    prefix = "Mr";
-  } else if (role === UserRole.MASTER) {
-    nextRole = UserRole.ADMIN;
-    prefix = "Adm";
-  } else if (role === UserRole.ADMIN) {
-    nextRole = UserRole.BRANCH;
-    prefix = "Br";
-  } else if (role === UserRole.BRANCH) {
-    nextRole = UserRole.USER;
-    prefix = "Usr";
-  } else {
-    return [];
-  }
-
-  const locationOptions = ["New York", "London", "Tokyo", "Berlin", "Remote"];
-
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `${prefix}-${parentId}-${i}`,
-    guid: `${prefix}-${parentId}-${i}-guid`,
-    name:
-      nextRole === UserRole.BRANCH
-        ? `Branch ${locationOptions[i % locationOptions.length]}`
-        : `${nextRole.charAt(0) + nextRole.slice(1).toLowerCase()} ${i + 1}`,
-    phone: `+1 ${Math.floor(Math.random() * 1000) + 100} ${Math.floor(Math.random() * 1000) + 100} ${Math.floor(Math.random() * 1000) + 1000}`,
-    status: Math.random() > 0.3 ? UserStatus.ONLINE : UserStatus.OFFLINE,
-    role: nextRole,
-    lastSeen: "2h ago",
-    email: `${prefix}${i}@cortix.ai`,
-    location: locationOptions[i % locationOptions.length],
-  }));
-};
-
-const searchMockHierarchy = (query: string): User[] => {
-  const results: User[] = [];
-  const lowerQuery = query.toLowerCase();
-
-  // Generating deterministic mock results based on query for demo
-  const mockDatabase = [
-    { name: "Branch Tokyo", role: UserRole.BRANCH },
-    { name: "Branch London", role: UserRole.BRANCH },
-    { name: "Branch Berlin", role: UserRole.BRANCH },
-    { name: "Admin Sarah", role: UserRole.ADMIN },
-    { name: "User John Doe", role: UserRole.USER },
-    { name: "User Alice Smith", role: UserRole.USER },
-    { name: "User Bob Jones", role: UserRole.USER },
-  ];
-
-  mockDatabase.forEach((m, i) => {
-    if (m.name.toLowerCase().includes(lowerQuery)) {
-      results.push({
-        id: `search-${i}`,
-        guid: `guid-${i}`,
-        name: m.name,
-        phone: `+1 ${Math.floor(Math.random() * 1000) + 100} ${Math.floor(Math.random() * 1000) + 100} ${Math.floor(Math.random() * 1000) + 1000}`,
-        status: i % 2 === 0 ? UserStatus.ONLINE : UserStatus.OFFLINE,
-        role: m.role,
-        lastSeen: "Recently",
-        email: `${m.name.split(" ")[1] || "user"}@cortix.ai`.toLowerCase(),
-        location: "Global",
-      });
-    }
-  });
-
-  return results;
-};
-
-const HierarchyNode = ({ user }: { user: User }) => {
+const HierarchyNode = ({
+  user,
+  onUserSelect,
+}: {
+  user: User;
+  onUserSelect?: (user: User) => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [children, setChildren] = useState<User[]>([]);
-  const hasChildren = user.role !== UserRole.USER;
+  const hasChildren =
+    user.role !== UserRole.USER || (user.children && user.children.length > 0);
+
+  // Query to fetch children/subordinates
+  const { data: children = [] } = useQuery({
+    queryKey: ["user-children", user.id],
+    queryFn: async () => {
+      try { 
+        if (!user.id) return [];
+        const response = await UserService.getUserSubordinates(user?.id);
+        console.log(response);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error fetching subordinates:", error);
+        return [];
+      }
+    },
+    enabled: isOpen && hasChildren, // Only fetch when node is expanded
+  });
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!hasChildren) return;
-
-    if (!isOpen && children.length === 0) {
-      setChildren(getMockSubordinates(user.role, user.id));
-    }
     setIsOpen(!isOpen);
   };
 
@@ -137,24 +85,34 @@ const HierarchyNode = ({ user }: { user: User }) => {
         return <Building size={14} className="text-orange-500" />;
       case UserRole.USER:
         return <Users size={14} className="text-green-500" />;
+      default:
+        return <UserIcon size={14} className="text-gray-500" />;
+    }
+  };
+
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onUserSelect) {
+      onUserSelect(user);
     }
   };
 
   return (
     <div className="select-none animate-in fade-in slide-in-from-left-2 duration-300">
       <div
-        onClick={handleToggle}
+        onClick={handleUserClick}
         className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-border hover:bg-surface-hover ${
           isOpen ? "bg-surface-hover" : ""
         }`}
       >
         <div className="w-5 h-5 flex items-center justify-center shrink-0">
           {hasChildren ? (
-            isOpen ? (
-              <ChevronDown size={14} className="text-secondary" />
-            ) : (
-              <ChevronRight size={14} className="text-secondary" />
-            )
+            <button
+              onClick={handleToggle}
+              className="text-secondary hover:text-text-main transition-colors"
+            >
+              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
           ) : (
             <div className="w-1.5 h-1.5 rounded-full bg-border" />
           )}
@@ -184,10 +142,14 @@ const HierarchyNode = ({ user }: { user: User }) => {
         </div>
       </div>
 
-      {isOpen && (
+      {isOpen && children.length > 0 && (
         <div className="relative ml-4 pl-4 border-l border-border/50 mt-1 space-y-1">
           {children.map((child) => (
-            <HierarchyNode key={child.id} user={child} />
+            <HierarchyNode
+              key={child.id}
+              user={child}
+              onUserSelect={onUserSelect}
+            />
           ))}
         </div>
       )}
@@ -200,12 +162,10 @@ export const UserView: React.FC<UserViewProps> = ({
   onStartChat,
   onUpdate,
   onBack,
-}) => { 
-
+}) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -216,8 +176,59 @@ export const UserView: React.FC<UserViewProps> = ({
     role: user.role,
   });
 
-  // Initial children for the current viewed admin
-  const [rootSubordinates, setRootSubordinates] = useState<User[]>([]);
+  // Query for user's subordinates
+  const { data: subordinates = [] } = useQuery({
+    queryKey: ["user-subordinates", user.id],
+    queryFn: async () => {
+      try {
+        const response = await UserService.getUserSubordinates(user.id);
+        return Array.isArray(response) ? response: [];
+      } catch (error) {
+        console.error("Error fetching subordinates:", error);
+        return [];
+      }
+    },
+  });
+
+  // Query for searching users
+  const { data: searchResults = [], refetch: searchUsers } = useQuery({
+    queryKey: ["search-users", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery.trim()) return [];
+      try {
+        const response = await UserService.searchUsers(searchQuery);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error searching users:", error);
+        return [];
+      }
+    },
+    enabled: false, // We'll manually trigger search
+  });
+
+  // Query for user stats/analytics
+  const { data: userStats } = useQuery({
+    queryKey: ["user-stats", user.id],
+    queryFn: async () => {
+      try {
+        const response = await UserService.getUserStats(user.id);
+        return (
+          response || {
+            uptime: "99.9%",
+            deployments: 0,
+            avgResponse: "N/A",
+          }
+        );
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+        return {
+          uptime: "N/A",
+          deployments: 0,
+          avgResponse: "N/A",
+        };
+      }
+    },
+  });
 
   useEffect(() => {
     setFormData({
@@ -229,23 +240,17 @@ export const UserView: React.FC<UserViewProps> = ({
     });
     setIsEditing(false);
     setSearchQuery("");
-
-    // Reset hierarchy when admin changes
-    if (user.role !== UserRole.USER) {
-      setRootSubordinates(getMockSubordinates(user.role, user.id));
-    } else {
-      setRootSubordinates([]);
-    }
   }, [user]);
 
-  // Search Effect
+  // Handle search with debounce
   useEffect(() => {
     if (searchQuery.trim()) {
-      setSearchResults(searchMockHierarchy(searchQuery));
-    } else {
-      setSearchResults([]);
+      const timer = setTimeout(() => {
+        searchUsers();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchUsers]);
 
   const copyGuid = () => {
     navigator.clipboard.writeText(user.guid);
@@ -254,14 +259,17 @@ export const UserView: React.FC<UserViewProps> = ({
   };
 
   const handleSave = () => {
-    onUpdate({
+    const updatedUser: User = {
       ...user,
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
       location: formData.location,
       role: formData.role,
-    });
+      updatedAt: new Date().toISOString(),
+    };
+
+    onUpdate(updatedUser);
     setIsEditing(false);
   };
 
@@ -276,19 +284,31 @@ export const UserView: React.FC<UserViewProps> = ({
     setIsEditing(false);
   };
 
-  const handleDeactivate = () => {
+  const handleDeactivate = async () => {
     if (
       window.confirm(
-        "Are you sure you want to deactivate this admin account? This will restrict their access.",
+        `Are you sure you want to ${user.isActive ? "deactivate" : "activate"} this account?`,
       )
     ) {
-      onUpdate({
-        ...user,
-        status: UserStatus.OFFLINE,
-        name: user.name.includes("(Deactivated)")
-          ? user.name
-          : `${user.name} (Deactivated)`,
-      });
+      try {
+        const updatedUser: User = {
+          ...user,
+          isActive: !user.isActive,
+          status: !user.isActive ? UserStatus.ONLINE : UserStatus.OFFLINE,
+          updatedAt: new Date().toISOString(),
+        };
+
+        if (!user.isActive) {
+          updatedUser.name = user.name.replace(" (Deactivated)", "");
+        } else if (!updatedUser.name.includes("(Deactivated)")) {
+          updatedUser.name = `${user.name} (Deactivated)`;
+        }
+
+        onUpdate(updatedUser);
+      } catch (error) {
+        console.error("Error toggling user status:", error);
+        alert("Failed to update user status. Please try again.");
+      }
     }
   };
 
@@ -302,6 +322,8 @@ export const UserView: React.FC<UserViewProps> = ({
         return "text-blue-500 bg-blue-500/10 border-blue-500/20";
       case UserRole.BRANCH:
         return "text-orange-500 bg-orange-500/10 border-orange-500/20";
+      case UserRole.USER:
+        return "text-green-500 bg-green-500/10 border-green-500/20";
       default:
         return "text-gray-500 bg-gray-500/10 border-gray-500/20";
     }
@@ -317,9 +339,26 @@ export const UserView: React.FC<UserViewProps> = ({
         return <Shield size={14} />;
       case UserRole.BRANCH:
         return <Building size={14} />;
-      default:
+      case UserRole.USER:
         return <Users size={14} />;
+      default:
+        return <UserIcon size={14} />;
     }
+  };
+
+  const handleUserSelect = (selectedUser: User) => {
+    // This would navigate to the selected user's profile
+    // For now, we'll just alert the action
+    console.log("Selected user:", selectedUser);
+    // In a real app, you would have navigation or call a callback
+  };
+
+  const handleStartChatWithUser = () => {
+    if (!user.isActive) {
+      alert("Cannot start chat with a deactivated user.");
+      return;
+    }
+    onStartChat(user);
   };
 
   return (
@@ -332,7 +371,7 @@ export const UserView: React.FC<UserViewProps> = ({
         >
           <ArrowLeft size={20} />
         </button>
-        <span className="font-bold text-text-main ml-2">Team Profile</span>
+        <span className="font-bold text-text-main ml-2">User Profile</span>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -374,6 +413,7 @@ export const UserView: React.FC<UserViewProps> = ({
                   onClick={() => setIsEditing(true)}
                   className="p-2 bg-surface-hover hover:bg-secondary/20 text-text-main rounded-full transition-colors border border-border"
                   title="Edit Profile"
+                  disabled={!user.isActive}
                 >
                   <Pencil size={18} />
                 </button>
@@ -385,7 +425,12 @@ export const UserView: React.FC<UserViewProps> = ({
               <div className="p-4 bg-surface rounded-3xl shadow-lg inline-block">
                 <Avatar user={user} size="xl" showStatus={!isEditing} />
               </div>
-              {isEditing && (
+              {!user.isActive && (
+                <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 rounded-3xl">
+                  <Ban className="text-red-500 drop-shadow-md" size={32} />
+                </div>
+              )}
+              {isEditing && user.isActive && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer m-1.5">
                   <Camera className="text-white drop-shadow-md" size={32} />
                 </div>
@@ -407,6 +452,11 @@ export const UserView: React.FC<UserViewProps> = ({
               ) : (
                 <h1 className="text-3xl md:text-4xl font-black text-text-main mb-2 tracking-tight">
                   {user.name}
+                  {!user.isActive && (
+                    <span className="text-red-500 text-sm ml-2">
+                      (Deactivated)
+                    </span>
+                  )}
                 </h1>
               )}
 
@@ -441,9 +491,9 @@ export const UserView: React.FC<UserViewProps> = ({
 
                 <span className="text-secondary flex items-center gap-1.5">
                   <div
-                    className={`w-2 h-2 rounded-full ${user.status === "ONLINE" ? "bg-green-500 animate-pulse" : "bg-secondary"}`}
+                    className={`w-2 h-2 rounded-full ${user.status === UserStatus.ONLINE ? "bg-green-500 animate-pulse" : "bg-secondary"}`}
                   ></div>
-                  {user.status === "ONLINE"
+                  {user.status === UserStatus.ONLINE
                     ? "Online Now"
                     : `Last seen ${user.lastSeen}`}
                 </span>
@@ -453,8 +503,13 @@ export const UserView: React.FC<UserViewProps> = ({
             {/* Main Action */}
             {!isEditing && (
               <button
-                onClick={() => onStartChat(user)}
-                className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg hover:shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+                onClick={handleStartChatWithUser}
+                disabled={!user.isActive}
+                className={`w-full md:w-auto px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                  user.isActive
+                    ? "bg-primary hover:bg-primary/90 text-white hover:shadow-primary/25"
+                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                }`}
               >
                 <MessageSquare size={16} />
                 <span>Message</span>
@@ -474,7 +529,9 @@ export const UserView: React.FC<UserViewProps> = ({
                       <Briefcase size={16} /> Team Hierarchy
                     </h3>
                     <p className="text-xs font-medium text-secondary mt-1">
-                      Master &gt; Admin &gt; Branch &gt; User
+                      {user.role === UserRole.USER
+                        ? "No subordinates"
+                        : "View team structure"}
                     </p>
                   </div>
 
@@ -486,7 +543,7 @@ export const UserView: React.FC<UserViewProps> = ({
                     />
                     <input
                       type="text"
-                      placeholder="Find branch or user..."
+                      placeholder="Search team members..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-surface-hover border border-border rounded-lg pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
@@ -514,6 +571,7 @@ export const UserView: React.FC<UserViewProps> = ({
                           {searchResults.map((result) => (
                             <div
                               key={result.id}
+                              onClick={() => handleUserSelect(result)}
                               className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-hover cursor-pointer border border-transparent hover:border-border transition-all"
                             >
                               <Avatar user={result} size="sm" showStatus />
@@ -521,6 +579,11 @@ export const UserView: React.FC<UserViewProps> = ({
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-sm text-text-main truncate">
                                     {result.name}
+                                    {!result.isActive && (
+                                      <span className="text-red-500 text-xs ml-1">
+                                        (Inactive)
+                                      </span>
+                                    )}
                                   </span>
                                   <span
                                     className={`text-[9px] px-1.5 py-0.5 rounded-full border uppercase font-bold tracking-wider ${
@@ -528,14 +591,16 @@ export const UserView: React.FC<UserViewProps> = ({
                                         ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
                                         : result.role === UserRole.ADMIN
                                           ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                                          : "bg-surface text-secondary border-border"
+                                          : result.role === UserRole.MASTER
+                                            ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                                            : "bg-surface text-secondary border-border"
                                     }`}
                                   >
                                     {result.role}
                                   </span>
                                 </div>
                                 <p className="text-xs text-secondary truncate">
-                                  {result.email}
+                                  {result.email || "No email"}
                                 </p>
                               </div>
                               <ChevronRight
@@ -564,7 +629,7 @@ export const UserView: React.FC<UserViewProps> = ({
                             Standard users have no subordinates.
                           </p>
                         </div>
-                      ) : (
+                      ) : subordinates.length > 0 ? (
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50 px-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
@@ -576,9 +641,18 @@ export const UserView: React.FC<UserViewProps> = ({
                                   : "Branch Staff"}
                             </span>
                           </div>
-                          {rootSubordinates.map((sub) => (
-                            <HierarchyNode key={sub.id} user={sub} />
+                          {subordinates.map((sub) => (
+                            <HierarchyNode
+                              key={sub.id}
+                              user={sub}
+                              onUserSelect={handleUserSelect}
+                            />
                           ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-secondary py-10 opacity-70">
+                          <Users size={32} className="mb-2" />
+                          <p className="text-sm">No subordinates found.</p>
                         </div>
                       )}
                     </>
@@ -598,6 +672,7 @@ export const UserView: React.FC<UserViewProps> = ({
                     value={formData.email}
                     isEditing={isEditing}
                     onChange={(v) => setFormData({ ...formData, email: v })}
+                    disabled={!user.isActive}
                   />
                   <EditableRow
                     icon={Phone}
@@ -605,6 +680,7 @@ export const UserView: React.FC<UserViewProps> = ({
                     value={formData.phone}
                     isEditing={isEditing}
                     onChange={(v) => setFormData({ ...formData, phone: v })}
+                    disabled={!user.isActive}
                   />
                   <EditableRow
                     icon={MapPin}
@@ -612,6 +688,7 @@ export const UserView: React.FC<UserViewProps> = ({
                     value={formData.location}
                     isEditing={isEditing}
                     onChange={(v) => setFormData({ ...formData, location: v })}
+                    disabled={!user.isActive}
                   />
                 </div>
               </div>
@@ -687,39 +764,57 @@ export const UserView: React.FC<UserViewProps> = ({
               <div className="space-y-3">
                 <StatsCard
                   icon={Activity}
-                  label="System Uptime"
-                  value="99.9%"
+                  label="Account Age"
+                  value={(() => {
+                    if (!user.createdAt) return "N/A";
+                    const createdAt = new Date(user.createdAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - createdAt.getTime();
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    return diffDays > 365
+                      ? `${Math.floor(diffDays / 365)}y`
+                      : `${diffDays}d`;
+                  })()}
                   color="text-green-500"
                 />
                 <StatsCard
                   icon={Server}
                   label="Deployments"
-                  value="1,240"
+                  value={userStats?.deployments || "0"}
                   color="text-blue-500"
                 />
                 <StatsCard
                   icon={Ticket}
                   label="Avg Response"
-                  value="12m"
+                  value={userStats?.avgResponse || "N/A"}
                   color="text-purple-500"
                 />
               </div>
 
-              {/* Deactivate Zone */}
-              <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-red-500 uppercase tracking-wider mb-2">
-                  Danger Zone
+              {/* Account Status Zone */}
+              <div
+                className={`rounded-2xl p-6 border ${user.isActive ? "bg-green-500/5 border-green-500/10" : "bg-red-500/5 border-red-500/10"}`}
+              >
+                <h3
+                  className={`text-sm font-bold uppercase tracking-wider mb-2 ${user.isActive ? "text-green-500" : "text-red-500"}`}
+                >
+                  Account Status
                 </h3>
                 <p className="text-xs text-secondary mb-4">
-                  Deactivating this account will immediately revoke all system
-                  access and API keys.
+                  {user.isActive
+                    ? "This account is currently active and has full system access."
+                    : "This account is deactivated and cannot access the system."}
                 </p>
                 <button
                   onClick={handleDeactivate}
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-surface hover:bg-red-500 hover:text-white border border-border hover:border-red-500 text-red-500 transition-all font-medium text-sm"
+                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-medium text-sm ${
+                    user.isActive
+                      ? "bg-surface hover:bg-red-500 hover:text-white border-border hover:border-red-500 text-red-500"
+                      : "bg-surface hover:bg-green-500 hover:text-white border-border hover:border-green-500 text-green-500"
+                  }`}
                 >
                   <Ban size={16} />
-                  Deactivate Account
+                  {user.isActive ? "Deactivate Account" : "Activate Account"}
                 </button>
               </div>
             </div>
@@ -752,8 +847,11 @@ const EditableRow = ({
   value,
   isEditing,
   onChange,
+  disabled = false,
 }: any) => (
-  <div className="flex items-start gap-3 p-3 rounded-xl bg-surface-hover/30 hover:bg-surface-hover/50 transition-colors border border-transparent hover:border-border">
+  <div
+    className={`flex items-start gap-3 p-3 rounded-xl bg-surface-hover/30 hover:bg-surface-hover/50 transition-colors border ${isEditing ? "border-primary/30" : "border-transparent"}`}
+  >
     <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-secondary shadow-sm">
       <Icon size={20} />
     </div>
@@ -766,10 +864,13 @@ const EditableRow = ({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none"
+          className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={disabled}
         />
       ) : (
-        <p className="text-text-main text-sm font-medium truncate">
+        <p
+          className={`text-text-main text-sm font-medium truncate ${!value ? "opacity-50 italic" : ""}`}
+        >
           {value || "Not set"}
         </p>
       )}

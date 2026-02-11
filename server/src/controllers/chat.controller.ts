@@ -1,10 +1,10 @@
 import { Response } from "express";
-import { ChatService } from "@/services/chat.service.js";
+import { ChatService } from "../services/chat.service.js";
 import {
   chatCreateSchema,
   sendMessageSchema,
-} from "@/validators/chat.validator.js";
-import { AuthRequest } from "@/middlewares/auth.middleware.js";
+} from "../validators/chat.validator.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class ChatController {
   // Create a new chat

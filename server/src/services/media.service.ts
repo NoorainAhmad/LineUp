@@ -5,8 +5,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
-import { prisma } from "@/config/db.js";
-import { MediaStatus } from "@/generated/prisma/index.js";
+import { prisma } from "../config/db.js";
+import { MediaStatus } from "../generated/prisma/index.js";
 
 // Create an S3 client
 const s3Client = new S3Client({

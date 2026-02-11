@@ -1,6 +1,6 @@
 import z from "zod";
-import { prisma } from "@/config/db.js";
-import type { cannedResponseCreateSchema } from "@/validators/canned.validator.js";
+import { prisma } from "../config/db.js";
+import type { cannedResponseCreateSchema } from "../validators/canned.validator.js";
 
 export class CannedResponseService {
   private static cannedResponseSelection = {

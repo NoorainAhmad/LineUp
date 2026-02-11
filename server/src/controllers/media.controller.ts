@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { MediaService } from "../services/media.service.js";
-import { AuthRequest } from "@/middlewares/auth.middleware.js";
-import { prisma } from "@/config/db.js";
-import { MediaStatus } from "@/generated/prisma/index.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
+import { prisma } from "../config/db.js";
+import { MediaStatus } from "../generated/prisma/index.js";
 
 export class MediaController {
   // Request an upload ticket

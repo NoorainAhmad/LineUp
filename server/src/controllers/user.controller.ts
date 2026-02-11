@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserService } from "@/services/user.service.js";
+import { UserService } from "../services/user.service.js";
 import {
   userCreateSchema,
   userUpdateSchema,
@@ -21,6 +21,29 @@ export class UserController {
   static async getAllUsers(_req: Request, res: Response) {
     try {
       const users = await UserService.getAllUsers();
+      return res.status(200).json(users);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Get user subordinates
+  static async getUserSubordinates(req: Request, res: Response) {
+    try {
+      const subordinates = await UserService.getUserSubordinates(
+        req.params.id as string,
+      );
+      return res.status(200).json(subordinates);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Search users
+  static async searchUsers(req: Request, res: Response) {
+    if (!req.query.q) return res.status(400).json({ error: "Missing query" });
+    try {
+      const users = await UserService.searchUsers(req.query.q as string);
       return res.status(200).json(users);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
