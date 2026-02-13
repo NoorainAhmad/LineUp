@@ -34,8 +34,7 @@ function App() {
           {/* Public Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} /> 
-            <Route path="/register" element={<Register />} />
-            <Route path="/register/:branchId" element={<Register />} />
+            <Route path="/register" element={<Register />} /> 
             <Route path="/verify/:context" element={<Verify />} />
             <Route path="/forgot-password" element={<Forgot />} />
             <Route path="/reset-password" element={<Reset />} />

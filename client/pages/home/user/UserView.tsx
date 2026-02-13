@@ -26,6 +26,11 @@ import {
   Search,
   Code2Icon,
   User as UserIcon,
+  FingerprintPatternIcon,
+  IdCardIcon,
+  Link2OffIcon,
+  GitBranchPlusIcon,
+  Link2Icon,
 } from "lucide-react";
 import { User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -663,25 +668,37 @@ export const UserView: React.FC<UserViewProps> = ({
                   <Mail size={16} /> Contact Details
                 </h3>
                 <div className="space-y-4">
-                  {(currentUser.role === UserRole.MASTER ||
-                    currentUser.role === UserRole.DEVELOPER) && (
+                  {user?.role === UserRole.BRANCH && (
+                    <EditableRow
+                      icon={Link2Icon}
+                      label="Branch Link"
+                      value={`${window.location.origin}/register?branchId=${user.id}`}
+                      disabled={true}
+                    />
+                  )}
+                  {(currentUser?.role === UserRole.MASTER ||
+                    currentUser?.role === UserRole.DEVELOPER) && (
                     <EditableRow
                       icon={Mail}
                       label="Email Address"
                       value={formData.email}
                       isEditing={isEditing}
-                      onChange={(v) => setFormData({ ...formData, email: v })}
+                      onChange={(v: any) =>
+                        setFormData({ ...formData, email: v })
+                      }
                       disabled={!user.isActive}
                     />
                   )}
-                  {(currentUser.role === UserRole.MASTER ||
-                    currentUser.role === UserRole.DEVELOPER) && (
+                  {(currentUser?.role === UserRole.MASTER ||
+                    currentUser?.role === UserRole.DEVELOPER) && (
                     <EditableRow
                       icon={Phone}
                       label="Phone Number"
                       value={formData.phone}
                       isEditing={isEditing}
-                      onChange={(v) => setFormData({ ...formData, phone: v })}
+                      onChange={(v: any) =>
+                        setFormData({ ...formData, phone: v })
+                      }
                       disabled={!user.isActive}
                     />
                   )}
@@ -690,7 +707,9 @@ export const UserView: React.FC<UserViewProps> = ({
                     label="Location"
                     value={formData.location}
                     isEditing={isEditing}
-                    onChange={(v) => setFormData({ ...formData, location: v })}
+                    onChange={(v: any) =>
+                      setFormData({ ...formData, location: v })
+                    }
                     disabled={!user.isActive}
                   />
                 </div>
@@ -851,32 +870,62 @@ const EditableRow = ({
   isEditing,
   onChange,
   disabled = false,
-}: any) => (
-  <div
-    className={`flex items-start gap-3 p-3 rounded-xl bg-surface-hover/30 hover:bg-surface-hover/50 transition-colors border ${isEditing ? "border-primary/30" : "border-transparent"}`}
-  >
-    <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-secondary shadow-sm">
-      <Icon size={20} />
-    </div>
-    <div className="flex-1 min-w-0 pt-0.5">
-      <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-0.5">
-        {label}
-      </p>
-      {isEditing ? (
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={disabled}
-        />
-      ) : (
-        <p
-          className={`text-text-main text-sm font-medium truncate ${!value ? "opacity-50 italic" : ""}`}
-        >
-          {value || "Not set"}
+}: any) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-start gap-3 p-3 rounded-xl bg-surface-hover/30 hover:bg-surface-hover/50 transition-colors border ${isEditing ? "border-primary/30" : "border-transparent"}`}
+    >
+      <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-secondary shadow-sm">
+        <Icon size={20} />
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-0.5">
+          {label}
         </p>
-      )}
+        {isEditing ? (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={disabled}
+          />
+        ) : (
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={`text-text-main text-sm font-medium truncate ${!value ? "opacity-50 italic" : ""}`}
+            >
+              {value || "Not set"}
+            </p>
+            {value && (
+              <button
+                onClick={handleCopy}
+                className="p-1.5 rounded-lg hover:bg-surface text-secondary hover:text-primary transition-colors shrink-0"
+                title="Copy to clipboard"
+              >
+                {copied ? (
+                  <Check size={16} className="text-green-500" />
+                ) : (
+                  <Copy size={16} />
+                )}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};

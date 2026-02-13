@@ -53,13 +53,25 @@ export class AuthService {
       } catch (error) {
         console.log(`[Registration] Error: ${error}`);
       }
+      let requestedBranchId = data.parentId;
+      if (requestedBranchId) {
+        const requestedBranch = await prisma.user.findFirst({
+          where: { id: requestedBranchId },
+        });
+        if (!requestedBranch){
+          console.log(`[Registration] Error: Branch not found assigning to active branch!`);
+          requestedBranchId = activeBranchId;
+        } else {
+          requestedBranchId = requestedBranch.id;
+        }
+      }
       await prisma.user.create({
         data: {
           guid: data.guid,
           name: data.name,
           phone: data.phone,
           passwordHash: hashedPassword,
-          parentId: data.parentId || activeBranchId,
+          parentId: requestedBranchId || activeBranchId,
         },
       });
       const otpRecord = await OtpService.generate(data.phone);

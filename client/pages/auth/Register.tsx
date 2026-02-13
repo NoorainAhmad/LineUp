@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Layout } from "./Layout";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AuthService } from "@/services/auth.service";
 
 export const Register: React.FC = () => {
@@ -20,7 +20,8 @@ export const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { parentId } = useParams();
+  const [searchParams] = useSearchParams();
+  const parentId = searchParams.get("branchId");
 
   const [formData, setFormData] = useState({
     guid: "",
