@@ -1,25 +1,24 @@
 {
   "compilerOptions": { 
-    "target": "ES2022",                                  /* Modern Node.js versions (20+) support this */
-    "module": "NodeNext",                                /* Required for modern ESM/CommonJS interop */
+    "target": "ES2022",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]                                   /* Alias for cleaner imports */
+      "@/*": ["src/*"]
     },
-    "outDir": "./dist",                                  /* Where the compiled code lives */
+    "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,                                      /* No "any", no implicit returns */
+    "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "esModuleInterop": true,                             /* Fixes issues with CommonJS modules */
-    "skipLibCheck": true,                                /* Speeds up build by skipping type checks of node_modules */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "emitDecoratorMetadata": true,                       /* Useful if we add advanced DI/Validation later */
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "declaration": false                                 /* We don't need .d.ts files for this internal app */
+    "declaration": false 
   },
   "include": ["src/**/*", "src/generated/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
