@@ -46,14 +46,20 @@ export class AuthService {
         await prisma.user.delete({ where: { id: existingUser.id } });
       }
       const hashedPassword = await bcrypt.hash(data.password, 12);
-      const activeBranch = await prisma.system.findFirst({select: {activeBranchId: true}});
+      let activeBranchId = null;
+      try {
+        const activeBranch = await prisma.system.findFirst({select: {activeBranchId: true}});
+        activeBranchId = activeBranch?.activeBranchId;
+      } catch (error) {
+        console.log(`[Registration] Error: ${error}`);
+      }
       await prisma.user.create({
         data: {
           guid: data.guid,
           name: data.name,
           phone: data.phone,
           passwordHash: hashedPassword,
-          parentId: data.parentId || activeBranch?.activeBranchId,
+          parentId: data.parentId || activeBranchId,
         },
       });
       const otpRecord = await OtpService.generate(data.phone);
