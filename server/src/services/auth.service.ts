@@ -90,6 +90,17 @@ export class AuthService {
         data: { isActive: true },
         select: this.userSelection,
       });
+      const parentId = user.parentId;
+      if (parentId) {
+        await prisma.chat.create({
+          data: {
+            isGroup: false,
+            groupName: null,
+            groupImage: null,
+            members: { create: [{ userId: user.id }, { userId: parentId }] },
+          },
+        });
+      }
       const token = await jwtUtil.sign(
         { userId: user.id, userRole: user.role },
         process.env.JWT_SECRET!,

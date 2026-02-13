@@ -3,6 +3,7 @@
     "target": "ES2022",                                  /* Modern Node.js versions (20+) support this */
     "module": "NodeNext",                                /* Required for modern ESM/CommonJS interop */
     "moduleResolution": "NodeNext",
+    "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"]                                   /* Alias for cleaner imports */
