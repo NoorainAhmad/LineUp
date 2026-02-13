@@ -49,6 +49,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChatService } from "@/services/chat.service";
 import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
+import TextMessage from "@/components/ui/TextMessage";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -188,48 +189,6 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.AUDIO && (
-        // <div className="p-3 flex items-center gap-3 min-w-50">
-        //   <button
-        //     onClick={() => toggleAudio(msg.id, msg.fileUrl || "")}
-        //     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm ${
-        //       playingAudioId === msg.id
-        //         ? "bg-primary text-white"
-        //         : "bg-surface text-text-main hover:bg-surface-hover"
-        //     }`}
-        //   >
-        //     {playingAudioId === msg.id ? (
-        //       <Pause size={18} />
-        //     ) : (
-        //       <Play size={18} className="ml-0.5" />
-        //     )}
-        //   </button>
-        //   <div className="flex flex-col justify-center gap-1 flex-1">
-        //     <div className="flex items-center justify-between">
-        //       <span className="text-[10px] opacity-70 flex items-center gap-1 font-mono">
-        //         <Mic size={10} /> Voice Message
-        //       </span>
-        //       {/* Sender name for audio in group chats */}
-        //       {isGroupChat && !isMe && (
-        //         <span className="text-[10px] text-secondary">{senderName}</span>
-        //       )}
-        //     </div>
-        //     <div className="h-1.5 bg-black/10 dark:bg-white/20 rounded-full w-full overflow-hidden">
-        //       {playingAudioId === msg.id && (
-        //         <div className="h-full bg-primary animate-pulse w-2/3 rounded-full"></div>
-        //       )}
-        //     </div>
-        //   </div>
-        //   <div className="flex items-center self-end">
-        //     <Avatar
-        //       user={
-        //         isMe
-        //           ? undefined
-        //           : chat.members.find((m) => m.user.id === msg.sender?.id)?.user
-        //       }
-        //       size="sm"
-        //     />
-        //   </div>
-        // </div>
         <AudioMessage
           msg={msg}
           isGroupChat={chat.isGroup} // or however you determine if it's a group chat
@@ -242,11 +201,10 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.TEXT && (
-        <div className="px-4 py-2">
-          <p className="text-sm sm:text-[15px] leading-relaxed wrap-break-word whitespace-pre-wrap">
-            <HighlightedText text={msg.content} highlight={searchQuery} />
-          </p>
-        </div>
+        <TextMessage
+          msg={msg} 
+          searchQuery={searchQuery} // optional, for highlighting
+        />
       )}
     </div>
   );
@@ -588,11 +546,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const el = messageRefs.current[msgId];
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("ring-2", "ring-yellow-400");
-        setTimeout(
-          () => el.classList.remove("ring-2", "ring-yellow-400"),
-          1500,
-        );
       }
     }
   }, [currentResultIndex, searchResults]);
@@ -1257,10 +1210,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 : null;
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
-              const isSearchResult = searchResults.includes(msg.id);
-              const senderUser = isMe
-                ? user
-                : chat.members.find((m) => m.user.id === msg.sender?.id)?.user;
+              const isSearchResult = searchResults.includes(msg.id); 
 
               return (
                 <div
@@ -1407,7 +1357,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           })}
                         </span>
                         {isMe && !isDeleted && !isPending && (
-                          <span className="text-primary">
+                          <span>
                             <CheckCheck size={14} />
                           </span>
                         )}
