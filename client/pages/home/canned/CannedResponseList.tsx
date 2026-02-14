@@ -18,7 +18,7 @@ export const CannedResponseList: React.FC<CannedResponseListProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredResponses = responses.filter(
-    (r) =>
+    (r: any) =>
       r.command.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );

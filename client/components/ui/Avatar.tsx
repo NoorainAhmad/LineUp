@@ -3,7 +3,7 @@ import { User, UserStatus } from "../../types";
 import { Users } from "lucide-react";
 
 interface AvatarProps {
-  user?: User; // For individual users
+  user?: Partial<User>; // For individual users
   groupName?: string; // For group chats
   isGroup?: boolean; // Flag for group avatar
   size?: "sm" | "md" | "lg" | "xl" | "2xl";

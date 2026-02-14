@@ -48,7 +48,7 @@ export const CannedResponseView: React.FC<CannedResponseViewProps> = ({
     if (response) {
       setFormData({
         command: response.command,
-        description: response.description,
+        description: response.description || "",
         text: response.text,
         userId: response.userId,
       });

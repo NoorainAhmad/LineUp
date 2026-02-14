@@ -175,7 +175,7 @@ export const StatusList: React.FC<StatusListProps> = ({
     } else {
       return (
         latestStatus.content?.substring(0, 30) +
-          (latestStatus.content?.length > 30 ? "..." : "") || "Status update"
+          (latestStatus.content?.length as number > 30 ? "..." : "") || "Status update"
       );
     }
   };
@@ -187,7 +187,7 @@ export const StatusList: React.FC<StatusListProps> = ({
         <h1 className="text-2xl font-black text-text-main tracking-tight">
           Status
         </h1>
-        {currentUser.role !== UserRole.USER && (
+        {currentUser?.role !== UserRole.USER && (
           <button
             onClick={onCreateStatus}
             className="p-2 hover:bg-surface-hover rounded-full transition-colors text-primary bg-primary/5"
@@ -200,7 +200,7 @@ export const StatusList: React.FC<StatusListProps> = ({
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 bg-surface">
         {/* My Status Card */}
-        {currentUser.role !== UserRole.USER && (
+        {currentUser?.role !== UserRole.USER && (
           <>
             <div
               className="flex items-center gap-4 cursor-pointer group p-3 rounded-2xl transition-all border border-transparent hover:bg-surface-hover hover:border-border active:scale-[0.98]"

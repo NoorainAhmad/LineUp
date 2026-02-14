@@ -187,17 +187,17 @@ export const Home: React.FC = () => {
 
   // Derived data
   const masters = useMemo(
-    () => usersData.filter((u) => u.role === UserRole.MASTER),
+    () => usersData.filter((u: any) => u.role === UserRole.MASTER),
     [usersData],
   );
 
   const adminUsers = useMemo(
-    () => usersData.filter((u) => u.role === UserRole.ADMIN),
+    () => usersData.filter((u: any) => u.role === UserRole.ADMIN),
     [usersData],
   );
 
   const branches = useMemo(
-    () => usersData.filter((u) => u.role === UserRole.BRANCH),
+    () => usersData.filter((u: any) => u.role === UserRole.BRANCH),
     [usersData],
   );
 
@@ -320,8 +320,8 @@ export const Home: React.FC = () => {
           members: [
             {
               id: `temp-member-${Date.now()}`,
-              userId: currentUser.id,
-              user: currentUser,
+              userId: currentUser!.id,
+              user: currentUser as User,
               chatId: `temp-${Date.now()}`,
               chat: {} as Chat,
               unreadCount: 0,
@@ -471,7 +471,7 @@ export const Home: React.FC = () => {
         old.map((chat) => {
           if (chat.id === chatId) {
             const updatedMembers = chat.members.map((member) =>
-              member.userId === currentUser.id
+              member.userId === currentUser!.id
                 ? { ...member, isPinned: !member.isPinned }
                 : member,
             );
@@ -483,14 +483,14 @@ export const Home: React.FC = () => {
 
       if (selectedChat?.id === chatId) {
         const updatedMembers = selectedChat.members.map((member) =>
-          member.userId === currentUser.id
+          member.userId === currentUser!.id
             ? { ...member, isPinned: !member.isPinned }
             : member,
         );
         setSelectedChat({ ...selectedChat, members: updatedMembers });
       }
     },
-    [selectedChat, currentUser.id, queryClient],
+    [selectedChat, currentUser!.id, queryClient],
   );
 
   const handleArchiveChat = useCallback(
@@ -500,7 +500,7 @@ export const Home: React.FC = () => {
         old.map((chat) => {
           if (chat.id === chatId) {
             const updatedMembers = chat.members.map((member) =>
-              member.userId === currentUser.id
+              member.userId === currentUser!.id
                 ? { ...member, isArchived: !member.isArchived }
                 : member,
             );
@@ -514,7 +514,7 @@ export const Home: React.FC = () => {
         setSelectedChat(null);
       }
     },
-    [selectedChat, currentUser.id, queryClient],
+    [selectedChat, currentUser!.id, queryClient],
   );
 
   const handleCreateResponse = useCallback(
@@ -566,10 +566,10 @@ export const Home: React.FC = () => {
       try {
         // Ensure current user is included
         const memberIds = [
-          currentUser.id,
+          currentUser!.id,
           ...participants
             .map((p) => p.id)
-            .filter((id) => id !== currentUser.id),
+            .filter((id) => id !== currentUser!.id),
         ];
 
         if (memberIds.length < 3) {
@@ -579,11 +579,11 @@ export const Home: React.FC = () => {
 
         // Check if group chat with exact same members already exists
         const existingGroupChat = chatsData.find(
-          (chat) =>
+          (chat: any) =>
             chat.isGroup &&
             chat.members.length === memberIds.length &&
             memberIds.every((id) =>
-              chat.members.some((member) => member.user.id === id),
+              chat.members.some((member: any) => member.user.id === id),
             ),
         );
 
@@ -627,20 +627,20 @@ export const Home: React.FC = () => {
 
         // Fallback: Create a temporary local group chat
         const memberIds = [
-          currentUser.id,
+          currentUser!.id,
           ...participants
             .map((p) => p.id)
-            .filter((id) => id !== currentUser.id),
+            .filter((id) => id !== currentUser!.id),
         ];
 
         const tempChat: Chat = {
           id: `local-group-${Date.now()}`,
           isGroup: true,
           groupName: groupName.trim() || `Group (${participants.length + 1})`,
-          groupImage: null,
+          groupImage: "",
           members: memberIds.map((userId, index) => {
             const user =
-              userId === currentUser.id
+              userId === currentUser!.id
                 ? currentUser
                 : participants.find((p) => p.id === userId)!;
             return {
@@ -655,14 +655,14 @@ export const Home: React.FC = () => {
               isArchived: false,
               joinedAt: new Date().toISOString(),
             };
-          }),
+          }) as [],
           messages: [],
           lastMessage: {
             id: `welcome-${Date.now()}`,
-            senderId: currentUser.id,
-            content: `${currentUser.name} created group "${groupName || `Group (${participants.length + 1})`}"`,
+            senderId: currentUser!.id,
+            content: `${currentUser!.name} created group "${groupName || `Group (${participants.length + 1})`}"`,
             type: MessageType.TEXT,
-            sender: currentUser,
+            sender: currentUser as User,
             chatId: `local-group-${Date.now()}`,
             chat: {} as Chat,
             isEdited: false,
@@ -706,11 +706,11 @@ export const Home: React.FC = () => {
       try {
         // Check if chat already exists locally
         const existingChat = chatsData.find(
-          (chat) =>
+          (chat: any) =>
             !chat.isGroup &&
             chat.members.length === 2 &&
-            chat.members.some((member) => member.user.id === targetUser.id) &&
-            chat.members.some((member) => member.user.id === currentUser.id),
+            chat.members.some((member: any) => member.user.id === targetUser.id) &&
+            chat.members.some((member: any) => member.user.id === currentUser!.id),
         );
 
         if (existingChat) {
@@ -723,7 +723,7 @@ export const Home: React.FC = () => {
         // Create the chat via API
         const response = await ChatService.createChat({
           isGroup: false,
-          memberIds: [currentUser.id, targetUser.id],
+          memberIds: [currentUser!.id, targetUser.id],
           groupName: null,
           groupImage: null,
         });
@@ -753,14 +753,14 @@ export const Home: React.FC = () => {
 
         // Fallback: Create a temporary local chat
         const tempChat: Chat = {
-          id: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
+          id: `local-${currentUser!.id}-${targetUser.id}-${Date.now()}`,
           isGroup: false,
           members: [
             {
-              id: `member-${currentUser.id}-${Date.now()}`,
-              userId: currentUser.id,
-              user: currentUser,
-              chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
+              id: `member-${currentUser!.id}-${Date.now()}`,
+              userId: currentUser!.id,
+              user: currentUser as User,
+              chatId: `local-${currentUser!.id}-${targetUser.id}-${Date.now()}`,
               chat: {} as Chat,
               unreadCount: 0,
               isPinned: false,
@@ -772,7 +772,7 @@ export const Home: React.FC = () => {
               id: `member-${targetUser.id}-${Date.now()}`,
               userId: targetUser.id,
               user: targetUser,
-              chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
+              chatId: `local-${currentUser!.id}-${targetUser.id}-${Date.now()}`,
               chat: {} as Chat,
               unreadCount: 0,
               isPinned: false,
@@ -784,11 +784,11 @@ export const Home: React.FC = () => {
           messages: [],
           lastMessage: {
             id: `welcome-${Date.now()}`,
-            senderId: currentUser.id,
+            senderId: currentUser!.id,
             content: "Chat started",
             type: MessageType.TEXT,
-            sender: currentUser,
-            chatId: `local-${currentUser.id}-${targetUser.id}-${Date.now()}`,
+            sender: currentUser as User,
+            chatId: `local-${currentUser!.id}-${targetUser.id}-${Date.now()}`,
             chat: {} as Chat,
             isEdited: false,
             isDeleted: false,
@@ -805,7 +805,7 @@ export const Home: React.FC = () => {
             (chat) =>
               !chat.isGroup &&
               chat.members.length === 2 &&
-              chat.members.some((m) => m.user.id === currentUser.id) &&
+              chat.members.some((m) => m.user.id === currentUser!.id) &&
               chat.members.some((m) => m.user.id === targetUser.id),
           );
           if (existing) return old;
@@ -848,7 +848,7 @@ export const Home: React.FC = () => {
   const handleNextStatus = useCallback(() => {
     if (!selectedStatusId) return;
     const currentIndex = statusesData.findIndex(
-      (s) => s.id === selectedStatusId,
+      (s: any) => s.id === selectedStatusId,
     );
     if (currentIndex < statusesData.length - 1) {
       setSelectedStatusId(statusesData[currentIndex + 1].id);
@@ -860,7 +860,7 @@ export const Home: React.FC = () => {
   const handlePrevStatus = useCallback(() => {
     if (!selectedStatusId) return;
     const currentIndex = statusesData.findIndex(
-      (s) => s.id === selectedStatusId,
+      (s: any) => s.id === selectedStatusId,
     );
     if (currentIndex > 0) {
       setSelectedStatusId(statusesData[currentIndex - 1].id);
@@ -878,7 +878,7 @@ export const Home: React.FC = () => {
     if (activeTab === "dashboard") {
       return (
         <Dashboard
-          currentUser={currentUser}
+          currentUser={currentUser as User}
           chats={chatsData}
           statuses={statusesData}
           isLoading={isLoadingChats || isLoadingStatuses}
@@ -893,7 +893,7 @@ export const Home: React.FC = () => {
     }
 
     if (activeTab === "status" && selectedStatusId) {
-      const status = statusesData.find((s) => s.id === selectedStatusId);
+      const status = statusesData.find((s: Status) => s.id === selectedStatusId);
       if (status) {
         return (
           <StatusView
@@ -925,7 +925,7 @@ export const Home: React.FC = () => {
       (selectedResponseId || isCreatingResponse)
     ) {
       const responseToEdit = selectedResponseId
-        ? responsesData.find((r) => r.id === selectedResponseId)
+        ? responsesData.find((r: any) => r.id === selectedResponseId)
         : null;
       return (
         <CannedResponseView
@@ -1120,7 +1120,7 @@ export const Home: React.FC = () => {
               <ChatList
                 chats={chatsData}
                 selectedChatId={selectedChat?.id}
-                currentUserId={currentUser.id}
+                currentUserId={currentUser!.id}
                 onAddContact={() => {
                   closeModals();
                   setIsAddingUser(true);
@@ -1244,11 +1244,11 @@ export const Home: React.FC = () => {
             {!selectedChat.isGroup && (
               <ProfileView
                 userId={
-                  selectedChat.members.find((m) => m.user.id !== currentUser.id)
+                  selectedChat.members.find((m) => m.user.id !== currentUser!.id)
                     ?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
-                onUpdate={handleUpdateUserProfile}
+                onUpdate={handleUpdateUserProfile as any}
                 onDelete={handleDeleteContact}
               />
             )}

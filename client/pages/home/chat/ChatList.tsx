@@ -450,7 +450,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                 <Archive size={20} aria-hidden="true" />
               </button>
               {
-                currentUser.role !== UserRole.USER &&
+                currentUser?.role !== UserRole.USER &&
                 <button
                   onClick={handleAddContact}
                   className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
@@ -461,7 +461,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                 </button>
               }
               {
-                currentUser.role !== UserRole.USER && currentUser.role !== UserRole.BRANCH &&
+                currentUser?.role !== UserRole.USER && currentUser?.role !== UserRole.BRANCH &&
                 <button
                   onClick={handleCreateGroup}
                   className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
