@@ -52,7 +52,7 @@ export const GeneralPanel: React.FC = () => {
       const users = await UserService.getAllUsers();
       if (users) {
         setAllBranches(
-          users?.filter((user) => user.role === UserRole.BRANCH) || [],
+          users?.filter((user: User) => user.role === UserRole.BRANCH) || [],
         );
       }
     } catch (error) {

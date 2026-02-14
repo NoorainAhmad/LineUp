@@ -23,7 +23,7 @@ import { UserService } from "@/services/user.service";
 interface ProfileViewProps {
   userId: string;
   onClose: () => void;
-  onUpdate: (user: User) => void;
+  onUpdate: (user: Partial<User>) => void;
   onDelete: () => void;
 }
 
@@ -66,7 +66,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       phone: user?.phone || "",
       email: user?.email || "",
       location: user?.location || "",
-      avatarUrl: user?.avatarUrl,
+      avatarUrl: user?.avatarUrl || "",
     });
     setIsEditing(false);
   }, [user]);
@@ -86,11 +86,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleCancel = () => {
     setFormData({
-      name: user?.name,
+      name: user?.name || "",
       phone: user?.phone || "",
       email: user?.email || "",
       location: user?.location || "",
-      avatarUrl: user?.avatarUrl,
+      avatarUrl: user?.avatarUrl || "",
     });
     setIsEditing(false);
   };
@@ -183,7 +183,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 ...user,
                 avatarUrl: formData.avatarUrl,
                 name: formData.name,
-                status: isEditing ? UserStatus.OFFLINE : user?.status,
+                status: isEditing ? UserStatus.OFFLINE : user?.status as UserStatus,
               }}
               size="2xl"
               showStatus={!isEditing}
@@ -285,14 +285,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <InfoItem
             icon={Shield}
             label="Role"
-            value={user?.role}
+            value={user?.role || ""}
             valueClass={user?.role === UserRole.MASTER ? "text-primary" : ""}
           />
-          <InfoItem icon={Fingerprint} label="GUID" value={user?.guid} isMono />
+          <InfoItem icon={Fingerprint} label="GUID" value={user?.guid || ""} isMono />
           <InfoItem
             icon={Clock}
             label="Last Seen"
-            value={formatLastSeen(user?.lastSeen)}
+            value={formatLastSeen(user?.lastSeen as string)}
           />
           <InfoItem
             icon={Lock}

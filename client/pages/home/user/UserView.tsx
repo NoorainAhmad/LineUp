@@ -510,7 +510,7 @@ export const UserView: React.FC<UserViewProps> = ({
             </div>
 
             {/* Main Action */}
-            {!isEditing && user.id !== currentUser?.id && (
+            {!isEditing && user.id !== currentUser?.id && (user.role === UserRole.USER && currentUser?.role === UserRole.BRANCH) && (
               <button
                 onClick={handleStartChatWithUser}
                 disabled={!user.isActive}

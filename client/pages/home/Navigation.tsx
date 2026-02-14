@@ -187,7 +187,7 @@ const ThemeToggleButton = memo(
 ThemeToggleButton.displayName = "ThemeToggleButton";
 
 const LogoutButton = memo(
-  ({ onLogout, user }: { onLogout?: () => void; user: User }) => {
+  ({ onLogout, user }: { onLogout?: () => void; user: Partial<User> }) => {
     const handleClick = useCallback(() => {
       if (onLogout) {
         onLogout();
@@ -234,9 +234,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   // Filter navigation items based on user role using useMemo
   const navItems = useMemo(() => {
     return ALL_NAV_ITEMS.filter((item) =>
-      item.roles.includes(currentUser.role),
+      item.roles.includes(currentUser!.role),
     );
-  }, [currentUser.role]);
+  }, [currentUser!.role]);
 
   // Memoize tab change handler
   const handleTabChange = useCallback(
@@ -366,7 +366,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         <div className="mt-auto flex flex-col gap-2 w-full px-2">
           <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
-          <LogoutButton onLogout={onLogout} user={currentUser} />
+          <LogoutButton onLogout={onLogout} user={currentUser as User} />
         </div>
       </div>
     </>

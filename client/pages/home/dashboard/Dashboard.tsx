@@ -202,7 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => onNavigate("chat")}
                 primary
               />
-              {user.role === "DEVELOPER" && (
+              {user?.role === "DEVELOPER" && (
                 <QuickActionButton
                   icon={Settings}
                   label="Settings"
