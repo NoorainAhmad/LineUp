@@ -17,6 +17,8 @@ export const validateMediaTypes = (
     "image/png",
     "image/webp",
     "video/mp4",
+    "video/webm",
+    "video/ogg",
     "audio/mpeg",
     "audio/wav",
     "audio/webm",
