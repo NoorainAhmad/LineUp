@@ -52,7 +52,7 @@ export class ChatController {
   static async getInbox(req: AuthRequest, res: Response) {
     try {
       const userId = req.userId as string;
-      const chats = await ChatService.getInbox(userId);
+      const chats = await ChatService.getInboxRoleBased(userId);
       return res.status(200).json(chats);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

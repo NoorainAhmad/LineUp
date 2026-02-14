@@ -41,6 +41,7 @@ import {
   CannedResponse,
   MessageType,
   User,
+  UserRole,
 } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmojiPicker } from "../../../components/ui/EmojiPicker";
@@ -202,7 +203,7 @@ const renderMessageContent = (
 
       {msg.type === MessageType.TEXT && (
         <TextMessage
-          msg={msg} 
+          msg={msg}
           searchQuery={searchQuery} // optional, for highlighting
         />
       )}
@@ -483,7 +484,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
       queryClient.setQueryData(["pending-messages", chat.id], []);
 
       // Mark as read
-      markAsRead();
+      if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
+        markAsRead();
 
       // Scroll to bottom
       setTimeout(() => {
@@ -962,12 +964,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
     queryClient.invalidateQueries({ queryKey: ["chats"] });
   };
 
-  // Get other user and current user member
-  const otherUser = chat?.isGroup
-    ? null
-    : chat?.members.find((m) => m.user.id !== user?.id)?.user;
+  let otherUser;
+  let currentUserMember;
 
-  const currentUserMember = chat?.members.find((m) => m.user.id === user?.id);
+  // Get other user and current user member
+  if (user?.role === UserRole.BRANCH || user?.role === UserRole.USER) {
+    otherUser = chat?.isGroup
+      ? null
+      : chat?.members.find((m) => m.user.id !== user?.id)?.user;
+    currentUserMember = chat?.members.find((m) => m.user.id === user?.id);
+  } else {
+    otherUser = chat?.isGroup
+      ? null
+      : chat?.members.find((m) => m.user.role === UserRole.USER)?.user;
+    currentUserMember = chat?.members.find(
+      (m) => m.user.role === UserRole.BRANCH,
+    );
+  }
 
   // Empty state
   if (!chat) {
@@ -1147,17 +1160,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <Search size={20} />
               </button>
 
-              <button
-                onClick={() => onTogglePin(chat.id)}
-                className={`p-2 hover:bg-surface-hover rounded-full transition-colors ${currentUserMember?.isPinned ? "text-primary bg-primary/10" : "hover:text-primary"}`}
-                title={currentUserMember?.isPinned ? "Unpin chat" : "Pin chat"}
-              >
-                {currentUserMember?.isPinned ? (
-                  <PinOff size={18} />
-                ) : (
-                  <Pin size={18} />
-                )}
-              </button>
+              {(user?.role === UserRole.USER ||
+                user?.role === UserRole.BRANCH) && (
+                <button
+                  onClick={() => onTogglePin(chat.id)}
+                  className={`p-2 hover:bg-surface-hover rounded-full transition-colors ${currentUserMember?.isPinned ? "text-primary bg-primary/10" : "hover:text-primary"}`}
+                  title={
+                    currentUserMember?.isPinned ? "Unpin chat" : "Pin chat"
+                  }
+                >
+                  {currentUserMember?.isPinned ? (
+                    <PinOff size={18} />
+                  ) : (
+                    <Pin size={18} />
+                  )}
+                </button>
+              )}
 
               <button
                 className="p-2 rounded-full transition-colors hover:bg-surface-hover hover:text-text-main"
@@ -1203,14 +1221,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
 
             {messages.map((msg) => {
-              const isMe = msg.sender?.id === user?.id;
+              const isMe = msg.sender?.id === currentUserMember?.user?.id;
               const isPending = msg.isPending;
-              const repliedMsg = msg.replyToId
-                ? messages.find((m) => m.id === msg.replyToId)
-                : null;
+              const repliedMsg = msg.replyToId ? messages.find((m) => m.id === msg.replyToId) : null;
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
-              const isSearchResult = searchResults.includes(msg.id); 
+              const isSearchResult = searchResults.includes(msg.id);
 
               return (
                 <div
@@ -1229,7 +1245,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
-                    {!isDeleted && !isPending && (
+                    {!isDeleted && !isPending && (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) && (
                       <div
                         className={`
                           absolute -top-10 z-20 flex items-center gap-1 p-1 rounded-full bg-surface border border-border shadow-xl transition-all duration-200
@@ -1511,180 +1527,184 @@ export const ChatView: React.FC<ChatViewProps> = ({
         )}
 
         {/* Input Bar */}
-        <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
-          {showEmojiPicker && (
-            <div
-              className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
-            >
+        {(user?.role == UserRole.USER || user?.role == UserRole.BRANCH) && (
+          <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
+            {showEmojiPicker && (
               <div
-                className="fixed inset-0 z-40"
+                className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
+              >
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
+                ></div>
+                <EmojiPicker
+                  onSelect={handleEmojiSelect}
+                  onClose={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Attachments & Emoji */}
+            <div className="flex items-center pl-1 pb-1">
+              <button
                 onClick={() => {
-                  setShowEmojiPicker(false);
+                  setShowEmojiPicker(!showEmojiPicker);
                   setActiveReactionMessageId(null);
+                  setShowAttachMenu(false);
                 }}
-              ></div>
-              <EmojiPicker
-                onSelect={handleEmojiSelect}
-                onClose={() => {
-                  setShowEmojiPicker(false);
-                  setActiveReactionMessageId(null);
-                }}
+                className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+              >
+                <Smile size={24} />
+              </button>
+
+              {!editingMessage && (
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowAttachMenu(!showAttachMenu);
+                      setShowEmojiPicker(false);
+                    }}
+                    className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  >
+                    <Plus
+                      size={24}
+                      className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
+                    />
+                  </button>
+
+                  {showAttachMenu && (
+                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                      <button
+                        onClick={() => setShowCamera(true)}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                          <Camera size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Camera
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                          <Image size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Photos & Videos
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                          <FileText size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Document
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
               />
             </div>
-          )}
 
-          {/* Attachments & Emoji */}
-          <div className="flex items-center pl-1 pb-1">
-            <button
-              onClick={() => {
-                setShowEmojiPicker(!showEmojiPicker);
-                setActiveReactionMessageId(null);
-                setShowAttachMenu(false);
-              }}
-              className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-            >
-              <Smile size={24} />
-            </button>
-
-            {!editingMessage && (
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowAttachMenu(!showAttachMenu);
-                    setShowEmojiPicker(false);
-                  }}
-                  className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                >
-                  <Plus
-                    size={24}
-                    className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
-                  />
-                </button>
-
-                {showAttachMenu && (
-                  <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                    <button
-                      onClick={() => setShowCamera(true)}
-                      className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                    >
-                      <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                        <Camera size={18} />
-                      </div>
-                      <span className="text-text-main font-medium text-sm">
-                        Camera
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                    >
-                      <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                        <Image size={18} />
-                      </div>
-                      <span className="text-text-main font-medium text-sm">
-                        Photos & Videos
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                    >
-                      <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                        <FileText size={18} />
-                      </div>
-                      <span className="text-text-main font-medium text-sm">
-                        Document
-                      </span>
-                    </button>
+            {/* Text Input */}
+            <div className="flex-1 min-h-12.5 flex items-center relative">
+              {isRecording ? (
+                <div className="absolute inset-0 flex items-center px-4 z-20 animate-pulse text-red-500 gap-3">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
+                  <span className="font-mono font-bold text-lg">
+                    {formatTime(recordingDuration)}
+                  </span>
+                  <span className="text-sm font-medium">Recording...</span>
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => stopRecording(true)}
+                    className="p-2 hover:bg-red-500/10 rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={
+                    replyingTo
+                      ? "Type your reply..."
+                      : editingMessage
+                        ? "Edit your message..."
+                        : "Type a message..."
+                  }
+                  className="w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  disabled={sendMessageMutation.isPending}
+                />
+              )}
+              {!inputValue &&
+                !isRecording &&
+                !sendMessageMutation.isPending && (
+                  <div className="absolute right-0 pointer-events-none opacity-30 flex items-center gap-1 pr-2">
+                    <Command size={14} />
+                    <span className="text-xs">/</span>
                   </div>
                 )}
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileSelect}
-              accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-            />
-          </div>
+            </div>
 
-          {/* Text Input */}
-          <div className="flex-1 min-h-12.5 flex items-center relative">
-            {isRecording ? (
-              <div className="absolute inset-0 flex items-center px-4 z-20 animate-pulse text-red-500 gap-3">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
-                <span className="font-mono font-bold text-lg">
-                  {formatTime(recordingDuration)}
-                </span>
-                <span className="text-sm font-medium">Recording...</span>
-                <div className="flex-1"></div>
+            {/* Send Button */}
+            <div className="pb-1 pr-1">
+              {inputValue.trim() || isRecording ? (
                 <button
-                  onClick={() => stopRecording(true)}
-                  className="p-2 hover:bg-red-500/10 rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ) : (
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={
-                  replyingTo
-                    ? "Type your reply..."
-                    : editingMessage
-                      ? "Edit your message..."
-                      : "Type a message..."
-                }
-                className="w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base"
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                disabled={sendMessageMutation.isPending}
-              />
-            )}
-            {!inputValue && !isRecording && !sendMessageMutation.isPending && (
-              <div className="absolute right-0 pointer-events-none opacity-30 flex items-center gap-1 pr-2">
-                <Command size={14} />
-                <span className="text-xs">/</span>
-              </div>
-            )}
-          </div>
-
-          {/* Send Button */}
-          <div className="pb-1 pr-1">
-            {inputValue.trim() || isRecording ? (
-              <button
-                onClick={
-                  isRecording ? () => stopRecording(false) : handleTextSend
-                }
-                disabled={sendMessageMutation.isPending}
-                className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {sendMessageMutation.isPending ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : editingMessage ? (
-                  <Check size={24} />
-                ) : isRecording ? (
-                  <Send size={24} />
-                ) : (
-                  <Send size={24} />
-                )}
-              </button>
-            ) : (
-              !editingMessage && (
-                <button
-                  onClick={startRecording}
+                  onClick={
+                    isRecording ? () => stopRecording(false) : handleTextSend
+                  }
                   disabled={sendMessageMutation.isPending}
-                  className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <Mic size={24} />
+                  {sendMessageMutation.isPending ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : editingMessage ? (
+                    <Check size={24} />
+                  ) : isRecording ? (
+                    <Send size={24} />
+                  ) : (
+                    <Send size={24} />
+                  )}
                 </button>
-              )
-            )}
+              ) : (
+                !editingMessage && (
+                  <button
+                    onClick={startRecording}
+                    disabled={sendMessageMutation.isPending}
+                    className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Mic size={24} />
+                  </button>
+                )
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

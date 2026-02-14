@@ -43,14 +43,14 @@ const ChatListItem = memo(
   ({
     processedChat,
     isSelected,
-    currentUserId,
+    currentUser,
     onChatSelect,
     onTogglePin,
     onArchive,
   }: {
     processedChat: ProcessedChat;
     isSelected: boolean;
-    currentUserId: string;
+    currentUser?: User | null;
     onChatSelect: (chat: Chat) => void;
     onTogglePin: (chatId: string) => void;
     onArchive: (chatId: string) => void;
@@ -174,27 +174,33 @@ const ChatListItem = memo(
         </div>
 
         {/* Hover Actions - Clean Floating Menu */}
-        <div
-          className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
-          onClick={(e) => e.stopPropagation()}
-          role="toolbar"
-          aria-label="Chat actions"
-        >
-          <button
-            onClick={handleTogglePin}
-            className={`p-1.5 rounded-lg transition-colors ${isPinned ? "bg-primary/10 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text-main"}`}
-            aria-label={isPinned ? "Unpin chat" : "Pin chat"}
+        {(currentUser?.role === UserRole.USER || currentUser?.role === UserRole.BRANCH) && (
+          <div
+            className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            role="toolbar"
+            aria-label="Chat actions"
           >
-            {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
-          </button>
-          <button
-            onClick={handleArchive}
-            className="p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
-            aria-label={isArchived ? "Unarchive chat" : "Archive chat"}
-          >
-            {isArchived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
-          </button>
-        </div>
+            <button
+              onClick={handleTogglePin}
+              className={`p-1.5 rounded-lg transition-colors ${isPinned ? "bg-primary/10 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text-main"}`}
+              aria-label={isPinned ? "Unpin chat" : "Pin chat"}
+            >
+              {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
+            </button>
+            <button
+              onClick={handleArchive}
+              className="p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
+              aria-label={isArchived ? "Unarchive chat" : "Archive chat"}
+            >
+              {isArchived ? (
+                <ArchiveRestore size={15} />
+              ) : (
+                <Archive size={15} />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     );
   },
@@ -272,17 +278,30 @@ export const ChatList: React.FC<ChatListProps> = ({
   // High-performance memoized processing of the relational data
   const processedChats = useMemo(() => {
     return chats
-      .map((chat) => { 
+      .map((chat) => {
+        let myMemberData;
+        let otherMembers;
 
-        // Find MY member data (where userId matches currentUserId)
-        const myMemberData = chat.members?.find(
-          (m) => m.user.id === currentUserId,
-        ); 
-
-        // Find OTHER members (excluding myself)
-        const otherMembers = chat.members.filter(
-          (m) => m.user.id !== currentUserId,
-        );
+        if (
+          currentUser?.role === UserRole.BRANCH ||
+          currentUser?.role === UserRole.USER
+        ) {
+          // Find MY member data (where userId matches currentUserId)
+          myMemberData = chat.members?.find((m) => m.user.id === currentUserId);
+          // Find OTHER members (excluding myself)
+          otherMembers = chat.members.filter(
+            (m) => m.user.id !== currentUserId,
+          );
+        } else {
+          // Find MY member data (where userId matches currentUserId)
+          myMemberData = chat.members?.find(
+            (m) => m.user.role === UserRole.BRANCH,
+          );
+          // Find OTHER members (excluding myself)
+          otherMembers = chat.members.filter(
+            (m) => m.user.role === UserRole.USER,
+          );
+        }
 
         // For direct messages, get the other user
         const otherMember =
@@ -441,16 +460,18 @@ export const ChatList: React.FC<ChatListProps> = ({
         <div className="flex gap-1.5">
           {!showArchived && (
             <>
-              <button
-                onClick={toggleArchiveView}
-                className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
-                title="View archived chats"
-                aria-label="View archived chats"
-              >
-                <Archive size={20} aria-hidden="true" />
-              </button>
-              {
-                currentUser?.role !== UserRole.USER &&
+              {(currentUser?.role === UserRole.USER ||
+                currentUser?.role === UserRole.BRANCH) && (
+                <button
+                  onClick={toggleArchiveView}
+                  className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
+                  title="View archived chats"
+                  aria-label="View archived chats"
+                >
+                  <Archive size={20} aria-hidden="true" />
+                </button>
+              )}
+              {currentUser?.role === UserRole.BRANCH && (
                 <button
                   onClick={handleAddContact}
                   className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
@@ -459,18 +480,18 @@ export const ChatList: React.FC<ChatListProps> = ({
                 >
                   <UserPlus size={20} aria-hidden="true" />
                 </button>
-              }
-              {
-                currentUser?.role !== UserRole.USER && currentUser?.role !== UserRole.BRANCH &&
-                <button
-                  onClick={handleCreateGroup}
-                  className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
-                  title="Create new group"
-                  aria-label="Create new group"
-                >
-                  <Users size={20} aria-hidden="true" />
-                </button>
-              }
+              )}
+              {currentUser?.role !== UserRole.USER &&
+                currentUser?.role !== UserRole.BRANCH && (
+                  <button
+                    onClick={handleCreateGroup}
+                    className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"
+                    title="Create new group"
+                    aria-label="Create new group"
+                  >
+                    <Users size={20} aria-hidden="true" />
+                  </button>
+                )}
             </>
           )}
         </div>
@@ -513,7 +534,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             key={processedChat.chat.id}
             processedChat={processedChat}
             isSelected={selectedChatId === processedChat.chat.id}
-            currentUserId={currentUserId}
+            currentUser={currentUser}
             onChatSelect={onChatSelect}
             onTogglePin={onTogglePin}
             onArchive={onArchive}
