@@ -1244,8 +1244,9 @@ export const Home: React.FC = () => {
             {!selectedChat.isGroup && (
               <ProfileView
                 userId={
-                  selectedChat.members.find((m) => m.user.id !== currentUser!.id)
-                    ?.user?.id || selectedChat.members[0].user?.id
+                  (currentUser?.role === UserRole.USER || currentUser?.role === UserRole.BRANCH) ?
+                  selectedChat.members.find((m) => m.user.id !== currentUser!.id)?.user?.id || selectedChat.members[0].user?.id :
+                  selectedChat.members.find((m) => m.user.role === UserRole.BRANCH)?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}
