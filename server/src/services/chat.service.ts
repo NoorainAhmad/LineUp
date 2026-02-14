@@ -244,4 +244,20 @@ export class ChatService {
       throw new Error("Delete message failed: " + (error as Error).message);
     }
   }
+
+  //Pin a message
+  static async pinChat(chatId: string, userId: string) {
+    const member = await prisma.chatMember.findFirst({
+      where: { userId, chatId }
+    });
+
+    if (!member) throw new Error("No such chat exists");
+
+    return prisma.chatMember.update({
+      where: { id: member.id },
+      data: {
+        isPinned: !member.isPinned // 🔥 toggle instead of always true
+      }
+    });
+  }
 }
