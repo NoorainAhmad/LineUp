@@ -98,4 +98,17 @@ export class ChatController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  //Pin a chat
+  static async pinChatMember(req: AuthRequest, res: Response) {
+    try {
+      const { chatId } = req.params as { chatId: string };
+      const userId = req.userId as string;
+      const pinMember = await ChatService.pinChat(chatId, userId);
+      return res.status(200).json(pinMember);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
 }

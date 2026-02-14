@@ -101,4 +101,10 @@ export class ChatService {
     const response = await api.delete(`/chats/messages/${messageId}`);
     return response.data;
   }
+
+  // Pin a chat
+  static async pinChatMember(chatId: string) {
+    const response = await api.patch(`/chats/${chatId}/pin`);
+    return response.data;
+  }
 }

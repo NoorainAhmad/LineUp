@@ -26,6 +26,9 @@ router.patch("/:chatId/read", ChatController.markAsRead);
 // Delete a message by ID
 router.delete("/messages/:messageId", ChatController.deleteMessage);
 
+// Pin a chat member
+router.patch("/:chatId/pin", ChatController.pinChatMember)
+
 // Health check
 router.get("/health", (req, res) => {
   res.status(200).json({

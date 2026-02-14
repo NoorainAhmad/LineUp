@@ -5,11 +5,11 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: postgresql_admin
-      POSTGRES_PASSWORD: postgresql_password_123
+      POSTGRES_USER: abrar
+      POSTGRES_PASSWORD: abrar
       POSTGRES_DB: lineup
     ports:
-      - "5432:5432"
+      - "5455:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data 
 
@@ -56,7 +56,7 @@ services:
       - -c
       - |
         echo "Waiting for MinIO API..."
-        until /usr/bin/mc alias set myminio http://minio:9000 admin password123; do
+        until /usr/bin/mc alias set myminio http://minio:9000 minio_admin minio_password_123; do
           sleep 2
         done
 

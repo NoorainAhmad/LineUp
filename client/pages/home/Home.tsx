@@ -463,10 +463,39 @@ export const Home: React.FC = () => {
     [selectedUser, queryClient],
   );
 
+  // const handleTogglePin = useCallback(
+  //   async (chatId: string) => {
+  //     // Note: In a real app, you would call an API to toggle pin
+  //     // For now, we'll update local state
+  //     queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
+  //       old.map((chat) => {
+  //         if (chat.id === chatId) {
+  //           const updatedMembers = chat.members.map((member) =>
+  //             member.userId === currentUser.id
+  //               ? { ...member, isPinned: !member.isPinned }
+  //               : member,
+  //           );
+  //           return { ...chat, members: updatedMembers };
+  //         }
+  //         return chat;
+  //       }),
+  //     );
+  //     if (selectedChat?.id === chatId) {
+  //       const updatedMembers = selectedChat.members.map((member) =>
+  //         member.userId === currentUser.id
+  //           ? { ...member, isPinned: !member.isPinned }
+  //           : member,
+  //       );
+  //       setSelectedChat({ ...selectedChat, members: updatedMembers });
+  //     }
+  //   },
+  //   [selectedChat, currentUser.id, queryClient],
+  // );
+
   const handleTogglePin = useCallback(
-    async (chatId: string) => {
-      // Note: In a real app, you would call an API to toggle pin
-      // For now, we'll update local state
+  async (chatId: string) => {
+    try {
+      // UI update
       queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
         old.map((chat) => {
           if (chat.id === chatId) {
@@ -480,18 +509,21 @@ export const Home: React.FC = () => {
           return chat;
         }),
       );
+      // Backend API call
+      await ChatService.pinChatMember(chatId);
 
-      if (selectedChat?.id === chatId) {
-        const updatedMembers = selectedChat.members.map((member) =>
-          member.userId === currentUser!.id
-            ? { ...member, isPinned: !member.isPinned }
-            : member,
-        );
-        setSelectedChat({ ...selectedChat, members: updatedMembers });
-      }
-    },
-    [selectedChat, currentUser!.id, queryClient],
-  );
+      // Sync with server 
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+
+    } catch (error) {
+      console.error("Error toggling pin:", error);
+
+      // Rollback if API fails
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    }
+  },
+  [currentUser.id, queryClient],
+);
 
   const handleArchiveChat = useCallback(
     (chatId: string) => {
