@@ -2,6 +2,7 @@
 .env
 
 server.txt
+
 # Logs
 logs
 *.log
