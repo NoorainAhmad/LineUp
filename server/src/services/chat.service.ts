@@ -19,7 +19,7 @@ export class ChatService {
         fileUrl: true,
         fileName: true,
         fileSize: true,
-        mimeType: true,   
+        mimeType: true,
         replyToId: true,
         isEdited: true,
         isDeleted: true,
@@ -221,6 +221,23 @@ export class ChatService {
     } catch (error) {
       console.log(`[Mark As Read] Error: ${error}`);
       throw new Error("Mark as read failed: " + (error as Error).message);
+    }
+  }
+
+  // Toggle archive status for a chat
+  static async toggleArchive(chatId: string, userId: string) {
+    try {
+      const member = await prisma.chatMember.findUnique({
+        where: { userId_chatId: { userId, chatId } },
+      });
+      if (!member) throw new Error("Chat member not found");
+      return prisma.chatMember.update({
+        where: { userId_chatId: { userId, chatId } },
+        data: { isArchived: !member.isArchived },
+      });
+    } catch (error) {
+      console.log(`[Toggle Archive] Error: ${error}`);
+      throw new Error("Toggle archive failed: " + (error as Error).message);
     }
   }
 

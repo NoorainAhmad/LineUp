@@ -23,6 +23,9 @@ router.get("/:chatId/messages", ChatController.getMessages);
 // Mark a chat as read
 router.patch("/:chatId/read", ChatController.markAsRead);
 
+// Toggle archive status of a chat
+router.patch("/:chatId/archive", ChatController.toggleArchive);
+
 // Delete a message by ID
 router.delete("/messages/:messageId", ChatController.deleteMessage);
 

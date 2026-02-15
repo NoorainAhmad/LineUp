@@ -96,6 +96,12 @@ export class ChatService {
     return response.data;
   }
 
+  // Toggle archive status of a chat
+  static async toggleArchive(chatId: string) {
+    const response = await api.patch(`/chats/${chatId}/archive`);
+    return response.data;
+  }
+
   // Soft-delete a message
   static async deleteMessage(messageId: string) {
     const response = await api.delete(`/chats/messages/${messageId}`);
