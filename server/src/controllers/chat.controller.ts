@@ -87,6 +87,18 @@ export class ChatController {
     }
   }
 
+  // Toggle archive status for a chat
+  static async toggleArchive(req: AuthRequest, res: Response) {
+    try {
+      const { chatId } = req.params as { chatId: string };
+      const userId = req.userId as string;
+      const result = await ChatService.toggleArchive(chatId, userId);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
   // Delete a message
   static async deleteMessage(req: AuthRequest, res: Response) {
     try {

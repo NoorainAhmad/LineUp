@@ -527,8 +527,8 @@ export const Home: React.FC = () => {
   );
 
   const handleArchiveChat = useCallback(
-    (chatId: string) => {
-      // Note: In a real app, you would call an API to archive
+    async (chatId: string) => {
+      // Optimistically update local state
       queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
         old.map((chat) => {
           if (chat.id === chatId) {
@@ -545,6 +545,16 @@ export const Home: React.FC = () => {
 
       if (selectedChat?.id === chatId) {
         setSelectedChat(null);
+      }
+
+      try {
+        await ChatService.toggleArchive(chatId);
+        // Refetch to sync with server
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
+      } catch (error) {
+        console.error("Error toggling archive:", error);
+        // Revert optimistic update on failure
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
     },
     [selectedChat, currentUser!.id, queryClient],

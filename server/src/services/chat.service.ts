@@ -419,6 +419,23 @@ export class ChatService {
     }
   }
 
+  // Toggle archive status for a chat
+  static async toggleArchive(chatId: string, userId: string) {
+    try {
+      const member = await prisma.chatMember.findUnique({
+        where: { userId_chatId: { userId, chatId } },
+      });
+      if (!member) throw new Error("Chat member not found");
+      return prisma.chatMember.update({
+        where: { userId_chatId: { userId, chatId } },
+        data: { isArchived: !member.isArchived },
+      });
+    } catch (error) {
+      console.log(`[Toggle Archive] Error: ${error}`);
+      throw new Error("Toggle archive failed: " + (error as Error).message);
+    }
+  }
+
   // Delete a message
   static async deleteMessage(messageId: string, userId: string) {
     try {
