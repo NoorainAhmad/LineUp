@@ -174,7 +174,7 @@ const ChatListItem = memo(
         </div>
 
         {/* Hover Actions - Clean Floating Menu */}
-        {(currentUser?.role === UserRole.USER || currentUser?.role === UserRole.BRANCH) && (
+        {(currentUser?.role === UserRole.BRANCH) && (
           <div
             className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
             onClick={(e) => e.stopPropagation()}
@@ -460,8 +460,8 @@ export const ChatList: React.FC<ChatListProps> = ({
         <div className="flex gap-1.5">
           {!showArchived && (
             <>
-              {(currentUser?.role === UserRole.USER ||
-                currentUser?.role === UserRole.BRANCH) && (
+              {" "}
+              {currentUser?.role !== UserRole.USER && (
                 <button
                   onClick={toggleArchiveView}
                   className="p-2.5 hover:bg-primary/10 hover:text-primary rounded-xl text-secondary transition-all"

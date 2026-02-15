@@ -1177,24 +1177,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 title="Search in chat"
               >
                 <Search size={20} />
-              </button>
-
-              {(user?.role === UserRole.USER ||
-                user?.role === UserRole.BRANCH) && (
-                <button
-                  onClick={() => onTogglePin(chat.id)}
-                  className={`p-2 hover:bg-surface-hover rounded-full transition-colors ${currentUserMember?.isPinned ? "text-primary bg-primary/10" : "hover:text-primary"}`}
-                  title={
-                    currentUserMember?.isPinned ? "Unpin chat" : "Pin chat"
-                  }
-                >
-                  {currentUserMember?.isPinned ? (
-                    <PinOff size={18} />
-                  ) : (
-                    <Pin size={18} />
-                  )}
-                </button>
-              )}
+              </button> 
 
               <button
                 className="p-2 rounded-full transition-colors hover:bg-surface-hover hover:text-text-main"
