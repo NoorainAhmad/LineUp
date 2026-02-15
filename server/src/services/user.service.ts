@@ -68,7 +68,7 @@ export class UserService {
     }
   }
 
-  // Search Users 
+  // Search Users
   static async searchUsers(query: string) {
     query = query.trim();
     console.log(query);
@@ -136,6 +136,60 @@ export class UserService {
     } catch (error) {
       console.log(`[User Update] Error: ${error}`);
       throw new Error("User update failed: " + (error as Error).message);
+    }
+  }
+
+  // Update user profile photo
+  static async updateProfilePhoto(userId: string, avatarUrl: string) {
+    try {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { avatarUrl },
+        select: this.userSelection,
+      });
+    } catch (error) {
+      console.log(`[Update Profile Photo] Error: ${error}`);
+      throw new Error(
+        "Profile photo update failed: " + (error as Error).message,
+      );
+    }
+  }
+
+  // Change a user's password
+  static async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    try {
+      // Get user with password hash
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { passwordHash: true },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Verify current password
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValid) {
+        throw new Error("Current password is incorrect");
+      }
+
+      // Hash new password
+      const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+      // Update password
+      return prisma.user.update({
+        where: { id: userId },
+        data: { passwordHash: newPasswordHash },
+        select: this.userSelection,
+      });
+    } catch (error) {
+      console.log(`[Change Password] Error: ${error}`);
+      throw new Error("Password change failed: " + (error as Error).message);
     }
   }
 

@@ -75,6 +75,53 @@ export class UserController {
     }
   }
 
+  // Change password
+  static async changePassword(req: Request, res: Response) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current password and new password are required" });
+      }
+      
+      const user = await UserService.changePassword(
+        req.params.id as string,
+        currentPassword,
+        newPassword,
+      );
+      
+      return res.status(200).json({ 
+        message: "Password changed successfully",
+        user 
+      });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  // Update profile photo
+  static async updateProfilePhoto(req: Request, res: Response) {
+    try {
+      const { avatarUrl } = req.body;
+
+      if (!avatarUrl) {
+        return res.status(400).json({ error: "Avatar URL is required" });
+      }
+      
+      const user = await UserService.updateProfilePhoto(
+        req.params.id as string,
+        avatarUrl,
+      );
+      
+      return res.status(200).json({ 
+        message: "Profile photo updated successfully",
+        user 
+      });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
   // Delete a user
   static async deleteUser(req: Request, res: Response) {
     try {

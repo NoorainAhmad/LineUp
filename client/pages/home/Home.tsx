@@ -35,6 +35,7 @@ import { CannedResponseService } from "@/services/canned.service";
 import { StatusService } from "@/services/status.service";
 import { ChatService } from "@/services/chat.service";
 import GroupProfileView from "./chat/GroupProfileView";
+import { MyProfileView } from "./profile/MyProfileView";
 
 // Helper function to normalize API response
 const normalizeChatData = (apiChat: any): Chat => {
@@ -280,7 +281,7 @@ export const Home: React.FC = () => {
   }, []);
 
   const handleTabChange = useCallback(
-    (tab: string) => {
+    (tab: string) => { 
       setActiveTab(tab);
       setSelectedChat(null);
       setSelectedStatusId(null);
@@ -429,10 +430,14 @@ export const Home: React.FC = () => {
       try {
         // Delete all undefined or null fields from the updated user object
         Object.keys(updatedUser).forEach(
-          (key) => updatedUser[key] === undefined || updatedUser[key] === null || updatedUser[key] === "" && delete updatedUser[key],
-        )
+          (key) =>
+            updatedUser[key] === undefined ||
+            updatedUser[key] === null ||
+            (updatedUser[key] === "" && delete updatedUser[key]),
+        );
         // Update users cache
-        const updatedUserData: any = await updateUserMutation.mutateAsync(updatedUser);
+        const updatedUserData: any =
+          await updateUserMutation.mutateAsync(updatedUser);
         queryClient.setQueryData(["users"], (old: User[] = []) =>
           old.map((user) =>
             user.id === updatedUser.id ? updatedUserData : user,
@@ -1001,6 +1006,18 @@ export const Home: React.FC = () => {
       );
     }
 
+    if (activeTab === "my-profile") {
+      return (
+        <MyProfileView onClose={() => {
+          if(currentUser?.role === UserRole.USER) {
+            setActiveTab("chat");
+          } else {
+            setActiveTab("dashboard");
+          }
+        }}/>
+      );
+    }
+
     // Default Placeholder
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-background text-secondary border-b-[6px] border-primary/40">
@@ -1146,7 +1163,7 @@ export const Home: React.FC = () => {
       {/* Content Wrapper */}
       <div className="flex-1 flex overflow-hidden relative h-full">
         {/* 2. List Container */}
-        {activeTab !== "dashboard" && (
+        {activeTab !== "dashboard" && activeTab !== "my-profile" && (
           <div
             className={`${showMainContentOnMobile ? "hidden md:flex" : "flex"} flex-1 md:flex-none h-full`}
           >
@@ -1227,7 +1244,7 @@ export const Home: React.FC = () => {
 
         {/* 3. Main Content Window */}
         <div
-          className={`${!showMainContentOnMobile && activeTab !== "dashboard" ? "hidden md:flex" : "flex"} flex-1 h-full min-w-0 bg-background relative`}
+          className={`${(!showMainContentOnMobile && (activeTab !== "dashboard" && activeTab !== "my-profile" )) ? "hidden md:flex" : "flex"} flex-1 h-full min-w-0 bg-background relative`}
         >
           {renderMainContent()}
 

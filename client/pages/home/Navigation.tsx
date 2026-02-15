@@ -12,6 +12,9 @@ import {
   LayoutDashboard,
   UsersRound,
   MessageCircleCodeIcon,
+  IdCardIcon,
+  UserCircle2Icon,
+  LogOutIcon,
 } from "lucide-react";
 import { UserRole, User } from "../../types";
 import { Avatar } from "../../components/ui/Avatar";
@@ -43,7 +46,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH 
+      UserRole.BRANCH,
     ],
   },
   {
@@ -78,7 +81,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH, 
+      UserRole.BRANCH,
     ],
   },
   {
@@ -89,16 +92,14 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
       UserRole.DEVELOPER,
       UserRole.MASTER,
       UserRole.ADMIN,
-      UserRole.BRANCH, 
+      UserRole.BRANCH,
     ],
   },
   {
     id: "setting",
     icon: Settings,
     label: "Settings",
-    roles: [
-      UserRole.DEVELOPER 
-    ],
+    roles: [UserRole.DEVELOPER],
   },
 ];
 
@@ -158,7 +159,6 @@ const NavigationItemButton = memo(
     );
   },
 );
-
 NavigationItemButton.displayName = "NavigationItemButton";
 
 const ThemeToggleButton = memo(
@@ -183,11 +183,10 @@ const ThemeToggleButton = memo(
     </button>
   ),
 );
-
 ThemeToggleButton.displayName = "ThemeToggleButton";
 
 const LogoutButton = memo(
-  ({ onLogout, user }: { onLogout?: () => void; user: Partial<User> }) => {
+  ({ onLogout }: { onLogout?: () => void; }) => {
     const handleClick = useCallback(() => {
       if (onLogout) {
         onLogout();
@@ -195,8 +194,8 @@ const LogoutButton = memo(
     }, [onLogout]);
 
     return (
-      <div
-        className="pt-2 border-t border-border mt-2 flex justify-center cursor-pointer group relative"
+      <button
+        className="w-full aspect-square rounded-xl flex items-center justify-center text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
         onClick={handleClick}
         title="Logout"
         role="button"
@@ -209,16 +208,40 @@ const LogoutButton = memo(
         }}
         aria-label="Logout"
       >
-        <Avatar user={user} size="sm" showStatus />
+        <LogOutIcon size={20} aria-hidden="true" />
+      </button>
+    );
+  },
+);
+LogoutButton.displayName = "LogoutButton";
+
+const MyProfileButton = memo(
+  ({ handleClick }: { handleClick: () => void; }) => {
+    const { user } = useAuth();
+    return (
+      <div
+        className="pt-3 border-t border-text-main/10 mt-2 flex justify-center cursor-pointer group relative"
+        onClick={handleClick}
+        title="My Profile"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
+        aria-label="My Profile"
+      >
+        <Avatar user={user as User} size="sm" showStatus />
         <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border rounded shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-          Log Out
+          My Profile
         </div>
       </div>
     );
   },
 );
-
-LogoutButton.displayName = "LogoutButton";
+MyProfileButton.displayName = "MyProfileButton";
 
 export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
@@ -240,7 +263,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   // Memoize tab change handler
   const handleTabChange = useCallback(
-    (tabId: string) => {
+    (tabId: string) => { 
       onTabChange(tabId);
       setIsMobileMenuOpen(false);
     },
@@ -303,7 +326,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 variant="mobile"
               />
             ))}
-            <div className="border-t border-border my-2 pt-2">
+            <div className="border-t border-text-main/10 my-2 pt-2">
               <button
                 onClick={onToggleTheme}
                 className="w-full flex items-center gap-3 p-3 rounded-lg text-text-main hover:bg-surface-hover"
@@ -323,6 +346,14 @@ export const Navigation: React.FC<NavigationProps> = ({
               >
                 <LogOut size={20} aria-hidden="true" />
                 <span className="font-medium">Log Out</span>
+              </button>
+              <button 
+                className="w-full flex items-center gap-3 p-3 rounded-lg text-primary hover:bg-primary/10"
+                onClick={() => handleTabChange("my-profile")}
+                aria-label="My Profile"
+              >
+                <UserCircle2Icon size={20} aria-hidden="true" />
+                <span className="font-medium">My Profile</span>
               </button>
             </div>
           </div>
@@ -366,7 +397,8 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         <div className="mt-auto flex flex-col gap-2 w-full px-2">
           <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
-          <LogoutButton onLogout={onLogout} user={currentUser as User} />
+          <LogoutButton onLogout={onLogout} />
+          <MyProfileButton handleClick={() => {handleTabChange("my-profile")}} />
         </div>
       </div>
     </>

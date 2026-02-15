@@ -23,6 +23,12 @@ router.post("/", UserController.createUser);
 // Update: User
 router.patch("/:id", UserController.updateUser);
 
+// Change Password
+router.post("/:id/change-password", UserController.changePassword);
+
+// Update Profile Photo
+router.patch("/:id/profile-photo", UserController.updateProfilePhoto);
+
 // Delete: User
 router.delete("/:id", UserController.deleteUser);
 
