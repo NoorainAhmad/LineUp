@@ -220,6 +220,21 @@ export const Home: React.FC = () => {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: (details: {
+      id: string;
+      name?: string;
+      phone?: string;
+      password?: string;
+      email?: string;
+      location?: string;
+    }) => UserService.updateUser(details.id, details),
+    onSuccess: (updatedUser) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(normalizeUserData(updatedUser));
+    },
+  });
+
   const createCannedResponseMutation = useMutation({
     mutationFn: (details: {
       command: string;
@@ -409,6 +424,31 @@ export const Home: React.FC = () => {
     [createUserMutation],
   );
 
+  const handleUpdateUser = useCallback(
+    async (updatedUser: any) => {
+      try {
+        // Delete all undefined or null fields from the updated user object
+        Object.keys(updatedUser).forEach(
+          (key) => updatedUser[key] === undefined || updatedUser[key] === null || updatedUser[key] === "" && delete updatedUser[key],
+        )
+        // Update users cache
+        const updatedUserData: any = await updateUserMutation.mutateAsync(updatedUser);
+        queryClient.setQueryData(["users"], (old: User[] = []) =>
+          old.map((user) =>
+            user.id === updatedUser.id ? updatedUserData : user,
+          ),
+        );
+        // Update selected user if needed
+        if (selectedUser) {
+          setSelectedUser(updatedUserData);
+        }
+      } catch (error) {
+        console.error("Error updating user:", error);
+      }
+    },
+    [selectedUser, queryClient],
+  );
+
   const handleDeleteContact = useCallback(() => {
     if (!selectedChat) return;
     // Note: In a real app, you would call an API to delete the chat
@@ -450,47 +490,6 @@ export const Home: React.FC = () => {
     },
     [selectedChat, queryClient],
   );
-
-  const handleUpdateUser = useCallback(
-    (updatedUser: User) => {
-      queryClient.setQueryData(["users"], (old: User[] = []) =>
-        old.map((user) => (user.id === updatedUser.id ? updatedUser : user)),
-      );
-      if (selectedUser?.id === updatedUser.id) {
-        setSelectedUser(updatedUser);
-      }
-    },
-    [selectedUser, queryClient],
-  );
-
-  // const handleTogglePin = useCallback(
-  //   async (chatId: string) => {
-  //     // Note: In a real app, you would call an API to toggle pin
-  //     // For now, we'll update local state
-  //     queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
-  //       old.map((chat) => {
-  //         if (chat.id === chatId) {
-  //           const updatedMembers = chat.members.map((member) =>
-  //             member.userId === currentUser.id
-  //               ? { ...member, isPinned: !member.isPinned }
-  //               : member,
-  //           );
-  //           return { ...chat, members: updatedMembers };
-  //         }
-  //         return chat;
-  //       }),
-  //     );
-  //     if (selectedChat?.id === chatId) {
-  //       const updatedMembers = selectedChat.members.map((member) =>
-  //         member.userId === currentUser.id
-  //           ? { ...member, isPinned: !member.isPinned }
-  //           : member,
-  //       );
-  //       setSelectedChat({ ...selectedChat, members: updatedMembers });
-  //     }
-  //   },
-  //   [selectedChat, currentUser.id, queryClient],
-  // );
 
   const handleTogglePin = useCallback(
   async (chatId: string) => {
@@ -741,8 +740,12 @@ export const Home: React.FC = () => {
           (chat: any) =>
             !chat.isGroup &&
             chat.members.length === 2 &&
-            chat.members.some((member: any) => member.user.id === targetUser.id) &&
-            chat.members.some((member: any) => member.user.id === currentUser!.id),
+            chat.members.some(
+              (member: any) => member.user.id === targetUser.id,
+            ) &&
+            chat.members.some(
+              (member: any) => member.user.id === currentUser!.id,
+            ),
         );
 
         if (existingChat) {
@@ -925,7 +928,9 @@ export const Home: React.FC = () => {
     }
 
     if (activeTab === "status" && selectedStatusId) {
-      const status = statusesData.find((s: Status) => s.id === selectedStatusId);
+      const status = statusesData.find(
+        (s: Status) => s.id === selectedStatusId,
+      );
       if (status) {
         return (
           <StatusView
@@ -1276,9 +1281,14 @@ export const Home: React.FC = () => {
             {!selectedChat.isGroup && (
               <ProfileView
                 userId={
-                  (currentUser?.role === UserRole.USER || currentUser?.role === UserRole.BRANCH) ?
-                  selectedChat.members.find((m) => m.user.id !== currentUser!.id)?.user?.id || selectedChat.members[0].user?.id :
-                  selectedChat.members.find((m) => m.user.role === UserRole.BRANCH)?.user?.id || selectedChat.members[0].user?.id
+                  currentUser?.role === UserRole.USER ||
+                  currentUser?.role === UserRole.BRANCH
+                    ? selectedChat.members.find(
+                        (m) => m.user.id !== currentUser!.id,
+                      )?.user?.id || selectedChat.members[0].user?.id
+                    : selectedChat.members.find(
+                        (m) => m.user.role === UserRole.BRANCH,
+                      )?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}

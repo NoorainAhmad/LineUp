@@ -64,7 +64,7 @@ export class UserController {
   // Update a user
   static async updateUser(req: Request, res: Response) {
     try {
-      const validatedData = userUpdateSchema.parse(req.body);
+      const validatedData = userUpdateSchema.parse(req.body); 
       const user = await UserService.updateUser(
         req.params.id as string,
         validatedData,

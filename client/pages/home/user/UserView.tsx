@@ -31,6 +31,7 @@ import {
   Link2OffIcon,
   GitBranchPlusIcon,
   Link2Icon,
+  LockIcon,
 } from "lucide-react";
 import { User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -179,8 +180,9 @@ export const UserView: React.FC<UserViewProps> = ({
   // Form State
   const [formData, setFormData] = useState({
     name: user.name,
-    email: user.email || "",
     phone: user.phone || "",
+    password: "",
+    email: user.email || "",
     location: user.location || "",
     role: user.role,
   });
@@ -242,8 +244,9 @@ export const UserView: React.FC<UserViewProps> = ({
   useEffect(() => {
     setFormData({
       name: user.name,
-      email: user.email || "",
       phone: user.phone || "",
+      password: "",
+      email: user.email || "",
       location: user.location || "",
       role: user.role,
     });
@@ -268,14 +271,14 @@ export const UserView: React.FC<UserViewProps> = ({
   };
 
   const handleSave = () => {
-    const updatedUser: User = {
+    const updatedUser = {
       ...user,
       name: formData.name,
-      email: formData.email,
       phone: formData.phone,
+      password: formData.password,
+      email: formData.email,
       location: formData.location,
       role: formData.role,
-      updatedAt: new Date().toISOString(),
     };
 
     onUpdate(updatedUser);
@@ -285,8 +288,9 @@ export const UserView: React.FC<UserViewProps> = ({
   const handleCancel = () => {
     setFormData({
       name: user.name,
-      email: user.email || "",
       phone: user.phone || "",
+      password: "",
+      email: user.email || "",
       location: user.location || "",
       role: user.role,
     });
@@ -470,33 +474,14 @@ export const UserView: React.FC<UserViewProps> = ({
               )}
 
               <div className="flex flex-col md:flex-row items-center gap-3 text-sm">
-                {isEditing ? (
-                  <select
-                    value={formData.role}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        role: e.target.value as UserRole,
-                      })
-                    }
-                    className="px-3 py-1 rounded-full bg-input border border-border text-xs font-bold uppercase tracking-wider focus:border-primary focus:outline-none cursor-pointer"
-                  >
-                    <option value={UserRole.DEVELOPER}>Developer</option>
-                    <option value={UserRole.MASTER}>Master</option>
-                    <option value={UserRole.ADMIN}>Admin</option>
-                    <option value={UserRole.BRANCH}>Branch</option>
-                    <option value={UserRole.USER}>User</option>
-                  </select>
-                ) : (
-                  <div
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${getRoleColor(user.role)}`}
-                  >
-                    {getRoleIcon(user.role)}
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {user.role}
-                    </span>
-                  </div>
-                )}
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${getRoleColor(user.role)}`}
+                >
+                  {getRoleIcon(user.role)}
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {user.role}
+                  </span>
+                </div>
 
                 <span className="text-secondary flex items-center gap-1.5">
                   <div
@@ -510,20 +495,23 @@ export const UserView: React.FC<UserViewProps> = ({
             </div>
 
             {/* Main Action */}
-            {!isEditing && user.id !== currentUser?.id && (user.role === UserRole.USER && currentUser?.role === UserRole.BRANCH) && (
-              <button
-                onClick={handleStartChatWithUser}
-                disabled={!user.isActive}
-                className={`w-full md:w-auto px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                  user.isActive
-                    ? "bg-primary hover:bg-primary/90 text-white hover:shadow-primary/25"
-                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                }`}
-              >
-                <MessageSquare size={16} />
-                <span>Message</span>
-              </button>
-            )}
+            {!isEditing &&
+              user.id !== currentUser?.id &&
+              user.role === UserRole.USER &&
+              currentUser?.role === UserRole.BRANCH && (
+                <button
+                  onClick={handleStartChatWithUser}
+                  disabled={!user.isActive}
+                  className={`w-full md:w-auto px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    user.isActive
+                      ? "bg-primary hover:bg-primary/90 text-white hover:shadow-primary/25"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
+                >
+                  <MessageSquare size={16} />
+                  <span>Message</span>
+                </button>
+              )}
           </div>
 
           {/* Grid Layout for details */}
@@ -677,14 +665,14 @@ export const UserView: React.FC<UserViewProps> = ({
                     />
                   )}
                   {(currentUser?.role === UserRole.MASTER ||
-                    currentUser?.role === UserRole.DEVELOPER) && (
+                    currentUser?.role === UserRole.DEVELOPER) && isEditing && (
                     <EditableRow
-                      icon={Mail}
-                      label="Email Address"
-                      value={formData.email}
+                      icon={LockIcon}
+                      label="New Password"
+                      value={formData.password}
                       isEditing={isEditing}
                       onChange={(v: any) =>
-                        setFormData({ ...formData, email: v })
+                        setFormData({ ...formData, password: v })
                       }
                       disabled={!user.isActive}
                     />
@@ -698,6 +686,19 @@ export const UserView: React.FC<UserViewProps> = ({
                       isEditing={isEditing}
                       onChange={(v: any) =>
                         setFormData({ ...formData, phone: v })
+                      }
+                      disabled={!user.isActive}
+                    />
+                  )}
+                  {(currentUser?.role === UserRole.MASTER ||
+                    currentUser?.role === UserRole.DEVELOPER) && (
+                    <EditableRow
+                      icon={Mail}
+                      label="Email Address"
+                      value={formData.email}
+                      isEditing={isEditing}
+                      onChange={(v: any) =>
+                        setFormData({ ...formData, email: v })
                       }
                       disabled={!user.isActive}
                     />
@@ -899,6 +900,7 @@ const EditableRow = ({
           <input
             type="text"
             value={value}
+            min={label == "New Password" ? 6 : 1}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
