@@ -39,23 +39,32 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
   const [content, setContent] = useState("");
   const [caption, setCaption] = useState("");
   const [color, setColor] = useState(COLORS[0]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isImageMode, setIsImageMode] = useState(false);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Auto trigger file input when switching to image mode
+  // Auto trigger file input when switching to media mode
   useEffect(() => {
-    if (type === StatusType.IMAGE && !imagePreview && !isUploading) {
-      // Small delay to ensure the input is mounted
+    if (type === StatusType.IMAGE && !mediaPreview && !isUploading) {
       const timer = setTimeout(() => {
         fileInputRef.current?.click();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [type, imagePreview, isUploading]);
+  }, [type, mediaPreview, isUploading]);
+
+  // Clean up object URLs
+  useEffect(() => {
+    return () => {
+      if (mediaPreview && mediaPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(mediaPreview);
+      }
+    };
+  }, [mediaPreview]);
 
   const handleSend = async () => {
     if (!currentUser) return;
@@ -66,7 +75,7 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
     }
 
     if (type === StatusType.IMAGE && !selectedFile) {
-      alert("Please select an image");
+      alert("Please select an image or video");
       return;
     }
 
@@ -74,7 +83,7 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
     try {
       const statusData = {
         type: type,
-        content: type === StatusType.TEXT ? content : caption || "Photo",
+        content: type === StatusType.TEXT ? content : caption || "Media",
         color: type === StatusType.TEXT ? color : undefined,
         userId: currentUser.id,
       };
@@ -96,34 +105,48 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
       const file = e.target.files[0];
 
       // Validate file type
-      if (!file.type.startsWith("image/")) {
-        alert("Please select an image file");
+      if (file.type.startsWith("image/")) {
+        setMediaType("image");
+        setType(StatusType.IMAGE);
+      } else if (file.type.startsWith("video/")) {
+        setMediaType("video");
+        setType(StatusType.IMAGE); // Still use IMAGE type for videos in status
+      } else {
+        alert("Please select an image or video file");
         return;
       }
 
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        alert("Image size should be less than 10MB");
+      // Validate file size (max 50MB for videos, 10MB for images)
+      const maxSize = file.type.startsWith("video/")
+        ? 50 * 1024 * 1024
+        : 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`File size should be less than ${maxSize / (1024 * 1024)}MB`);
         return;
       }
 
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setImagePreview(url);
-      setType(StatusType.IMAGE);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setMediaPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-    
+
     // Clear the input so the same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
   };
 
-  const handleRemoveImage = () => {
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
+  const handleRemoveMedia = () => {
+    if (mediaPreview && mediaPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(mediaPreview);
     }
-    setImagePreview(null);
+    setMediaPreview(null);
     setSelectedFile(null);
     setCaption("");
+    setMediaType(null);
     setType(StatusType.TEXT);
   };
 
@@ -134,7 +157,7 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
       setType(StatusType.IMAGE);
       // The useEffect will trigger file input
     } else {
-      handleRemoveImage();
+      handleRemoveMedia();
       setType(StatusType.TEXT);
     }
   };
@@ -148,12 +171,12 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
 
   return (
     <div className="absolute inset-0 z-50 bg-[#0b141a] flex flex-col animate-in slide-in-from-bottom-full duration-300">
-      {/* Hidden file input - ALWAYS rendered */}
+      {/* Hidden file input - accept image and video files */}
       <input
         type="file"
         ref={fileInputRef}
         className="hidden"
-        accept="image/*"
+        accept="image/*,video/*"
         onChange={handleFileSelect}
         disabled={isUploading}
       />
@@ -178,10 +201,14 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
                 ? "text-white bg-white/10"
                 : "text-white/50 hover:text-white hover:bg-white/10"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Add Photo"
-            aria-label="Add Photo"
+            title="Add Photo/Video"
+            aria-label="Add Photo/Video"
           >
-            <ImageIcon size={24} />
+            {mediaType === "video" ? (
+              <Video size={24} />
+            ) : (
+              <ImageIcon size={24} />
+            )}
           </button>
           <button
             onClick={() => handleTypeToggle(StatusType.TEXT)}
@@ -249,18 +276,31 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
           </div>
         ) : (
           <div className="relative w-full h-full flex items-center justify-center">
-            {imagePreview ? (
+            {mediaPreview ? (
               <div className="relative w-full h-full flex items-center justify-center bg-black">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="max-h-full max-w-full object-contain"
-                />
+                {mediaType === "video" ? (
+                  <video
+                    ref={videoRef}
+                    src={mediaPreview}
+                    className="max-h-full max-w-full object-contain"
+                    controls
+                    autoPlay
+                    loop
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={mediaPreview}
+                    alt="Preview"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                )}
+
                 <button
-                  onClick={handleRemoveImage}
+                  onClick={handleRemoveMedia}
                   disabled={isUploading}
                   className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white backdrop-blur-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Remove image"
+                  aria-label="Remove media"
                 >
                   <X size={20} />
                 </button>
@@ -281,22 +321,32 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Video indicator */}
+                {mediaType === "video" && (
+                  <div className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs text-white/80 flex items-center gap-1">
+                    <Video size={14} />
+                    <span>Video Status</span>
+                  </div>
+                )}
               </div>
             ) : (
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
                 className="flex flex-col items-center gap-6 text-white/50 hover:text-white transition-colors p-12 border-2 border-dashed border-white/20 hover:border-white/50 rounded-3xl group disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Upload photo"
+                aria-label="Upload photo or video"
               >
                 <div className="p-6 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-300">
                   <ImageIcon size={64} />
                 </div>
                 <span className="text-2xl font-bold tracking-tight">
-                  Upload Photo
+                  Upload Photo/Video
                 </span>
                 <span className="text-sm">Click to browse your files</span>
-                <span className="text-xs text-white/30">Max 10MB</span>
+                <span className="text-xs text-white/30">
+                  Images: Max 10MB | Videos: Max 50MB
+                </span>
               </button>
             )}
           </div>
@@ -311,11 +361,11 @@ export const StatusCreator: React.FC<StatusCreatorProps> = ({
           onClick={handleSend}
           disabled={
             isUploading ||
-            (type === StatusType.TEXT ? !content.trim() : !imagePreview)
+            (type === StatusType.TEXT ? !content.trim() : !mediaPreview)
           }
           className={`w-16 h-16 rounded-full text-white shadow-xl transition-all active:scale-95 flex items-center justify-center pointer-events-auto ${
             isUploading ||
-            (type === StatusType.TEXT ? !content.trim() : !imagePreview)
+            (type === StatusType.TEXT ? !content.trim() : !mediaPreview)
               ? "bg-surface/20 backdrop-blur-md opacity-50 cursor-not-allowed"
               : "bg-primary hover:bg-primary/90 hover:scale-105"
           }`}

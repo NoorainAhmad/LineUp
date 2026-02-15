@@ -4,6 +4,7 @@ import {
   sendMessageSchema,
   chatCreateSchema,
 } from "../validators/chat.validator.js";
+import { UserRole } from "@/generated/prisma/index.js";
 
 export class ChatService {
   private static chatSelection = {
@@ -189,6 +190,200 @@ export class ChatService {
     } catch (error) {
       console.log(`[Inbox] Error: ${error}`);
       throw new Error("Inbox not found: " + (error as Error).message);
+    }
+  }
+
+  // Get inbox chats for a user with role-based visibility
+  static async getInboxRoleBased(userId: string) {
+    try {
+      // First get the current user with their role and relationships
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          children: true, // Users under this user
+        },
+      });
+
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      let chatWhereCondition: any = {};
+
+      // Role-based filtering
+      switch (currentUser.role) {
+        case UserRole.DEVELOPER:
+          // Developer can see ALL chats (no filter)
+          chatWhereCondition = {};
+          break;
+
+        case UserRole.MASTER:
+          // Master can see chats of:
+          // 1. Their own direct chats
+          // 2. Chats of all admins under them
+          // 3. Chats of all branches/users under those admins
+          const masterChildren = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Direct admins
+                { parent: { parentId: currentUser.id } }, // Branches under admins
+                { parent: { parent: { parentId: currentUser.id } } }, // Users under branches
+              ],
+            },
+            select: { id: true },
+          });
+
+          const relevantUserIds = [
+            currentUser.id,
+            ...masterChildren.map((u) => u.id),
+          ];
+
+          chatWhereCondition = {
+            members: {
+              some: {
+                userId: { in: relevantUserIds },
+              },
+            },
+          };
+          break;
+
+        case UserRole.ADMIN:
+          // Admin can see chats of:
+          // 1. Their own direct chats
+          // 2. Chats of all branches under them
+          // 3. Chats of all users under those branches
+          const adminChildren = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Direct branches
+                { parent: { parentId: currentUser.id } }, // Users under branches
+              ],
+            },
+            select: { id: true },
+          });
+
+          const adminRelevantUserIds = [
+            currentUser.id,
+            ...adminChildren.map((u) => u.id),
+          ];
+
+          chatWhereCondition = {
+            members: {
+              some: {
+                userId: { in: adminRelevantUserIds },
+              },
+            },
+          };
+          break;
+
+        case UserRole.BRANCH:
+          // Branch can see chats of:
+          // 1. Their own direct chats
+          // 2. Chats of users directly under them
+          const branchChildren = await prisma.user.findMany({
+            where: {
+              parentId: currentUser.id, // Users under this branch
+            },
+            select: { id: true },
+          });
+
+          const branchRelevantUserIds = [
+            currentUser.id,
+            ...branchChildren.map((u) => u.id),
+          ];
+
+          chatWhereCondition = {
+            members: {
+              some: {
+                userId: { in: branchRelevantUserIds },
+              },
+            },
+          };
+          break;
+
+        case UserRole.USER:
+          // Regular user can only see their own chats
+          chatWhereCondition = {
+            members: {
+              some: {
+                userId: currentUser.id,
+              },
+            },
+          };
+          break;
+
+        default:
+          // Fallback to only user's own chats
+          chatWhereCondition = {
+            members: {
+              some: {
+                userId: currentUser.id,
+              },
+            },
+          };
+      }
+
+      // Fetch chats with the constructed condition
+      const chats = await prisma.chat.findMany({
+        where: chatWhereCondition,
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          isGroup: true,
+          groupName: true,
+          groupImage: true,
+          createdAt: true,
+          updatedAt: true,
+          lastMessageId: true,
+          lastMessage: {
+            select: {
+              id: true,
+              content: true,
+              type: true,
+              createdAt: true,
+              senderId: true,
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+          members: {
+            select: {
+              id: true,
+              userId: true,
+              unreadCount: true,
+              isPinned: true,
+              isMuted: true,
+              isArchived: true,
+              joinedAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  status: true,
+                  lastSeen: true,
+                  role: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              messages: true,
+            },
+          },
+        },
+      });
+
+      return chats;
+    } catch (error) {
+      console.error(`[Inbox] Error for user ${userId}:`, error);
+      throw new Error("Failed to fetch inbox: " + (error as Error).message);
     }
   }
 

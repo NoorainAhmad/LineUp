@@ -1,0 +1,17 @@
+name: Check branch is up to date
+on: pull_request
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check if branch is behind master
+        run: |
+          git fetch origin master
+          BEHIND=$(git rev-list --count HEAD..origin/master)
+          if [ $BEHIND -gt 0 ]; then
+            echo "Branch is $BEHIND commits behind master. Please update."
+            exit 1
+          fi
