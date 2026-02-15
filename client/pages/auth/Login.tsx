@@ -48,7 +48,7 @@ export const Login: React.FC = () => {
       theme={theme}
       onToggleTheme={toggleTheme}
       title="Welcome back"
-      subtitle="Sign in with your Unique ID or Phone Number"
+      subtitle="Sign in with your ID or Phone Number"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (

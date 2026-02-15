@@ -85,7 +85,7 @@ export const Register: React.FC = () => {
             />
             <input
               type="text"
-              placeholder="Unique ID"
+              placeholder="Enter ID"
               value={formData.guid}
               onChange={(e) =>
                 setFormData({ ...formData, guid: e.target.value })
