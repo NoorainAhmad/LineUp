@@ -267,7 +267,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [showMuteDialog, setShowMuteDialog] = useState(false);
-  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
+    null,
+  );
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -401,8 +403,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }: {
       messageId: string;
       content: string;
-    }) =>
-      ChatService.editMessage(messageId, { content }),
+    }) => ChatService.editMessage(messageId, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
       queryClient.invalidateQueries({ queryKey: ["chats"] });
@@ -425,7 +426,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
     },
   });
 
-  const forwardMessageHandler = async (originalMessageId: string, targetChatIds: string[]) => {
+  const forwardMessageHandler = async (
+    originalMessageId: string,
+    targetChatIds: string[],
+  ) => {
     try {
       await ChatService.forwardMessage(originalMessageId, targetChatIds);
       // Invalidate all affected chat message queries
@@ -775,7 +779,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
         if (isVideo || isAudio) {
           const hasAudioTrack = await MediaUtils.hasAudio(file);
           if (hasAudioTrack) {
-            const result = window.confirm("Do you want to mute the audio? It has an audio track.");
+            const result = window.confirm(
+              "Do you want to mute the audio? It has an audio track.",
+            );
             if (result) {
               if (isVideo) {
                 file = await MediaUtils.muteVideo(file);
@@ -973,7 +979,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleEndEdit = useCallback(() => {
     if (!editingMessage) return;
-    updateMessageMutation.mutate({ messageId: editingMessage.id, content: inputValue });
+    updateMessageMutation.mutate({
+      messageId: editingMessage.id,
+      content: inputValue,
+    });
     setEditingMessage(null);
     setInputValue("");
     setReplyingTo(null);
@@ -1081,7 +1090,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {forwardingMessage && (
         <ForwardMessageModal
           message={forwardingMessage}
-          chats={(queryClient.getQueryData<Chat[]>(["chats"]) || [])}
+          chats={queryClient.getQueryData<Chat[]>(["chats"]) || []}
           onClose={() => setForwardingMessage(null)}
           onForward={forwardMessageHandler}
         />
@@ -1255,7 +1264,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {messages.map((msg) => {
               const isMe = msg.sender?.id === currentUserMember?.user?.id;
               const isPending = msg.isPending;
-              const repliedMsg = msg.replyToId ? messages.find((m) => m.id === msg.replyToId) : null;
+              const repliedMsg = msg.replyToId
+                ? messages.find((m) => m.id === msg.replyToId)
+                : null;
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
               const isSearchResult = searchResults.includes(msg.id);
@@ -1277,85 +1288,95 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
-                    {!isDeleted && !isPending && (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) && (
-                      <div
-                        className={`
+                    {!isDeleted &&
+                      !isPending &&
+                      (user?.role === UserRole.USER ||
+                        user?.role === UserRole.BRANCH ||
+                        (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                        (user?.role === UserRole.MASTER && chat.isGroup)) && (
+                        <div
+                          className={`
                           absolute -top-10 z-20 flex items-center gap-1 p-1 rounded-full bg-surface border border-border shadow-xl transition-all duration-200
                           ${isMe ? "right-0" : "left-0"}
                           ${isSelected ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none md:group-hover:opacity-100 md:group-hover:scale-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto"}
                         `}
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReplyingTo(msg);
-                            setSelectedMessageId(null);
-                            setEditingMessage(null);
-                          }}
-                          className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
                         >
-                          <Reply size={16} />
-                        </button>
-                        <div className="w-px h-3 bg-border"></div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setForwardingMessage(msg);
-                            setSelectedMessageId(null);
-                          }}
-                          className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                          title="Forward"
-                        >
-                          <Share2 size={16} />
-                        </button>
-                        <div className="w-px h-3 bg-border"></div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openReactionPicker(msg.id);
-                          }}
-                          className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                        >
-                          <Smile size={16} />
-                        </button>
-
-                        {isMe && (
-                          <>
-                            <div className="w-px h-3 bg-border"></div>
-                            {msg.type === MessageType.TEXT && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReplyingTo(msg);
+                              setSelectedMessageId(null);
+                              setEditingMessage(null);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                          >
+                            <Reply size={16} />
+                          </button>
+                          {user?.role === UserRole.BRANCH && (
+                            <>
+                              <div className="w-px h-3 bg-border"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleStartEdit(msg);
+                                  setForwardingMessage(msg);
+                                  setSelectedMessageId(null);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                                title="Forward"
                               >
-                                <Pencil size={16} />
+                                <Share2 size={16} />
                               </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMessage(msg.id);
-                              }}
-                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
+                            </>
+                          )}
+                          <div className="w-px h-3 bg-border"></div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReactionPicker(msg.id);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                          >
+                            <Smile size={16} />
+                          </button>
+
+                          {isMe && (
+                            <>
+                              <div className="w-px h-3 bg-border"></div>
+                              {msg.type === MessageType.TEXT && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartEdit(msg);
+                                  }}
+                                  className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMessage(msg.id);
+                                }}
+                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-red-400 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
 
                     {/* Message Bubble */}
                     <div
                       className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
-                        ${isDeleted
-                          ? "bg-surface text-secondary border border-border"
-                          : isMe
-                            ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
-                            : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
+                        ${
+                          isDeleted
+                            ? "bg-surface text-secondary border border-border"
+                            : isMe
+                              ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
+                              : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
                         }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                       `}
@@ -1365,9 +1386,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     >
                       {/* Forwarded Label */}
                       {!isDeleted && msg.forwardedFromId && (
-                        <div className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}>
+                        <div
+                          className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
+                        >
                           <Share2 size={12} />
-                          <span>Forwarded{msg.originalSenderName ? ` from ${msg.originalSenderName}` : ""}</span>
+                          <span>
+                            Forwarded
+                            {msg.originalSenderName
+                              ? ` from ${msg.originalSenderName}`
+                              : ""}
+                          </span>
                         </div>
                       )}
                       {/* Reply Quote */}
@@ -1381,8 +1409,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             {repliedMsg.sender?.id === user?.id
                               ? "You"
                               : chat.members.find(
-                                (m) => m.user.id === repliedMsg.sender?.id,
-                              )?.user.name || "Unknown"}
+                                  (m) => m.user.id === repliedMsg.sender?.id,
+                                )?.user.name || "Unknown"}
                           </p>
                           <p className="opacity-80 truncate">
                             {repliedMsg.content || "Attachment"}
@@ -1446,10 +1474,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                   e.stopPropagation();
                                   toggleReaction(msg.id, emoji);
                                 }}
-                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${(users as string[]).includes(user?.id || "")
-                                  ? "bg-primary/20 border-primary/50 text-text-main"
-                                  : "bg-surface border-border text-secondary hover:bg-surface-hover"
-                                  }`}
+                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${
+                                  (users as string[]).includes(user?.id || "")
+                                    ? "bg-primary/20 border-primary/50 text-text-main"
+                                    : "bg-surface border-border text-secondary hover:bg-surface-hover"
+                                }`}
                               >
                                 <span>{emoji}</span>
                                 <span className="font-mono">
@@ -1490,8 +1519,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                    (m) => m.user.id === replyingTo.sender?.id,
-                  )?.user.name || "Unknown"}
+                      (m) => m.user.id === replyingTo.sender?.id,
+                    )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -1545,10 +1574,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-surface-hover border border-transparent"
-                      }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
+                      index === selectedCannedIndex
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-surface-hover border border-transparent"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
@@ -1575,7 +1605,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
         )}
 
         {/* Input Bar */}
-        {(user?.role == UserRole.USER || user?.role == UserRole.BRANCH) && (
+        {(user?.role == UserRole.USER ||
+          user?.role == UserRole.BRANCH ||
+          (user?.role == UserRole.ADMIN && chat.isGroup) ||
+          (user?.role == UserRole.MASTER && chat.isGroup)) && (
           <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
             {showEmojiPicker && (
               <div
@@ -1724,7 +1757,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
               {inputValue.trim() || isRecording ? (
                 <button
                   onClick={
-                    isRecording ? () => stopRecording(false) : editingMessage ? handleEndEdit : handleTextSend
+                    isRecording
+                      ? () => stopRecording(false)
+                      : editingMessage
+                        ? handleEndEdit
+                        : handleTextSend
                   }
                   disabled={sendMessageMutation.isPending}
                   className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1740,7 +1777,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   )}
                 </button>
               ) : (
-                !editingMessage && !replyingTo && (
+                !editingMessage &&
+                !replyingTo && (
                   <button
                     onClick={startRecording}
                     disabled={sendMessageMutation.isPending}
