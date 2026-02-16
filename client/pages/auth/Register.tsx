@@ -55,7 +55,12 @@ export const Register: React.FC = () => {
       });
       navigate(`/verify/auth`, { state: { phone: userData.phone } });
     } catch (err: any) {
-      setError(err.message || "Registration failed.");
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Registration failed.";
+
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }
