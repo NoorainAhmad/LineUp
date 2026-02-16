@@ -176,6 +176,7 @@ export const UserView: React.FC<UserViewProps> = ({
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -202,20 +203,34 @@ export const UserView: React.FC<UserViewProps> = ({
   });
 
   // Query for searching users
-  const { data: searchResults = [], refetch: searchUsers } = useQuery({
-    queryKey: ["search-users", searchQuery],
-    queryFn: async () => {
-      if (!searchQuery.trim()) return [];
-      try {
-        const response = await UserService.searchUsers(searchQuery);
-        return Array.isArray(response) ? response : [];
-      } catch (error) {
-        console.error("Error searching users:", error);
-        return [];
-      }
-    },
-    enabled: false, // We'll manually trigger search
-  });
+  // const { data: searchResults = [], refetch: searchUsers } = useQuery({
+  //   queryKey: ["search-users", searchQuery],
+  //   queryFn: async () => {
+  //     if (!searchQuery.trim()) return [];
+  //     try {
+  //       const response = await UserService.searchUsers(searchQuery); 
+  //       return Array.isArray(response) ? response : [];
+  //     } catch (error) {
+  //       console.error("Error searching users:", error);
+  //       return [];
+  //     }
+  //   },
+  //   enabled: false, // We'll manually trigger search
+  // });
+
+  const searchUsers = async () => {
+    try {
+      const searchedUsers = subordinates.filter((user) =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.guid.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phone.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+      setSearchResults(searchedUsers);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      setSearchResults([]);
+    }
+  };
 
   // Query for user stats/analytics
   const { data: userStats } = useQuery({
