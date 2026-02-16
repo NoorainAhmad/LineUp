@@ -36,7 +36,10 @@ import { StatusService } from "@/services/status.service";
 import { ChatService } from "@/services/chat.service";
 import GroupProfileView from "./chat/GroupProfileView";
 import { MyProfileView } from "./profile/MyProfileView";
+import { z } from "zod";
 
+//State to handle create User error
+//const [error, setError] = useState<string | null>(null);
 // Helper function to normalize API response
 const normalizeChatData = (apiChat: any): Chat => {
   return {
@@ -109,6 +112,7 @@ export const Home: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { user: currentUser, logout } = useAuth();
   const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState(
     currentUser?.role === UserRole.USER ? "chat" : "dashboard",
@@ -281,7 +285,7 @@ export const Home: React.FC = () => {
   }, []);
 
   const handleTabChange = useCallback(
-    (tab: string) => { 
+    (tab: string) => {
       setActiveTab(tab);
       setSelectedChat(null);
       setSelectedStatusId(null);
@@ -395,13 +399,42 @@ export const Home: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["chats"] });
         setSelectedChat(newChat);
         setIsAddingUser(false);
-      } catch (error) {
-        console.error("Error adding contact:", error);
+      } catch (err: any) {
+        console.error("Error adding contact:", err);
+
+        const backendMessage =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to add contact.";
+
+        setError(backendMessage);
       }
     },
     [createUserMutation, currentUser, queryClient],
   );
+  function getUserFriendlyZodErrors(error: z.ZodError): Record<string, string> {
+    const fieldErrors: Record<string, string> = {};
 
+    for (const issue of error.issues) {
+      const field = issue.path.join("."); // "guid", "phone", "password"
+
+      if (issue.code === "too_small") {
+        if (issue.minimum === 6) {
+          fieldErrors[field] = `Must be at least 6 characters`;
+        } else if (issue.minimum === 10) {
+          fieldErrors[field] = `Must be at least 10 characters`;
+        }
+      }
+      // You can add more cases later: invalid_type, invalid_string, too_big, etc.
+      else {
+        // Fallback for unexpected cases
+        fieldErrors[field] = issue.message;
+      }
+    }
+
+    return fieldErrors;
+  }
   const handleCreateUser = useCallback(
     async (details: {
       guid: string;
@@ -418,8 +451,61 @@ export const Home: React.FC = () => {
         const newUser = await createUserMutation.mutateAsync(details);
         setSelectedUser(normalizeUserData(newUser));
         setIsCreatingUser(false);
-      } catch (error) {
-        console.error("Error creating user:", error);
+      } catch (err: any) {
+        console.error("Error creating user:", err);
+
+        let readableMessage = "User creation failed. Please try again.";
+
+        if (err instanceof z.ZodError) {
+          // ── Most common approach: field → first error message ────────
+          const fieldErrors: Record<string, string> = {};
+
+          err.issues.forEach((issue) => {
+            const field = issue.path.join("."); // "guid", "phone", "password"
+
+            // Use the custom message if it exists, otherwise fallback
+            let msg = issue.message;
+
+            // Optional: make messages nicer / more user-friendly
+            if (issue.code === "too_small") {
+              const fieldName =
+                issue.path[0] === "guid"
+                  ? "GUID"
+                  : issue.path[0] === "phone"
+                    ? "Phone number"
+                    : issue.path[0] === "password"
+                      ? "Password"
+                      : issue.path.join(".");
+
+              fieldErrors[issue.path.join(".")] =
+                ` ${fieldName} must be at least ${issue.minimum} characters`;
+            }
+
+            // You can also do: take the first error per field only
+            if (!fieldErrors[field]) {
+              fieldErrors[field] = msg;
+            }
+          });
+
+          // Decide how to show it
+          if (Object.keys(fieldErrors).length > 0) {
+            // Option A: set one main message (simplest for now)
+            readableMessage = Object.values(fieldErrors).join(" \n ");
+
+            // Option B: store field-level errors (best if you have inputs)
+            // setFieldErrors(fieldErrors);   ← add this state if you want per-field red text
+          }
+        }
+        // Handle other backend errors (Prisma duplicate, etc.)
+        else if (err?.response?.data?.error) {
+          readableMessage = err.response.data.error;
+        } else if (err?.response?.data?.message) {
+          readableMessage = err.response.data.message;
+        } else if (err?.message) {
+          readableMessage = err.message;
+        }
+
+        setError(readableMessage);
       }
     },
     [createUserMutation],
@@ -497,37 +583,36 @@ export const Home: React.FC = () => {
   );
 
   const handleTogglePin = useCallback(
-  async (chatId: string) => {
-    try {
-      // UI update
-      queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
-        old.map((chat) => {
-          if (chat.id === chatId) {
-            const updatedMembers = chat.members.map((member) =>
-              member.userId === currentUser!.id
-                ? { ...member, isPinned: !member.isPinned }
-                : member,
-            );
-            return { ...chat, members: updatedMembers };
-          }
-          return chat;
-        }),
-      );
-      // Backend API call
-      await ChatService.pinChatMember(chatId);
+    async (chatId: string) => {
+      try {
+        // UI update
+        queryClient.setQueryData(["chats"], (old: Chat[] = []) =>
+          old.map((chat) => {
+            if (chat.id === chatId) {
+              const updatedMembers = chat.members.map((member) =>
+                member.userId === currentUser!.id
+                  ? { ...member, isPinned: !member.isPinned }
+                  : member,
+              );
+              return { ...chat, members: updatedMembers };
+            }
+            return chat;
+          }),
+        );
+        // Backend API call
+        await ChatService.pinChatMember(chatId);
 
-      // Sync with server 
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
+        // Sync with server
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
+      } catch (error) {
+        console.error("Error toggling pin:", error);
 
-    } catch (error) {
-      console.error("Error toggling pin:", error);
-
-      // Rollback if API fails
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-    }
-  },
-  [currentUser.id, queryClient],
-);
+        // Rollback if API fails
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
+      }
+    },
+    [currentUser.id, queryClient],
+  );
 
   const handleArchiveChat = useCallback(
     async (chatId: string) => {
@@ -1021,13 +1106,15 @@ export const Home: React.FC = () => {
 
     if (activeTab === "my-profile") {
       return (
-        <MyProfileView onClose={() => {
-          if(currentUser?.role === UserRole.USER) {
-            setActiveTab("chat");
-          } else {
-            setActiveTab("dashboard");
-          }
-        }}/>
+        <MyProfileView
+          onClose={() => {
+            if (currentUser?.role === UserRole.USER) {
+              setActiveTab("chat");
+            } else {
+              setActiveTab("dashboard");
+            }
+          }}
+        />
       );
     }
 
@@ -1257,7 +1344,7 @@ export const Home: React.FC = () => {
 
         {/* 3. Main Content Window */}
         <div
-          className={`${(!showMainContentOnMobile && (activeTab !== "dashboard" && activeTab !== "my-profile" )) ? "hidden md:flex" : "flex"} flex-1 h-full min-w-0 bg-background relative`}
+          className={`${!showMainContentOnMobile && activeTab !== "dashboard" && activeTab !== "my-profile" ? "hidden md:flex" : "flex"} flex-1 h-full min-w-0 bg-background relative`}
         >
           {renderMainContent()}
 
@@ -1278,8 +1365,13 @@ export const Home: React.FC = () => {
 
           {isAddingUser && (
             <AddUserModal
-              onClose={() => setIsAddingUser(false)}
-              onAdd={handleAddContact}
+              onClose={() => {
+                setIsCreatingUser(false);
+                setError(null);
+              }}
+              onAdd={handleCreateUser}
+              //error={error}
+              showRoleSelection={true}
               masters={masters}
               admins={adminUsers}
               branches={branches}
@@ -1288,13 +1380,25 @@ export const Home: React.FC = () => {
 
           {isCreatingUser && (
             <AddUserModal
-              onClose={() => setIsCreatingUser(false)}
+              onClose={() => {
+                setIsCreatingUser(false);
+                setError(null); // reset when closing
+              }}
               onAdd={handleCreateUser}
+              //error={error} // 
               showRoleSelection={true}
               masters={masters}
               admins={adminUsers}
               branches={branches}
             />
+          )}
+          {error && (
+            <div className="fixed top-6 right-6 z-[9999] max-w-sm">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl shadow-lg backdrop-blur">
+                <div className="font-semibold mb-1">Error</div>
+                <div className="text-sm whitespace-pre-line">{error}</div>
+              </div>
+            </div>
           )}
         </div>
 
