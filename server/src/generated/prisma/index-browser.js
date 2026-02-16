@@ -172,6 +172,8 @@ exports.Prisma.MessageScalarFieldEnum = {
   fileSize: 'fileSize',
   mimeType: 'mimeType',
   replyToId: 'replyToId',
+  forwardedFromId: 'forwardedFromId',
+  originalSenderId: 'originalSenderId',
   isEdited: 'isEdited',
   isDeleted: 'isDeleted',
   reactions: 'reactions',

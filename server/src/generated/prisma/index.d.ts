@@ -5709,6 +5709,8 @@ export namespace Prisma {
     fileSize: string | null
     mimeType: string | null
     replyToId: string | null
+    forwardedFromId: string | null
+    originalSenderId: string | null
     isEdited: boolean | null
     isDeleted: boolean | null
     createdAt: Date | null
@@ -5726,6 +5728,8 @@ export namespace Prisma {
     fileSize: string | null
     mimeType: string | null
     replyToId: string | null
+    forwardedFromId: string | null
+    originalSenderId: string | null
     isEdited: boolean | null
     isDeleted: boolean | null
     createdAt: Date | null
@@ -5743,6 +5747,8 @@ export namespace Prisma {
     fileSize: number
     mimeType: number
     replyToId: number
+    forwardedFromId: number
+    originalSenderId: number
     isEdited: number
     isDeleted: number
     reactions: number
@@ -5763,6 +5769,8 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     replyToId?: true
+    forwardedFromId?: true
+    originalSenderId?: true
     isEdited?: true
     isDeleted?: true
     createdAt?: true
@@ -5780,6 +5788,8 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     replyToId?: true
+    forwardedFromId?: true
+    originalSenderId?: true
     isEdited?: true
     isDeleted?: true
     createdAt?: true
@@ -5797,6 +5807,8 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     replyToId?: true
+    forwardedFromId?: true
+    originalSenderId?: true
     isEdited?: true
     isDeleted?: true
     reactions?: true
@@ -5888,6 +5900,8 @@ export namespace Prisma {
     fileSize: string | null
     mimeType: string | null
     replyToId: string | null
+    forwardedFromId: string | null
+    originalSenderId: string | null
     isEdited: boolean
     isDeleted: boolean
     reactions: JsonValue | null
@@ -5923,6 +5937,8 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     replyToId?: boolean
+    forwardedFromId?: boolean
+    originalSenderId?: boolean
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: boolean
@@ -5944,6 +5960,8 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     replyToId?: boolean
+    forwardedFromId?: boolean
+    originalSenderId?: boolean
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: boolean
@@ -5964,6 +5982,8 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     replyToId?: boolean
+    forwardedFromId?: boolean
+    originalSenderId?: boolean
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: boolean
@@ -5984,6 +6004,8 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     replyToId?: boolean
+    forwardedFromId?: boolean
+    originalSenderId?: boolean
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: boolean
@@ -5991,7 +6013,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "fileUrl" | "fileName" | "fileSize" | "mimeType" | "replyToId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "fileUrl" | "fileName" | "fileSize" | "mimeType" | "replyToId" | "forwardedFromId" | "originalSenderId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
@@ -6024,6 +6046,8 @@ export namespace Prisma {
       fileSize: string | null
       mimeType: string | null
       replyToId: string | null
+      forwardedFromId: string | null
+      originalSenderId: string | null
       isEdited: boolean
       isDeleted: boolean
       reactions: Prisma.JsonValue | null
@@ -6465,6 +6489,8 @@ export namespace Prisma {
     readonly fileSize: FieldRef<"Message", 'String'>
     readonly mimeType: FieldRef<"Message", 'String'>
     readonly replyToId: FieldRef<"Message", 'String'>
+    readonly forwardedFromId: FieldRef<"Message", 'String'>
+    readonly originalSenderId: FieldRef<"Message", 'String'>
     readonly isEdited: FieldRef<"Message", 'Boolean'>
     readonly isDeleted: FieldRef<"Message", 'Boolean'>
     readonly reactions: FieldRef<"Message", 'Json'>
@@ -13573,6 +13599,8 @@ export namespace Prisma {
     fileSize: 'fileSize',
     mimeType: 'mimeType',
     replyToId: 'replyToId',
+    forwardedFromId: 'forwardedFromId',
+    originalSenderId: 'originalSenderId',
     isEdited: 'isEdited',
     isDeleted: 'isDeleted',
     reactions: 'reactions',
@@ -14172,6 +14200,8 @@ export namespace Prisma {
     fileSize?: StringNullableFilter<"Message"> | string | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
+    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
     reactions?: JsonNullableFilter<"Message">
@@ -14193,6 +14223,8 @@ export namespace Prisma {
     fileSize?: SortOrderInput | SortOrder
     mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
+    forwardedFromId?: SortOrderInput | SortOrder
+    originalSenderId?: SortOrderInput | SortOrder
     isEdited?: SortOrder
     isDeleted?: SortOrder
     reactions?: SortOrderInput | SortOrder
@@ -14217,6 +14249,8 @@ export namespace Prisma {
     fileSize?: StringNullableFilter<"Message"> | string | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
+    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
     reactions?: JsonNullableFilter<"Message">
@@ -14238,6 +14272,8 @@ export namespace Prisma {
     fileSize?: SortOrderInput | SortOrder
     mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
+    forwardedFromId?: SortOrderInput | SortOrder
+    originalSenderId?: SortOrderInput | SortOrder
     isEdited?: SortOrder
     isDeleted?: SortOrder
     reactions?: SortOrderInput | SortOrder
@@ -14262,6 +14298,8 @@ export namespace Prisma {
     fileSize?: StringNullableWithAggregatesFilter<"Message"> | string | null
     mimeType?: StringNullableWithAggregatesFilter<"Message"> | string | null
     replyToId?: StringNullableWithAggregatesFilter<"Message"> | string | null
+    forwardedFromId?: StringNullableWithAggregatesFilter<"Message"> | string | null
+    originalSenderId?: StringNullableWithAggregatesFilter<"Message"> | string | null
     isEdited?: BoolWithAggregatesFilter<"Message"> | boolean
     isDeleted?: BoolWithAggregatesFilter<"Message"> | boolean
     reactions?: JsonNullableWithAggregatesFilter<"Message">
@@ -15008,6 +15046,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15029,6 +15069,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15046,6 +15088,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15067,6 +15111,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15086,6 +15132,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15102,6 +15150,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -15120,6 +15170,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -16013,6 +16065,8 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
+    forwardedFromId?: SortOrder
+    originalSenderId?: SortOrder
     isEdited?: SortOrder
     isDeleted?: SortOrder
     reactions?: SortOrder
@@ -16031,6 +16085,8 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
+    forwardedFromId?: SortOrder
+    originalSenderId?: SortOrder
     isEdited?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -16048,6 +16104,8 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
+    forwardedFromId?: SortOrder
+    originalSenderId?: SortOrder
     isEdited?: SortOrder
     isDeleted?: SortOrder
     createdAt?: SortOrder
@@ -17615,6 +17673,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -17634,6 +17694,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -17966,6 +18028,8 @@ export namespace Prisma {
     fileSize?: StringNullableFilter<"Message"> | string | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
+    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
     reactions?: JsonNullableFilter<"Message">
@@ -18160,6 +18224,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -18179,6 +18245,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -18206,6 +18274,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -18226,6 +18296,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -18290,6 +18362,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -18310,6 +18384,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -19626,6 +19702,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -19793,6 +19871,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -19812,6 +19892,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -19830,6 +19912,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -20005,6 +20089,8 @@ export namespace Prisma {
     fileSize?: string | null
     mimeType?: string | null
     replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -20051,6 +20137,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -20070,6 +20158,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue
@@ -20088,6 +20178,8 @@ export namespace Prisma {
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     reactions?: NullableJsonNullValueInput | InputJsonValue

@@ -139,10 +139,12 @@ model Message {
   fileSize String?
   mimeType String?
 
-  replyToId String?
-  isEdited  Boolean @default(false)
-  isDeleted Boolean @default(false)
-  reactions Json?
+  replyToId        String?
+  forwardedFromId  String?
+  originalSenderId String?
+  isEdited         Boolean @default(false)
+  isDeleted        Boolean @default(false)
+  reactions        Json?
 
   asLastMessage Chat? @relation("LastMessage")
 
