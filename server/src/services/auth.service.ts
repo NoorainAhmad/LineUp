@@ -16,7 +16,7 @@ export class AuthService {
     id: true,
     guid: true,
     name: true,
-    phone: true,    
+    phone: true,
     email: true,
     location: true,
     avatarUrl: true,
@@ -37,10 +37,26 @@ export class AuthService {
   static async register(data: z.infer<typeof registerSchema>) {
     try {
       const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ guid: data.guid }, { phone: data.phone }] },
+        where: {
+          OR: [
+            { guid: data.guid },
+            { phone: data.phone }
+          ]
+        },
+        select: {
+          id:true,
+          guid: true,
+          phone: true,
+          isActive: true
+        }
       });
       if (existingUser && existingUser.isActive) {
-        throw new Error("User with this ID or Phone already exists");
+        if (existingUser.guid === data.guid) {
+          throw new Error("ID is already taken. Try another ID.");
+        }
+        if (existingUser.phone === data.phone) {
+          throw new Error("Phone number is already registered.");
+        }
       }
       if (existingUser && !existingUser.isActive) {
         await prisma.user.delete({ where: { id: existingUser.id } });
@@ -48,7 +64,9 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(data.password, 12);
       let activeBranchId = null;
       try {
-        const activeBranch = await prisma.system.findFirst({select: {activeBranchId: true}});
+        const activeBranch = await prisma.system.findFirst({
+          select: { activeBranchId: true },
+        });
         activeBranchId = activeBranch?.activeBranchId;
       } catch (error) {
         console.log(`[Registration] Error: ${error}`);
@@ -58,8 +76,10 @@ export class AuthService {
         const requestedBranch = await prisma.user.findFirst({
           where: { id: requestedBranchId },
         });
-        if (!requestedBranch){
-          console.log(`[Registration] Error: Branch not found assigning to active branch!`);
+        if (!requestedBranch) {
+          console.log(
+            `[Registration] Error: Branch not found assigning to active branch!`,
+          );
           requestedBranchId = activeBranchId;
         } else {
           requestedBranchId = requestedBranch.id;
@@ -81,9 +101,31 @@ export class AuthService {
         message: "Verification code sent successfully",
         data: { phone: data.phone },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.log(`[Registration] Error: ${error}`);
-      throw new Error("Registration failed: " + (error as Error).message);
+
+      // Prisma Unique Constraint Error (SAFE CHECK - NO IMPORT NEEDED)
+      if (error?.code === "P2002") {
+        console.log("[Registration] Raw Error:", error);
+        console.log("[Registration] Error Code:", error?.code);
+        console.log("[Registration] Error Message:", error?.message);
+
+
+        if (error?.message.includes("guid")) {
+          throw new Error("ID is already taken; try another ID name.");
+        }
+
+        if (error?.message.includes("phone")) {
+          throw new Error(
+            "Phone number already exists; try another phone number.",
+          );
+        }
+
+        throw new Error("User already exists with this information.");
+      }
+
+      // fallback error
+      throw new Error(error.message || "Registration failed.");
     }
   }
 
