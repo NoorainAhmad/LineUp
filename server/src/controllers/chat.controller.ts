@@ -3,6 +3,7 @@ import { ChatService } from "../services/chat.service.js";
 import {
   chatCreateSchema,
   sendMessageSchema,
+  forwardMessageSchema,
 } from "../validators/chat.validator.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 
@@ -31,7 +32,7 @@ export class ChatController {
     }
   }
 
-    // Edit a message
+  // Edit a message
   static async editMessage(req: AuthRequest, res: Response) {
     try {
       const userId = req.userId as string;
@@ -138,5 +139,17 @@ export class ChatController {
       return res.status(500).json({ error: error.message });
     }
   }
-  
+
+  // Forward a message to one or more chats
+  static async forwardMessage(req: AuthRequest, res: Response) {
+    try {
+      const senderId = req.userId as string;
+      const validatedData = forwardMessageSchema.parse(req.body);
+      const messages = await ChatService.forwardMessage(senderId, validatedData);
+      return res.status(201).json(messages);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
 }

@@ -23,7 +23,7 @@ export const chatCreateSchema = z.object({
 });
 
 // CHAT MEMBER UPDATE VALIDATOR
-export const chatMemberUpdateSchema = z.object({ 
+export const chatMemberUpdateSchema = z.object({
   isPinned: z.boolean().optional(),
   isMuted: z.boolean().optional(),
   isArchived: z.boolean().optional(),
@@ -39,3 +39,11 @@ export const messageReactionSchema = z.object({
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ChatCreateInput = z.infer<typeof chatCreateSchema>;
 export type ChatMemberUpdateInput = z.infer<typeof chatMemberUpdateSchema>;
+
+// FORWARD MESSAGE VALIDATOR
+export const forwardMessageSchema = z.object({
+  originalMessageId: z.string(),
+  targetChatIds: z.array(z.string()).min(1),
+});
+
+export type ForwardMessageInput = z.infer<typeof forwardMessageSchema>;

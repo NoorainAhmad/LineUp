@@ -110,6 +110,9 @@ export interface Message {
   mimeType?: string;
 
   replyToId?: string;
+  forwardedFromId?: string;
+  originalSenderId?: string;
+  originalSenderName?: string;
   isEdited: boolean;
   isDeleted: boolean;
   reactions?: Record<string, string[]>;
@@ -185,7 +188,7 @@ export interface Otp {
 }
 
 export interface System {
-  id: string; 
+  id: string;
   activeBranchId: string;
   activeBranch: User;
   workspaceName: string;

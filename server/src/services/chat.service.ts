@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import {
   sendMessageSchema,
   chatCreateSchema,
+  forwardMessageSchema,
 } from "../validators/chat.validator.js";
 import { UserRole } from "@/generated/prisma/index.js";
 
@@ -22,6 +23,8 @@ export class ChatService {
         fileSize: true,
         mimeType: true,
         replyToId: true,
+        forwardedFromId: true,
+        originalSenderId: true,
         isEdited: true,
         isDeleted: true,
         reactions: true,
@@ -451,6 +454,85 @@ export class ChatService {
     } catch (error) {
       console.log(`[Messages] Error: ${error}`);
       throw new Error("Messages not found: " + (error as Error).message);
+    }
+  }
+
+  // Forward a message to one or more chats
+  static async forwardMessage(
+    senderId: string,
+    data: z.infer<typeof forwardMessageSchema>,
+  ) {
+    try {
+      const { originalMessageId, targetChatIds } = data;
+
+      // Find original message
+      const original = await prisma.message.findUnique({
+        where: { id: originalMessageId },
+        include: {
+          sender: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      });
+
+      if (!original) throw new Error("Original message not found");
+      if (original.isDeleted) throw new Error("Cannot forward a deleted message");
+
+      const forwardedMessages = [];
+
+      for (const targetChatId of targetChatIds) {
+        // Verify sender is a member of the target chat
+        const membership = await prisma.chatMember.findUnique({
+          where: { userId_chatId: { userId: senderId, chatId: targetChatId } },
+        });
+        if (!membership) {
+          console.log(`[Forward] User ${senderId} is not a member of chat ${targetChatId}, skipping.`);
+          continue;
+        }
+
+        const message = await prisma.$transaction(async (tx) => {
+          const msg = await tx.message.create({
+            data: {
+              type: original.type,
+              content: original.content,
+              senderId,
+              chatId: targetChatId,
+              fileUrl: original.fileUrl,
+              fileName: original.fileName,
+              fileSize: original.fileSize,
+              mimeType: original.mimeType,
+              forwardedFromId: original.id,
+              originalSenderId: original.senderId,
+            },
+            include: {
+              sender: { select: { id: true, name: true, avatarUrl: true } },
+            },
+          });
+
+          await tx.chat.update({
+            where: { id: targetChatId },
+            data: {
+              lastMessageId: msg.id,
+              updatedAt: new Date(),
+            },
+          });
+
+          await tx.chatMember.updateMany({
+            where: { chatId: targetChatId, userId: { not: senderId } },
+            data: { unreadCount: { increment: 1 } },
+          });
+
+          return msg;
+        });
+
+        forwardedMessages.push({
+          ...message,
+          originalSenderName: original.sender.name,
+        });
+      }
+
+      return forwardedMessages;
+    } catch (error) {
+      console.log(`[Forward Message] Error: ${error}`);
+      throw new Error("Message forwarding failed: " + (error as Error).message);
     }
   }
 

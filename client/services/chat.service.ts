@@ -119,4 +119,13 @@ export class ChatService {
     const response = await api.patch(`/chats/${chatId}/pin`);
     return response.data;
   }
+
+  // Forward a message to one or more chats
+  static async forwardMessage(originalMessageId: string, targetChatIds: string[]) {
+    const response = await api.post("/chats/messages/forward", {
+      originalMessageId,
+      targetChatIds,
+    });
+    return response.data;
+  }
 }

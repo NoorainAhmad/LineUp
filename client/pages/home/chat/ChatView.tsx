@@ -33,6 +33,7 @@ import {
   Search,
   RefreshCw,
   MessageCircleCodeIcon,
+  Share2,
 } from "lucide-react";
 import {
   Chat,
@@ -46,6 +47,7 @@ import {
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmojiPicker } from "../../../components/ui/EmojiPicker";
 import { CameraModal } from "../../../components/modals/CameraModal";
+import { ForwardMessageModal } from "../../../components/modals/ForwardMessageModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChatService } from "@/services/chat.service";
 import AudioMessage from "@/components/ui/AudioMessage";
@@ -265,6 +267,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [showMuteDialog, setShowMuteDialog] = useState(false);
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -421,6 +424,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
     },
   });
+
+  const forwardMessageHandler = async (originalMessageId: string, targetChatIds: string[]) => {
+    try {
+      await ChatService.forwardMessage(originalMessageId, targetChatIds);
+      // Invalidate all affected chat message queries
+      targetChatIds.forEach((chatId) => {
+        queryClient.invalidateQueries({ queryKey: ["chat-messages", chatId] });
+      });
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    } catch (error) {
+      console.error("Failed to forward message:", error);
+      throw error;
+    }
+  };
 
   // Scroll utilities
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -756,8 +773,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
         // Check if video/audio has audio track
         if (isVideo || isAudio) {
-          const hasAudioTrack = await MediaUtils.hasAudio(file); 
-          if (hasAudioTrack) { 
+          const hasAudioTrack = await MediaUtils.hasAudio(file);
+          if (hasAudioTrack) {
             const result = window.confirm("Do you want to mute the audio? It has an audio track.");
             if (result) {
               if (isVideo) {
@@ -1060,6 +1077,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {/* Forward Message Modal */}
+      {forwardingMessage && (
+        <ForwardMessageModal
+          message={forwardingMessage}
+          chats={(queryClient.getQueryData<Chat[]>(["chats"]) || [])}
+          onClose={() => setForwardingMessage(null)}
+          onForward={forwardMessageHandler}
+        />
+      )}
+
       {/* Header */}
       <header className="h-18 px-4 md:px-6 bg-surface/90 backdrop-blur-xl flex items-center justify-between border-b border-border/60 shadow-sm relative z-20 transition-all shrink-0">
         {isSearchOpen ? (
@@ -1180,7 +1207,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 title="Search in chat"
               >
                 <Search size={20} />
-              </button> 
+              </button>
 
               <button
                 className="p-2 rounded-full transition-colors hover:bg-surface-hover hover:text-text-main"
@@ -1273,6 +1300,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            setForwardingMessage(msg);
+                            setSelectedMessageId(null);
+                          }}
+                          className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                          title="Forward"
+                        >
+                          <Share2 size={16} />
+                        </button>
+                        <div className="w-px h-3 bg-border"></div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             openReactionPicker(msg.id);
                           }}
                           className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
@@ -1312,12 +1351,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     <div
                       className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
-                        ${
-                          isDeleted
-                            ? "bg-surface text-secondary border border-border"
-                            : isMe
-                              ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
-                              : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
+                        ${isDeleted
+                          ? "bg-surface text-secondary border border-border"
+                          : isMe
+                            ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
+                            : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
                         }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                       `}
@@ -1325,6 +1363,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         handleMessageClick(e, msg.id, !!isDeleted)
                       }
                     >
+                      {/* Forwarded Label */}
+                      {!isDeleted && msg.forwardedFromId && (
+                        <div className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}>
+                          <Share2 size={12} />
+                          <span>Forwarded{msg.originalSenderName ? ` from ${msg.originalSenderName}` : ""}</span>
+                        </div>
+                      )}
                       {/* Reply Quote */}
                       {!isDeleted && repliedMsg && (
                         <div
@@ -1336,8 +1381,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             {repliedMsg.sender?.id === user?.id
                               ? "You"
                               : chat.members.find(
-                                  (m) => m.user.id === repliedMsg.sender?.id,
-                                )?.user.name || "Unknown"}
+                                (m) => m.user.id === repliedMsg.sender?.id,
+                              )?.user.name || "Unknown"}
                           </p>
                           <p className="opacity-80 truncate">
                             {repliedMsg.content || "Attachment"}
@@ -1401,11 +1446,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                   e.stopPropagation();
                                   toggleReaction(msg.id, emoji);
                                 }}
-                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${
-                                  (users as string[]).includes(user?.id || "")
-                                    ? "bg-primary/20 border-primary/50 text-text-main"
-                                    : "bg-surface border-border text-secondary hover:bg-surface-hover"
-                                }`}
+                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${(users as string[]).includes(user?.id || "")
+                                  ? "bg-primary/20 border-primary/50 text-text-main"
+                                  : "bg-surface border-border text-secondary hover:bg-surface-hover"
+                                  }`}
                               >
                                 <span>{emoji}</span>
                                 <span className="font-mono">
@@ -1446,8 +1490,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                      (m) => m.user.id === replyingTo.sender?.id,
-                    )?.user.name || "Unknown"}
+                    (m) => m.user.id === replyingTo.sender?.id,
+                  )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -1501,11 +1545,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
-                      index === selectedCannedIndex
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-surface-hover border border-transparent"
-                    }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-surface-hover border border-transparent"
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
