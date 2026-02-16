@@ -11,6 +11,9 @@ router.post("/", ChatController.createChat);
 // Send a new message
 router.post("/messages", ChatController.sendMessage);
 
+// Edit a new message
+router.patch("/messages/:messageId", ChatController.editMessage);
+
 // React to a message
 router.post("/messages/:messageId/react", ChatController.toggleReaction);
 
@@ -26,11 +29,11 @@ router.patch("/:chatId/read", ChatController.markAsRead);
 // Toggle archive status of a chat
 router.patch("/:chatId/archive", ChatController.toggleArchive);
 
-// Delete a message by ID
-router.delete("/messages/:messageId", ChatController.deleteMessage);
-
 // Pin a chat member
 router.patch("/:chatId/pin", ChatController.pinChatMember)
+
+// Delete a message by ID
+router.delete("/messages/:messageId", ChatController.deleteMessage);
 
 // Health check
 router.get("/health", (req, res) => {

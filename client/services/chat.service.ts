@@ -68,6 +68,12 @@ export class ChatService {
     return response.data;
   }
 
+  // Edit a message 
+  static async editMessage(messageId: string, data: any) {
+    const response = await api.patch(`/chats/messages/${messageId}`, data);
+    return response.data;
+  }
+
   // Toggle an emoji reaction on a message
   static async toggleReaction(messageId: string, emoji: string) {
     const response = await api.post(`/chats/messages/${messageId}/react`, {

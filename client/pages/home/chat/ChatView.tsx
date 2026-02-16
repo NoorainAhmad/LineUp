@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, use } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Phone,
@@ -399,13 +399,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       messageId: string;
       content: string;
     }) =>
-      ChatService.sendMessage({
-        chatId: chat?.id || "",
-        content,
-        type: MessageType.TEXT,
-        isEdit: true,
-        messageId,
-      }),
+      ChatService.editMessage(messageId, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
       queryClient.invalidateQueries({ queryKey: ["chats"] });
@@ -959,6 +953,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setSelectedMessageId(null);
     inputRef.current?.focus();
   }, []);
+
+  const handleEndEdit = useCallback(() => {
+    if (!editingMessage) return;
+    updateMessageMutation.mutate({ messageId: editingMessage.id, content: inputValue });
+    setEditingMessage(null);
+    setInputValue("");
+    setReplyingTo(null);
+    setSelectedMessageId(null);
+  }, [updateMessageMutation]);
 
   const handleNextMatch = () => {
     if (searchResults.length === 0) return;
@@ -1678,7 +1681,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               {inputValue.trim() || isRecording ? (
                 <button
                   onClick={
-                    isRecording ? () => stopRecording(false) : handleTextSend
+                    isRecording ? () => stopRecording(false) : editingMessage ? handleEndEdit : handleTextSend
                   }
                   disabled={sendMessageMutation.isPending}
                   className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}

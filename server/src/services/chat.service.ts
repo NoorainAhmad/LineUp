@@ -150,6 +150,54 @@ export class ChatService {
     }
   }
 
+  // Edit a message content
+  static async editMessage(
+    userId: string,
+    messageId: string,
+    newContent: string,
+  ) {
+    try {
+      // Verify the message exists and belongs to the user
+      const message = await prisma.message.findFirst({
+        where: {
+          id: messageId,
+          senderId: userId,
+          isDeleted: false, // Can't edit deleted messages
+        },
+      });
+
+      if (!message) {
+        throw new Error(
+          "Message not found or you don't have permission to edit it",
+        );
+      }
+
+      // Check if message is too old to edit (optional - 1 hour limit)
+      // const messageAge = Date.now() - new Date(message.createdAt).getTime();
+      // const oneHourInMs = 60 * 60 * 1000;
+      // if (messageAge > oneHourInMs) {
+      //   throw new Error("Messages older than 1 hour cannot be edited");
+      // }
+
+      // Update the message
+      const updatedMessage = await prisma.message.update({
+        where: { id: messageId },
+        data: {
+          content: newContent,
+          isEdited: true,
+        },
+        include: {
+          sender: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      });
+
+      return updatedMessage;
+    } catch (error) {
+      console.log(`[Edit Message] Error: ${error}`);
+      throw new Error("Message edit failed: " + (error as Error).message);
+    }
+  }
+
   // Reaction logic for a message
   static async toggleReaction(
     messageId: string,
@@ -460,7 +508,7 @@ export class ChatService {
   //Pin a message
   static async pinChat(chatId: string, userId: string) {
     const member = await prisma.chatMember.findFirst({
-      where: { userId, chatId }
+      where: { userId, chatId },
     });
 
     if (!member) throw new Error("No such chat exists");
@@ -468,8 +516,8 @@ export class ChatService {
     return prisma.chatMember.update({
       where: { id: member.id },
       data: {
-        isPinned: !member.isPinned // 🔥 toggle instead of always true
-      }
+        isPinned: !member.isPinned, // 🔥 toggle instead of always true
+      },
     });
   }
 }

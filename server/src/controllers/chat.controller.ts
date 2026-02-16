@@ -31,6 +31,22 @@ export class ChatController {
     }
   }
 
+    // Edit a message
+  static async editMessage(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.userId as string;
+      const messageId = req.params.messageId as string;
+      const newContent = req.body.content as string;
+      if (!messageId || !newContent) {
+        throw new Error("Message ID and message content are required");
+      }
+      const message = await ChatService.editMessage(userId, messageId, newContent);
+      return res.status(201).json(message);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
   // React to a message
   static async toggleReaction(req: AuthRequest, res: Response) {
     try {
