@@ -32,6 +32,9 @@ router.patch("/:chatId/archive", ChatController.toggleArchive);
 // Pin a chat member
 router.patch("/:chatId/pin", ChatController.pinChatMember)
 
+// Forward a message to one or more chats
+router.post("/messages/forward", ChatController.forwardMessage);
+
 // Delete a message by ID
 router.delete("/messages/:messageId", ChatController.deleteMessage);
 
