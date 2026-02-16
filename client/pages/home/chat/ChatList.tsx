@@ -10,6 +10,9 @@ import {
   ArrowLeft,
   MessageSquare,
   Loader2,
+  ArrowDownIcon,
+  EllipsisIcon,
+  EllipsisVertical,
 } from "lucide-react";
 import { Chat, User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -55,6 +58,8 @@ const ChatListItem = memo(
     onTogglePin: (chatId: string) => void;
     onArchive: (chatId: string) => void;
   }) => {
+    const [floatingMenu, setFloatingMenu] = useState(false);
+
     const {
       chat,
       displayUser,
@@ -74,18 +79,25 @@ const ChatListItem = memo(
     const handleTogglePin = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (floatingMenu) setFloatingMenu(false);
         onTogglePin(chat.id);
       },
-      [chat.id, onTogglePin],
+      [chat.id, onTogglePin, floatingMenu],
     );
 
     const handleArchive = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (floatingMenu) setFloatingMenu(false);
         onArchive(chat.id);
       },
-      [chat.id, onArchive],
+      [chat.id, onArchive, floatingMenu],
     );
+
+    const toggleFloatingMenu = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFloatingMenu((prev) => !prev);
+    }, []);
 
     return (
       <div
@@ -136,9 +148,14 @@ const ChatListItem = memo(
                 </span>
               )}
             </span>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-secondary/60">
-              {lastMessageTime}
-            </span>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-secondary/60">
+                {lastMessageTime}
+              </span> 
+              <span onClick={toggleFloatingMenu} className="inline-block md:hidden font-extrabold uppercase tracking-widest text-secondary">
+                <EllipsisIcon size={18} className="inline-block ml-2"/>
+              </span>
+            </div>
           </div>
 
           <div className="flex justify-between items-center">
@@ -177,6 +194,35 @@ const ChatListItem = memo(
         {(currentUser?.role === UserRole.BRANCH) && (
           <div
             className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            role="toolbar"
+            aria-label="Chat actions"
+          >
+            <button
+              onClick={handleTogglePin}
+              className={`p-1.5 rounded-lg transition-colors ${isPinned ? "bg-primary/10 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text-main"}`}
+              aria-label={isPinned ? "Unpin chat" : "Pin chat"}
+            >
+              {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
+            </button>
+            <button
+              onClick={handleArchive}
+              className="p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
+              aria-label={isArchived ? "Unarchive chat" : "Archive chat"}
+            >
+              {isArchived ? (
+                <ArchiveRestore size={15} />
+              ) : (
+                <Archive size={15} />
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Three dots Actions (Mobile) - Clean Floating Menu */}
+        {(currentUser?.role === UserRole.BRANCH) && floatingMenu && (
+          <div
+            className="flex md:hidden absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
             onClick={(e) => e.stopPropagation()}
             role="toolbar"
             aria-label="Chat actions"
