@@ -3,7 +3,7 @@ import { prisma } from "../config/db.js";
 // Send OTP
 const sendOtp = async (phone: string, code: string) => {
   await fetch(
-    `http://3.110.17.247/V2/http-api.php?apikey=8mPO0HaORVZ9p9yo&senderid=KNGCDS&number=${phone}&message=Your One Time Password is ${code}. Do not disclose this OTP to anyone. King of Cards&format=json`,
+    `http://3.110.17.247/V2/http-api.php?apikey=WRD3EhHXl2a3t6bv&senderid=MANFOU&number=${phone}&message=Hello, Your OTP for login is ${code} Thank You, Mangocity&format=json`,
     {
       method: "POST",
       headers: {
