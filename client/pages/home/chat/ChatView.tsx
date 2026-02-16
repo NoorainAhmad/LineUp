@@ -1568,7 +1568,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <Smile size={24} />
               </button>
 
-              {!editingMessage && (
+              {!editingMessage && !replyingTo && (
                 <div className="relative">
                   <button
                     onClick={() => {
@@ -1697,7 +1697,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   )}
                 </button>
               ) : (
-                !editingMessage && (
+                !editingMessage && !replyingTo && (
                   <button
                     onClick={startRecording}
                     disabled={sendMessageMutation.isPending}
