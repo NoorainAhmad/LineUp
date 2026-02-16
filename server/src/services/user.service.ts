@@ -96,11 +96,29 @@ export class UserService {
     try {
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [{ guid: data?.guid }, { phone: data?.phone }],
+          OR: [
+            { guid: data.guid },
+            { phone: data.phone }
+          ]
         },
+        select: {
+          id:true,
+          guid: true,
+          phone: true,
+          isActive: true
+        }
       });
-      if (existingUser)
-        throw new Error("User with this GUID or Phone already exists");
+      if (existingUser && existingUser.isActive) {
+        if (existingUser.guid === data.guid) {
+          throw new Error("ID is already taken. Try another ID.");
+        }
+        if (existingUser.phone === data.phone) {
+          throw new Error("Phone number is already registered.");
+        }
+      }
+      if (existingUser && !existingUser.isActive) {
+        await prisma.user.delete({ where: { id: existingUser.id } });
+      }
       const hashedPassword = await bcrypt.hash(data.password!, 12);
       const { password, ...rest } = data;
       return prisma.user.create({

@@ -19,6 +19,7 @@ import {
   ChevronDown,
   Fingerprint,
   Code2Icon,
+  AlertCircle,
 } from "lucide-react";
 import { UserRole, UserPermission, User as UserType } from "../../types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,19 +39,21 @@ interface ContactDetails {
 interface AddUserModalProps {
   onClose: () => void;
   onAdd: (details: ContactDetails) => void;
+  error?: string | null;
   showRoleSelection?: boolean;
   masters: UserType[];
   admins: UserType[];
-  branches: UserType[]; 
+  branches: UserType[];
 }
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
   onClose,
   onAdd,
+  error,
   showRoleSelection = false,
   masters,
   admins,
-  branches 
+  branches,
 }) => {
   const { user: CurrentUser } = useAuth();
 
@@ -58,7 +61,12 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   const getAllowedRoles = (): UserRole[] => {
     switch (CurrentUser?.role) {
       case UserRole.DEVELOPER:
-        return [UserRole.MASTER, UserRole.ADMIN, UserRole.BRANCH, UserRole.USER];
+        return [
+          UserRole.MASTER,
+          UserRole.ADMIN,
+          UserRole.BRANCH,
+          UserRole.USER,
+        ];
       case UserRole.MASTER:
         return [UserRole.ADMIN, UserRole.BRANCH, UserRole.USER];
       case UserRole.ADMIN:
@@ -73,15 +81,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   // Get default role based on current user
   const getDefaultRole = (): UserRole | undefined => {
     if (!showRoleSelection) return UserRole.USER;
-    
+
     const allowedRoles = getAllowedRoles();
     if (allowedRoles.length === 0) return undefined;
-    
+
     // Branch users default to USER role
     if (CurrentUser?.role === UserRole.BRANCH) {
       return UserRole.USER;
     }
-    
+
     // Others default to the lowest allowed role
     return allowedRoles[allowedRoles.length - 1];
   };
@@ -157,7 +165,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   // Get parent selection config
   const getParentSelectionConfig = () => {
     const availableParents = getAvailableParents();
-    
+
     switch (formData.role) {
       case UserRole.MASTER:
         return {
@@ -199,16 +207,25 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   // Auto-select parent when only one option is available
   useEffect(() => {
     const availableParents = getAvailableParents();
-    
+
     if (availableParents.length === 1) {
       setFormData((prev) => ({ ...prev, parentId: availableParents[0].id }));
-    } else if (formData.role === UserRole.USER && CurrentUser?.role === UserRole.BRANCH) {
+    } else if (
+      formData.role === UserRole.USER &&
+      CurrentUser?.role === UserRole.BRANCH
+    ) {
       // Auto-assign USER to current BRANCH
       setFormData((prev) => ({ ...prev, parentId: CurrentUser.id }));
-    } else if (formData.role === UserRole.BRANCH && CurrentUser?.role === UserRole.ADMIN) {
+    } else if (
+      formData.role === UserRole.BRANCH &&
+      CurrentUser?.role === UserRole.ADMIN
+    ) {
       // Auto-assign BRANCH to current ADMIN
       setFormData((prev) => ({ ...prev, parentId: CurrentUser.id }));
-    } else if (formData.role === UserRole.ADMIN && CurrentUser?.role === UserRole.MASTER) {
+    } else if (
+      formData.role === UserRole.ADMIN &&
+      CurrentUser?.role === UserRole.MASTER
+    ) {
       // Auto-assign ADMIN to current MASTER
       setFormData((prev) => ({ ...prev, parentId: CurrentUser.id }));
     } else {
@@ -218,7 +235,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.guid.trim()) {
       alert("Please enter a unique ID.");
       return;
@@ -307,6 +324,17 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
             onSubmit={handleSubmit}
             className="p-6 flex flex-col items-center gap-6 bg-background/50"
           >
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3.5 rounded-xl">
+                {error.split("\n").map((line, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span>•</span>
+                    <span>{line}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center border-2 border-dashed border-border shadow-sm group transition-all duration-300">
               {getRoleIcon()}
             </div>
@@ -329,7 +357,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                   }
                 />
               </div>
-              
+
               <div className="relative group">
                 <User
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors"
@@ -433,10 +461,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                       <option value={UserRole.MASTER}>Master (Root)</option>
                     )}
                     {allowedRoles.includes(UserRole.ADMIN) && (
-                      <option value={UserRole.ADMIN}>Admin (Regional Manager)</option>
+                      <option value={UserRole.ADMIN}>
+                        Admin (Regional Manager)
+                      </option>
                     )}
                     {allowedRoles.includes(UserRole.BRANCH) && (
-                      <option value={UserRole.BRANCH}>Branch (Location Manager)</option>
+                      <option value={UserRole.BRANCH}>
+                        Branch (Location Manager)
+                      </option>
                     )}
                     {allowedRoles.includes(UserRole.USER) && (
                       <option value={UserRole.USER}>User (Client)</option>
@@ -466,7 +498,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                     <option value="">{parentConfig.placeholder}</option>
                     {availableParents.map((opt) => (
                       <option key={opt.id} value={opt.id}>
-                        {opt.name} ({opt.role}) {opt.location ? `• ${opt.location}` : ''}
+                        {opt.name} ({opt.role}){" "}
+                        {opt.location ? `• ${opt.location}` : ""}
                       </option>
                     ))}
                   </select>
@@ -474,7 +507,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                     <ChevronDown size={16} />
                   </div>
                   <label className="absolute -top-2 left-3 bg-surface px-1 text-[10px] font-bold text-primary uppercase tracking-wider pointer-events-none">
-                    {parentConfig.label} {parentConfig.required && '*'}
+                    {parentConfig.label} {parentConfig.required && "*"}
                   </label>
                 </div>
               )}
