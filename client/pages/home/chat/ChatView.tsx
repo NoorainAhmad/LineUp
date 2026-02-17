@@ -1613,94 +1613,124 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
-                    {!isDeleted &&
-                      !isPending &&
-                      (user?.role === UserRole.USER ||
-                        user?.role === UserRole.BRANCH ||
-                        (user?.role === UserRole.ADMIN && chat.isGroup) ||
-                        (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                        <div
-                          className={`
+                    {!isDeleted && !isPending && (
+                      <div
+                        className={`
                           absolute -top-10 z-20 flex items-center gap-1 p-1 rounded-full bg-surface border border-border shadow-xl transition-all duration-200
                           ${isMe ? "right-0" : "left-0"}
                           ${isSelected ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2 pointer-events-none md:group-hover:opacity-100 md:group-hover:scale-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto"}
                         `}
-                        >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReplyingTo(msg);
-                              setSelectedMessageId(null);
-                              setEditingMessage(null);
-                            }}
-                            className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                          >
-                            <Reply size={16} />
-                          </button>
-                          {user?.role === UserRole.BRANCH && (
+                      >
+                        {/* Reply */}
+                        {(user?.role === UserRole.USER ||
+                          user?.role === UserRole.BRANCH ||
+                          (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                          (user?.role === UserRole.MASTER && chat.isGroup)) && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingTo(msg);
+                                setSelectedMessageId(null);
+                                setEditingMessage(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Reply size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
+                        {/* Forward */}
+                        {(user?.role === UserRole.BRANCH ||
+                          (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                          (user?.role === UserRole.MASTER && chat.isGroup)) && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setForwardingMessage(msg);
+                                setSelectedMessageId(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                              title="Forward"
+                            >
+                              <Share2 size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
+                        {/* Reactions */}
+                        {(user?.role === UserRole.USER ||
+                          user?.role === UserRole.BRANCH ||
+                          (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                          (user?.role === UserRole.MASTER && chat.isGroup)) && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReactionPicker(msg.id);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Smile size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
+                        {/* Edit */}
+                        {isMe &&
+                          (user?.role === UserRole.USER ||
+                            user?.role === UserRole.BRANCH ||
+                            (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                            (user?.role === UserRole.MASTER && chat.isGroup)) &&
+                          msg.type === MessageType.TEXT && (
                             <>
-                              <div className="w-px h-3 bg-border"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setForwardingMessage(msg);
-                                  setSelectedMessageId(null);
+                                  handleStartEdit(msg);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                                title="Forward"
                               >
-                                <Share2 size={16} />
+                                <Pencil size={16} />
                               </button>
+                              <div className="w-px h-3 bg-border"></div>
                             </>
                           )}
-                          <div className="w-px h-3 bg-border"></div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openReactionPicker(msg.id);
-                            }}
-                            className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                          >
-                            <Smile size={16} />
-                          </button>
-                          {isMe && (
+                        {/* Copy */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyMessage(
+                              msg.id,
+                              msg.content || msg.fileName || "Attachment",
+                            );
+                          }}
+                          className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors relative"
+                          title="Copy message"
+                        >
+                          {copiedMessageId === msg.id ? (
+                            <Check size={16} className="text-green-500" />
+                          ) : (
+                            <Copy size={16} />
+                          )}
+                        </button>
+                        {/* Delete */}
+                        {isMe &&
+                          (user?.role === UserRole.USER ||
+                            user?.role === UserRole.BRANCH ||
+                            (user?.role === UserRole.ADMIN && chat.isGroup) ||
+                            (user?.role === UserRole.MASTER &&
+                              chat.isGroup)) && (
                             <>
                               <div className="w-px h-3 bg-border"></div>
-                              {msg.type === MessageType.TEXT && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStartEdit(msg);
-                                  }}
-                                  className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                              )}
-                              <div className="w-px h-3 bg-border"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCopyMessage(
-                                    msg.id,
-                                    msg.content || msg.fileName || "Attachment",
-                                  );
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors relative"
-                                title="Copy message"
-                              >
-                                {copiedMessageId === msg.id ? (
-                                  <Check size={16} className="text-green-500" />
-                                ) : (
-                                  <Copy size={16} />
-                                )}
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.confirm("Are you sure you want to delete this message?") &&
-                                    handleDeleteMessage(msg.id);
+                                  window.confirm(
+                                    "Are you sure you want to delete this message?",
+                                  ) && handleDeleteMessage(msg.id);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-red-400 transition-colors"
                               >
@@ -1708,8 +1738,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                               </button>
                             </>
                           )}
-                        </div>
-                      )}
+                      </div>
+                    )}
 
                     {/* Message Bubble */}
                     <div
