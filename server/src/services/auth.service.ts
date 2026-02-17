@@ -177,7 +177,7 @@ export class AuthService {
       const requestedUser = await prisma.user.findFirst({
         where: { OR: [{ guid: data.identity }, { phone: data.identity }] },
       });
-      if (!requestedUser) throw new Error("Invalid credentials");
+      if (!requestedUser) throw new Error("No such user exists");
       if (!requestedUser.isActive) {
         throw new Error(
           "Account not verified. Please verify your phone number.",

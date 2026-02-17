@@ -53,7 +53,14 @@ export const Reset: React.FC = () => {
       setSuccess(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to reset password.");
+      const backendMessage =
+        err?.response?.data?.readableMessage || 
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to reset password";
+
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }

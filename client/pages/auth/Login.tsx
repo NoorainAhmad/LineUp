@@ -36,8 +36,14 @@ export const Login: React.FC = () => {
       login(response.data.user, response.data.token);
       navigate("/");
     } catch (err: any) {
-      const errorMessage = err.message || "Login failed.";
-      setError(errorMessage);
+      const backendMessage =
+        err?.response?.data?.readableMessage || // ⭐ FIRST PRIORITY (Zod detailed errors)
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Login failed.";
+
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }

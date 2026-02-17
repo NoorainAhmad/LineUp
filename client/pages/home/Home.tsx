@@ -413,28 +413,7 @@ export const Home: React.FC = () => {
     },
     [createUserMutation, currentUser, queryClient],
   );
-  function getUserFriendlyZodErrors(error: z.ZodError): Record<string, string> {
-    const fieldErrors: Record<string, string> = {};
-
-    for (const issue of error.issues) {
-      const field = issue.path.join("."); // "guid", "phone", "password"
-
-      if (issue.code === "too_small") {
-        if (issue.minimum === 6) {
-          fieldErrors[field] = `Must be at least 6 characters`;
-        } else if (issue.minimum === 10) {
-          fieldErrors[field] = `Must be at least 10 characters`;
-        }
-      }
-      // You can add more cases later: invalid_type, invalid_string, too_big, etc.
-      else {
-        // Fallback for unexpected cases
-        fieldErrors[field] = issue.message;
-      }
-    }
-
-    return fieldErrors;
-  }
+  
   const handleCreateUser = useCallback(
     async (details: {
       guid: string;
@@ -1393,7 +1372,7 @@ export const Home: React.FC = () => {
             />
           )}
           {error && (
-            <div className="fixed top-6 right-6 z-[9999] max-w-sm">
+            <div className="fixed top-6 right-6 z-9999 max-w-sm">
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl shadow-lg backdrop-blur">
                 <div className="font-semibold mb-1">Error</div>
                 <div className="text-sm whitespace-pre-line">{error}</div>

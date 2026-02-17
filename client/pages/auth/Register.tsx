@@ -56,8 +56,10 @@ export const Register: React.FC = () => {
       navigate(`/verify/auth`, { state: { phone: userData.phone } });
     } catch (err: any) {
       const backendMessage =
+        err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
+        err?.message ||
         "Registration failed.";
 
       setError(backendMessage);
