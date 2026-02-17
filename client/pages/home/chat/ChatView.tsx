@@ -32,6 +32,7 @@ import {
   Strikethrough,
   Code,
   HelpCircle,
+  Copy,
 } from "lucide-react";
 import {
   Chat,
@@ -733,6 +734,28 @@ export const ChatView: React.FC<ChatViewProps> = ({
     } catch (error) {
       console.error("Failed to forward message:", error);
       throw error;
+    }
+  };
+
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [copiedReplyId, setCopiedReplyId] = useState<string | null>(null);
+
+  const handleCopyMessage = async (
+    messageId: string,
+    content: string,
+    type: "message" | "reply" = "message",
+  ) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      if (type === "message") {
+        setCopiedMessageId(messageId);
+        setTimeout(() => setCopiedMessageId(null), 2000);
+      } else {
+        setCopiedReplyId(messageId);
+        setTimeout(() => setCopiedReplyId(null), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to copy:", err);
     }
   };
 
@@ -1654,10 +1677,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                   <Pencil size={16} />
                                 </button>
                               )}
+                              <div className="w-px h-3 bg-border"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDeleteMessage(msg.id);
+                                  handleCopyMessage(
+                                    msg.id,
+                                    msg.content || msg.fileName || "Attachment",
+                                  );
+                                }}
+                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors relative"
+                                title="Copy message"
+                              >
+                                {copiedMessageId === msg.id ? (
+                                  <Check size={16} className="text-green-500" />
+                                ) : (
+                                  <Copy size={16} />
+                                )}
+                              </button>
+                              <div className="w-px h-3 bg-border"></div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.confirm("Are you sure you want to delete this message?") &&
+                                    handleDeleteMessage(msg.id);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-red-400 transition-colors"
                               >
@@ -2038,8 +2081,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         replyingTo
                           ? "Type your reply..."
                           : editingMessage
-                            ? "Edit your message..."
-                            : "Type a message..."
+                            ? "Edit your msg..."
+                            : "Type a msg..."
                       }
                       className="absolute inset-0 w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base resize-none overflow-y-auto"
                       style={{ minHeight: "44px", maxHeight: "120px" }}
@@ -2049,7 +2092,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       disabled={sendMessageMutation.isPending}
                       rows={1}
                     />
-                  </div> 
+                  </div>
                   {!inputValue &&
                     !isRecording &&
                     !sendMessageMutation.isPending && (

@@ -152,9 +152,12 @@ const ChatListItem = memo(
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-secondary/60">
                 {lastMessageTime}
-              </span> 
-              <span onClick={toggleFloatingMenu} className="inline-block md:hidden font-extrabold uppercase tracking-widest text-secondary">
-                <EllipsisIcon size={18} className="inline-block ml-2"/>
+              </span>
+              <span
+                onClick={toggleFloatingMenu}
+                className="inline-block md:hidden font-extrabold uppercase tracking-widest text-secondary"
+              >
+                <EllipsisIcon size={18} className="inline-block ml-2" />
               </span>
             </div>
           </div>
@@ -168,7 +171,14 @@ const ChatListItem = memo(
                   You:
                 </span>
               )}
-              <FormattedText text={lastMessage?.content || "Start a conversation"}/>
+              <FormattedText
+                text={
+                  ((lastMessage?.content || "").length < 28
+                    ? lastMessage?.content
+                    : lastMessage?.content?.slice(0, 28) + "...") ||
+                  "Start a conversation"
+                }
+              />
             </p>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -192,7 +202,7 @@ const ChatListItem = memo(
         </div>
 
         {/* Hover Actions - Clean Floating Menu */}
-        {(currentUser?.role === UserRole.BRANCH) && (
+        {currentUser?.role === UserRole.BRANCH && (
           <div
             className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
             onClick={(e) => e.stopPropagation()}
@@ -221,7 +231,7 @@ const ChatListItem = memo(
         )}
 
         {/* Three dots Actions (Mobile) - Clean Floating Menu */}
-        {(currentUser?.role === UserRole.BRANCH) && floatingMenu && (
+        {currentUser?.role === UserRole.BRANCH && floatingMenu && (
           <div
             className="flex md:hidden absolute right-3 top-1/2 -translate-y-1/2 bg-surface shadow-xl border border-border/50 rounded-xl p-1 gap-0.5 z-30 animate-in fade-in slide-in-from-right-2 duration-150"
             onClick={(e) => e.stopPropagation()}
