@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, use } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Phone,
-  Video,
   MoreHorizontal,
   Smile,
-  Paperclip,
   Send,
   Mic,
   ArrowLeft,
@@ -13,8 +10,6 @@ import {
   CheckCheck,
   FileText,
   Download,
-  Play,
-  Pause,
   X,
   Reply,
   Plus,
@@ -27,8 +22,6 @@ import {
   ChevronDown,
   Command,
   Sparkles,
-  Pin,
-  PinOff,
   ArrowDown,
   Search,
   RefreshCw,
@@ -59,7 +52,7 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
- 
+
 interface ChatViewProps {
   chat: Chat | null;
   onBack: () => void;
@@ -218,7 +211,6 @@ const renderMessageContent = (
     </div>
   );
 };
-
 
 const FormattingHint = () => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -494,7 +486,7 @@ const FormattingHint = () => {
     </div>
   );
 };
- 
+
 const FormattingRow = ({
   syntax,
   example,
@@ -1648,7 +1640,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           >
                             <Smile size={16} />
                           </button>
-
                           {isMe && (
                             <>
                               <div className="w-px h-3 bg-border"></div>
@@ -1727,7 +1718,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           </p>
                         </div>
                       )}
-
                       {isDeleted ? (
                         <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
                           <Ban size={14} className="text-secondary" />
@@ -1744,7 +1734,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           audioRefs,
                         )
                       )}
-
                       {/* Message Meta */}
                       <div
                         className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
@@ -2020,55 +2009,57 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {/* Text Input */}
             <div className="flex-1 min-h-12.5 flex items-center relative">
               {isRecording ? (
-                <div className="absolute inset-0 flex items-center px-4 z-20 animate-pulse text-red-500 gap-3">
-                  <div className="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
-                  <span className="font-mono font-bold text-lg">
+                <div className="absolute inset-0 flex items-center px-0 z-20 animate-pulse text-red-500 gap-2">
+                  <div className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full bg-red-500 animate-ping"></div>
+                  <span className="font-mono font-bold text-sm md:text-lg">
                     {formatTime(recordingDuration)}
                   </span>
-                  <span className="text-sm font-medium">Recording...</span>
+                  <span className="text-xs md:text-sm font-medium">rec...</span>
                   <div className="flex-1"></div>
                   <button
                     onClick={() => stopRecording(true)}
-                    className="p-2 hover:bg-red-500/10 rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
+                    className="p-2 hover:bg-red-500/50 bg-red-500/80 text-text-main rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
                   >
                     <X size={16} />
                   </button>
                 </div>
               ) : (
-                <div className="w-full relative">
-                  <div
-                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-2 py-3 text-base"
-                    style={{ minHeight: "44px" }}
-                  >
-                    {inputValue || "placeholder"}
-                  </div>
-                  <textarea
-                    ref={inputRef}
-                    placeholder={
-                      replyingTo
-                        ? "Type your reply..."
-                        : editingMessage
-                          ? "Edit your message..."
-                          : "Type a message..."
-                    }
-                    className="absolute inset-0 w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base resize-none overflow-y-auto"
-                    style={{ minHeight: "44px", maxHeight: "120px" }}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    disabled={sendMessageMutation.isPending}
-                    rows={1}
-                  />
-                </div>
+                <>
+                  <div className="w-full relative">
+                    <div
+                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-2 py-3 text-base"
+                      style={{ minHeight: "44px" }}
+                    >
+                      {inputValue || "placeholder"}
+                    </div>
+                    <textarea
+                      ref={inputRef}
+                      placeholder={
+                        replyingTo
+                          ? "Type your reply..."
+                          : editingMessage
+                            ? "Edit your message..."
+                            : "Type a message..."
+                      }
+                      className="absolute inset-0 w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base resize-none overflow-y-auto"
+                      style={{ minHeight: "44px", maxHeight: "120px" }}
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      disabled={sendMessageMutation.isPending}
+                      rows={1}
+                    />
+                  </div> 
+                  {!inputValue &&
+                    !isRecording &&
+                    !sendMessageMutation.isPending && (
+                      <div className="absolute right-0 pointer-events-none opacity-30 flex items-center gap-1 pr-2">
+                        <Command size={14} />
+                        <span className="text-xs">/</span>
+                      </div>
+                    )}
+                </>
               )}
-              {!inputValue &&
-                !isRecording &&
-                !sendMessageMutation.isPending && (
-                  <div className="absolute right-0 pointer-events-none opacity-30 flex items-center gap-1 pr-2">
-                    <Command size={14} />
-                    <span className="text-xs">/</span>
-                  </div>
-                )}
             </div>
 
             {/* Send Button */}
