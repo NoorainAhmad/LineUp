@@ -18,6 +18,7 @@ import { Chat, User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormattedText } from "@/components/ui/FormattedText";
+import { formatLastMessageTime } from "@/utils/time_formatter.utils";
 
 interface ChatListProps {
   chats: Chat[];
@@ -402,10 +403,7 @@ export const ChatList: React.FC<ChatListProps> = ({
         }
 
         const lastMessageTime = chat.lastMessage?.createdAt
-          ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+          ? formatLastMessageTime(chat.lastMessage.createdAt)
           : "";
 
         // Check if the last message was sent by me
