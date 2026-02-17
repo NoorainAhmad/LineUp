@@ -1199,7 +1199,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           );
 
           await sendMessageMutation.mutateAsync({
-            content: `Voice message (${durationStr})`,
+            content: `Voice message`,
             type: MessageType.AUDIO,
             fileData: {
               file: audioFile,
