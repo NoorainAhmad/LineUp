@@ -39,7 +39,7 @@ export const Login: React.FC = () => {
       const backendMessage =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        "Registration failed.";
+        "Login failed.";
 
       setError(backendMessage);
     } finally {
