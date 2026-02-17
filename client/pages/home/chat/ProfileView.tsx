@@ -19,6 +19,7 @@ import {
 import { User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { UserService } from "@/services/user.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileViewProps {
   userId: string;
@@ -33,6 +34,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onUpdate,
   onDelete,
 }) => {
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -240,7 +242,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           />
         ) : (
           <span className="text-secondary text-sm font-mono mt-1">
-            {user?.phone || "No phone number"}
+            {currentUser?.role === UserRole.DEVELOPER && (user?.phone || "No phone number")}
           </span>
         )}
 
