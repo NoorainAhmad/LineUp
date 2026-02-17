@@ -2219,6 +2219,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     wrap="soft"
                     inputMode="text"
                     // enterKeyHint="send"
+                    enterKeyHint="enter"
                     autoCapitalize="sentences"
                     autoCorrect="on"
                     spellCheck="true"
