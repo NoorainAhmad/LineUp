@@ -29,9 +29,11 @@ export const Forgot: React.FC = () => {
       navigate(`/verify/reset`, { state: { phone } });
     } catch (err: any) {
       const backendMessage =
+        err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        "Registration failed.";
+        err?.message ||
+        "Password reset failed";
 
       setError(backendMessage);
     } finally {

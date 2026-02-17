@@ -63,8 +63,10 @@ export const Verify: React.FC = () => {
       inputRefs.current[0]?.focus();
     } catch (err: any) {
       const backendMessage =
+        err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
+        err?.message ||
         "Failed to resend OTP.";
 
       setError(backendMessage);
@@ -104,8 +106,10 @@ export const Verify: React.FC = () => {
       }
     } catch (err: any) {
       const backendMessage =
+        err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
+        err?.message ||
         "OTP verification failed.";
 
       setError(backendMessage);
