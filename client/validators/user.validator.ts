@@ -5,7 +5,7 @@ const RoleEnum = z.enum(["DEVELOPER", "MASTER", "ADMIN", "BRANCH", "USER"]);
 
 // USER CREATE VALIDATOR
 export const userCreateSchema = z.object({
-  guid: z.string(),
+  guid: z.string().min(6),
   name: z.string().min(2).max(50),
   phone: z.string().min(10),
   password: z.string().min(6),
