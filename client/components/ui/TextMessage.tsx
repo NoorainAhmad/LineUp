@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Link as LinkIcon, Phone, Mail, Globe, Code } from 'lucide-react';
+import { Link as LinkIcon, Phone, Mail, Code } from 'lucide-react';
+import { FormattedText } from './FormattedText';
 
 interface TextMessageProps {
   msg: {
@@ -10,7 +11,7 @@ interface TextMessageProps {
 }
 
 // Types of detected entities
-type EntityType = 'url' | 'phone' | 'email' | 'code';
+type EntityType = 'url' | 'phone' | 'email';
 
 interface DetectedEntity {
   type: EntityType;
@@ -22,29 +23,28 @@ interface DetectedEntity {
 
 const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
   
-  // Detect all entities in the text
+  // Detect entities (URLs, phones, emails) - NO code detection
   const entities = useMemo(() => {
     const detected: DetectedEntity[] = [];
     const text = msg.content;
     
-    // URL detection - improved regex for better URL matching
+    // URL detection
     const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+\.[^\s]+)|([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?(?:\/[^\s]*)?)/gi;
     
-    // Phone number detection (international format)
-    const phoneRegex = /(?:\+?(\d{1,3}))?[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+    // Phone number detection
+    const phoneRegex = /(?:\+?(\d{1,3}))?[-.\s]?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{4,9}/g;
     
     // Email detection
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    
-    // Code/special characters detection (sequences of special chars or code-like patterns)
-    const codeRegex = /[{}[\]()<>$&@!`~|\\/^+=;:#%'"*]{2,}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|https?:\/\/[^\s]+/g;
     
     let match: any;
     
     // Find URLs
     while ((match = urlRegex.exec(text)) !== null) {
-      // Avoid duplicates and overlapping matches
       const url = match[0];
+      // Skip if it looks like an email
+      if (url.includes('@')) continue;
+      
       const isAlreadyDetected = detected.some(e => 
         (e.index <= match.index && e.index + e.length > match.index) ||
         (match.index <= e.index && match.index + url.length > e.index)
@@ -53,12 +53,7 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
       if (!isAlreadyDetected) {
         let href = url;
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          if (url.startsWith('www.')) {
-            href = 'http://' + url;
-          } else if (url.includes('.') && !url.includes('@')) {
-            // Likely a domain without protocol
-            href = 'http://' + url;
-          }
+          href = url.startsWith('www.') ? 'http://' + url : 'http://' + url;
         }
         
         detected.push({
@@ -71,29 +66,26 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
       }
     }
     
-    // Reset lastIndex for other regex
-    urlRegex.lastIndex = 0;
-    
     // Find phone numbers
     while ((match = phoneRegex.exec(text)) !== null) {
       const phone = match[0];
-      const isAlreadyDetected = detected.some(e => 
+      if (phone.length < 10) continue;
+      
+      const isAlreadyDetected = detected.some((e: any) => 
         (e.index <= match.index && e.index + e.length > match.index) ||
         (match.index <= e.index && match.index + phone.length > e.index)
       );
       
-      if (!isAlreadyDetected && phone.length >= 10) { // Minimum reasonable phone length
+      if (!isAlreadyDetected) {
         detected.push({
           type: 'phone',
           text: phone,
           index: match.index,
           length: phone.length,
-          href: `tel:${phone.replace(/[^\d+]/g, '')}`
+          href: (phone.length >= 10 && phone.length <=14) ? `tel:${phone.replace(/[^\d+]/g, '')}` : phone
         });
       }
     }
-    
-    phoneRegex.lastIndex = 0;
     
     // Find emails
     while ((match = emailRegex.exec(text)) !== null) {
@@ -114,28 +106,6 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
       }
     }
     
-    emailRegex.lastIndex = 0;
-
-    // Find code-like patterns
-    while ((match = codeRegex.exec(text)) !== null) {
-      const code = match[0];
-      const isAlreadyDetected = detected.some(e => 
-        (e.index <= match.index && e.index + e.length > match.index) ||
-        (match.index <= e.index && match.index + code.length > e.index)
-      );
-      
-      if (!isAlreadyDetected) {
-        detected.push({
-          type: 'code',
-          text: code,
-          index: match.index,
-          length: code.length
-        });
-      }
-    }
-    
-    codeRegex.lastIndex = 0;
-    
     // Sort by index
     return detected.sort((a, b) => a.index - b.index);
   }, [msg.content]);
@@ -143,7 +113,7 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
   // Highlight search terms
   const HighlightedText = ({ text }: { text: string }) => {
     if (!searchQuery.trim()) {
-      return <>{text}</>;
+      return <FormattedText text={text} />;
     }
     
     const escapedHighlight = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -151,18 +121,19 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
 
     return (
       <>
-        {parts.map((part, i) =>
-          part.toLowerCase() === searchQuery.toLowerCase() ? (
-            <span
-              key={i}
-              className="bg-yellow-300 text-black rounded-xs shadow-sm"
-            >
-              {part}
-            </span>
-          ) : (
-            part
-          ),
-        )}
+        {parts.map((part, i) => {
+          if (part.toLowerCase() === searchQuery.toLowerCase()) {
+            return (
+              <span
+                key={i}
+                className="bg-yellow-300 text-black px-0.5 rounded-xs shadow-sm"
+              >
+                {part}
+              </span>
+            );
+          }
+          return <FormattedText key={i} text={part} />;
+        })}
       </>
     );
   };
@@ -191,18 +162,19 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
         );
       }
 
-      // Add entity with appropriate styling and link
+      // Add entity
       const entityText = msg.content.substring(entity.index, entity.index + entity.length);
       
-      // Check if entity itself contains search highlight
-      const shouldHighlight = searchQuery && 
-        entityText.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const entityContent = shouldHighlight ? (
-        <HighlightedText text={entityText} />
-      ) : (
-        entityText
-      );
+      // For entities, we DON'T apply formatting - just show plain text
+      // This prevents conflicts between formatting and links
+      const entityContent = searchQuery && 
+        entityText.toLowerCase().includes(searchQuery.toLowerCase()) ? (
+          <span className="bg-yellow-300 text-black px-0.5 rounded-xs shadow-sm">
+            {entityText}
+          </span>
+        ) : (
+          entityText
+        );
 
       switch (entity.type) {
         case 'url':
@@ -214,9 +186,8 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-0.5 group"
               title="Open link"
-            >
-              <LinkIcon size={12} className="opacity-60 group-hover:opacity-100" />
-              {entityContent}
+            > 
+              <span>{entityContent}</span>
             </a>
           );
           break;
@@ -228,9 +199,8 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
               href={entity.href}
               className="text-green-600 dark:text-green-400 hover:underline inline-flex items-center gap-0.5 group"
               title="Call this number"
-            >
-              <Phone size={12} className="opacity-60 group-hover:opacity-100" />
-              {entityContent}
+            > 
+              <span>{entityContent}</span>
             </a>
           );
           break;
@@ -242,20 +212,11 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '' }) => {
               href={entity.href}
               className="text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-0.5 group"
               title="Send email"
-            >
-              <Mail size={12} className="opacity-60 group-hover:opacity-100" />
-              {entityContent}
+            > 
+              <span>{entityContent}</span>
             </a>
           );
           break;
-          
-        default:
-          elements.push(
-            <span key={`entity-${idx}`} className="inline-flex items-center gap-0.5">
-              <Code size={12} className="opacity-60" />
-              {entityContent}
-            </span>
-          );
       }
 
       lastIndex = entity.index + entity.length;

@@ -17,6 +17,7 @@ import {
 import { Chat, User, UserRole, UserStatus } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { FormattedText } from "@/components/ui/FormattedText";
 
 interface ChatListProps {
   chats: Chat[];
@@ -167,7 +168,7 @@ const ChatListItem = memo(
                   You:
                 </span>
               )}
-              {lastMessage?.content || "Start a conversation"}
+              <FormattedText text={lastMessage?.content || "Start a conversation"}/>
             </p>
 
             <div className="flex items-center gap-2 shrink-0">

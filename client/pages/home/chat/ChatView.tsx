@@ -34,6 +34,11 @@ import {
   RefreshCw,
   MessageCircleCodeIcon,
   Share2,
+  Bold,
+  Italic,
+  Strikethrough,
+  Code,
+  HelpCircle,
 } from "lucide-react";
 import {
   Chat,
@@ -54,7 +59,7 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
-
+ 
 interface ChatViewProps {
   chat: Chat | null;
   onBack: () => void;
@@ -213,6 +218,302 @@ const renderMessageContent = (
     </div>
   );
 };
+
+
+const FormattingHint = () => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [showFullGuide, setShowFullGuide] = useState(false);
+
+  return (
+    <div className="relative flex items-center">
+      {/* Formatting icons hint */}
+      <div className="flex items-center gap-1 mr-2 text-secondary/50">
+        <button
+          onClick={() => {
+            const textarea = document.querySelector("textarea");
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+
+            // Insert bold syntax
+            const newText =
+              text.substring(0, start) +
+              (selectedText ? `*${selectedText}*` : "**bold**") +
+              text.substring(end);
+
+            // Trigger change event
+            const event = new Event("input", { bubbles: true });
+            Object.getOwnPropertyDescriptor(
+              HTMLTextAreaElement.prototype,
+              "value",
+            )?.set?.call(textarea, newText);
+            textarea.dispatchEvent(event);
+
+            // Set cursor position
+            setTimeout(() => {
+              if (!selectedText) {
+                textarea.setSelectionRange(start + 2, start + 6);
+              }
+              textarea.focus();
+            }, 0);
+          }}
+          className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
+          title="Bold (⌘B)"
+        >
+          <Bold size={14} />
+        </button>
+
+        <button
+          onClick={() => {
+            const textarea = document.querySelector("textarea");
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+
+            const newText =
+              text.substring(0, start) +
+              (selectedText ? `_${selectedText}_` : "_italic_") +
+              text.substring(end);
+
+            const event = new Event("input", { bubbles: true });
+            Object.getOwnPropertyDescriptor(
+              HTMLTextAreaElement.prototype,
+              "value",
+            )?.set?.call(textarea, newText);
+            textarea.dispatchEvent(event);
+
+            setTimeout(() => {
+              if (!selectedText) {
+                textarea.setSelectionRange(start + 1, start + 7);
+              }
+              textarea.focus();
+            }, 0);
+          }}
+          className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
+          title="Italic (⌘I)"
+        >
+          <Italic size={14} />
+        </button>
+
+        <button
+          onClick={() => {
+            const textarea = document.querySelector("textarea");
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+
+            const newText =
+              text.substring(0, start) +
+              (selectedText ? `~${selectedText}~` : "~strikethrough~") +
+              text.substring(end);
+
+            const event = new Event("input", { bubbles: true });
+            Object.getOwnPropertyDescriptor(
+              HTMLTextAreaElement.prototype,
+              "value",
+            )?.set?.call(textarea, newText);
+            textarea.dispatchEvent(event);
+
+            setTimeout(() => {
+              if (!selectedText) {
+                textarea.setSelectionRange(start + 1, start + 14);
+              }
+              textarea.focus();
+            }, 0);
+          }}
+          className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
+          title="Strikethrough (⌘Shift+X)"
+        >
+          <Strikethrough size={14} />
+        </button>
+
+        <button
+          onClick={() => {
+            const textarea = document.querySelector("textarea");
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+
+            const newText =
+              text.substring(0, start) +
+              (selectedText ? `\`${selectedText}\`` : "`code`") +
+              text.substring(end);
+
+            const event = new Event("input", { bubbles: true });
+            Object.getOwnPropertyDescriptor(
+              HTMLTextAreaElement.prototype,
+              "value",
+            )?.set?.call(textarea, newText);
+            textarea.dispatchEvent(event);
+
+            setTimeout(() => {
+              if (!selectedText) {
+                textarea.setSelectionRange(start + 1, start + 5);
+              }
+              textarea.focus();
+            }, 0);
+          }}
+          className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
+          title="Code (⌘E)"
+        >
+          <Code size={14} />
+        </button>
+      </div>
+
+      {/* Help icon with tooltip */}
+      <div
+        className="relative"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <button
+          onClick={() => setShowFullGuide(!showFullGuide)}
+          className="p-1 hover:bg-surface-hover rounded-full transition-colors text-secondary hover:text-primary"
+        >
+          <HelpCircle size={16} />
+        </button>
+
+        {/* Quick tooltip on hover */}
+        {showTooltip && !showFullGuide && (
+          <div className="absolute bottom-full right-0 mb-2 p-2 bg-surface border border-border rounded-lg shadow-xl text-xs whitespace-nowrap z-50 animate-in fade-in slide-in-from-bottom-1">
+            <div className="font-medium mb-1">Formatting:</div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-secondary">
+              <span>*bold*</span>
+              <span>_italic_</span>
+              <span>~strike~</span>
+              <span>`code`</span>
+            </div>
+            <div className="border-t border-border mt-1 pt-1 text-[10px] text-secondary/70">
+              Click for more options
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Full formatting guide modal */}
+      {showFullGuide && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowFullGuide(false)}
+          />
+          <div className="absolute bottom-full right-0 mb-2 w-72 bg-surface border border-border rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold flex items-center gap-2">
+                <Sparkles size={16} className="text-primary" />
+                Text Formatting
+              </h3>
+              <button
+                onClick={() => setShowFullGuide(false)}
+                className="p-1 hover:bg-surface-hover rounded-full"
+              >
+                <HelpCircle size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <FormattingRow
+                  syntax="*text*"
+                  example="bold"
+                  preview={<span className="font-bold">bold</span>}
+                />
+                <FormattingRow
+                  syntax="_text_"
+                  example="italic"
+                  preview={<span className="italic">italic</span>}
+                />
+                <FormattingRow
+                  syntax="~text~"
+                  example="strikethrough"
+                  preview={<span className="line-through">strikethrough</span>}
+                />
+                <FormattingRow
+                  syntax="`text`"
+                  example="code"
+                  preview={
+                    <code className="font-mono bg-black/10 dark:bg-white/10 px-1 rounded">
+                      code
+                    </code>
+                  }
+                />
+                <FormattingRow
+                  syntax="*_text_*"
+                  example="bold italic"
+                  preview={
+                    <span className="font-bold italic">bold italic</span>
+                  }
+                />
+              </div>
+
+              <div className="border-t border-border pt-2 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-secondary">
+                    Select text + click icon
+                  </span>
+                  <span className="font-mono bg-surface-hover px-1.5 py-0.5 rounded">
+                    ⌘B
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-secondary">Shift+Enter</span>
+                  <span className="font-mono bg-surface-hover px-1.5 py-0.5 rounded">
+                    new line
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-secondary">Enter</span>
+                  <span className="font-mono bg-surface-hover px-1.5 py-0.5 rounded">
+                    send
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-surface-hover/50 rounded-lg p-2 text-[10px] text-secondary">
+                <p className="flex items-center gap-1">
+                  <Sparkles size={10} />
+                  Tip: Select text and click format, or type syntax manually
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+ 
+const FormattingRow = ({
+  syntax,
+  example,
+  preview,
+}: {
+  syntax: string;
+  example: string;
+  preview: React.ReactNode;
+}) => (
+  <div className="flex items-center justify-between text-sm">
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-xs bg-surface-hover px-2 py-1 rounded">
+        {syntax}
+      </span>
+      <span className="text-secondary">→</span>
+    </div>
+    <div className="text-text-main">{preview}</div>
+  </div>
+);
 
 // Helper to format bytes
 const formatBytes = (bytes: number, decimals = 1) => {
@@ -1734,32 +2035,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </button>
                 </div>
               ) : (
-                // <input
-                //   ref={inputRef}
-                //   type="text"
-                //   placeholder={
-                //     replyingTo
-                //       ? "Type your reply..."
-                //       : editingMessage
-                //         ? "Edit your message..."
-                //         : "Type a message..."
-                //   }
-                //   className="w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base"
-                //   value={inputValue}
-                //   onChange={handleInputChange}
-                //   onKeyDown={handleKeyDown}
-                //   disabled={sendMessageMutation.isPending}
-                // />
                 <div className="w-full relative">
-                  {/* Hidden div for measuring text height (same styling) */}
                   <div
                     className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-2 py-3 text-base"
                     style={{ minHeight: "44px" }}
                   >
                     {inputValue || "placeholder"}
                   </div>
-
-                  {/* Actual textarea - replaces input */}
                   <textarea
                     ref={inputRef}
                     placeholder={
