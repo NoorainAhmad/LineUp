@@ -276,7 +276,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -671,7 +671,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, [inputValue, handleSendMessage]);
 
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const val = e.target.value;
       setInputValue(val);
 
@@ -705,7 +705,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, []);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Canned responses logic (same as before)
       if (showCannedMenu && filteredCannedResponses.length > 0) {
         if (e.key === "ArrowUp") {
           e.preventDefault();
@@ -729,7 +730,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
         return;
       }
 
+      // Handle Enter key
       if (e.key === "Enter") {
+        // If Shift is pressed, let the browser handle it (new line)
+        if (e.shiftKey) {
+          // Do nothing - let textarea handle Shift+Enter naturally
+          return;
+        }
+
+        // Regular Enter without Shift - send message
         e.preventDefault();
         handleTextSend();
       }
@@ -1725,22 +1734,50 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </button>
                 </div>
               ) : (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder={
-                    replyingTo
-                      ? "Type your reply..."
-                      : editingMessage
-                        ? "Edit your message..."
-                        : "Type a message..."
-                  }
-                  className="w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  disabled={sendMessageMutation.isPending}
-                />
+                // <input
+                //   ref={inputRef}
+                //   type="text"
+                //   placeholder={
+                //     replyingTo
+                //       ? "Type your reply..."
+                //       : editingMessage
+                //         ? "Edit your message..."
+                //         : "Type a message..."
+                //   }
+                //   className="w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base"
+                //   value={inputValue}
+                //   onChange={handleInputChange}
+                //   onKeyDown={handleKeyDown}
+                //   disabled={sendMessageMutation.isPending}
+                // />
+                <div className="w-full relative">
+                  {/* Hidden div for measuring text height (same styling) */}
+                  <div
+                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-2 py-3 text-base"
+                    style={{ minHeight: "44px" }}
+                  >
+                    {inputValue || "placeholder"}
+                  </div>
+
+                  {/* Actual textarea - replaces input */}
+                  <textarea
+                    ref={inputRef}
+                    placeholder={
+                      replyingTo
+                        ? "Type your reply..."
+                        : editingMessage
+                          ? "Edit your message..."
+                          : "Type a message..."
+                    }
+                    className="absolute inset-0 w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base resize-none overflow-y-auto"
+                    style={{ minHeight: "44px", maxHeight: "120px" }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    disabled={sendMessageMutation.isPending}
+                    rows={1}
+                  />
+                </div>
               )}
               {!inputValue &&
                 !isRecording &&
