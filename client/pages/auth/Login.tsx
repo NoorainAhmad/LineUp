@@ -36,8 +36,12 @@ export const Login: React.FC = () => {
       login(response.data.user, response.data.token);
       navigate("/");
     } catch (err: any) {
-      const errorMessage = err.message || "Login failed.";
-      setError(errorMessage);
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Registration failed.";
+
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }
