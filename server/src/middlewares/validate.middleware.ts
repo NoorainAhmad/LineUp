@@ -10,10 +10,10 @@ export const validate =
       return next();
     } catch (error: any) {
       if (error instanceof ZodError) {
-        console.warn(`[Validation Error]: ${req.path}`, error.issues);
+        console.log(`[Validation Error]: ${req.path}`, error.issues);
         return res.status(400).json({
           status: "error",
-          message: "Input validation failed",
+          message: "Input  failed",
           errors: error.issues.map((err) => ({
             field: err.path[err.path.length - 1],
             message: err.message,

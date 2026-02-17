@@ -28,7 +28,12 @@ export const Forgot: React.FC = () => {
       await AuthService.requestPasswordReset({ phone: phone });
       navigate(`/verify/reset`, { state: { phone } });
     } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Registration failed.";
+
+      setError(backendMessage);
     } finally {
       setIsLoading(false);
     }
