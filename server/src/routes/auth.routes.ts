@@ -1,12 +1,16 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+
 import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
   verifyOtpSchema,
   requestOtpSchema,
+  logoutSchema,
+  refreshTokenSchema
 } from "../validators/auth.validator.js";
 
 const router = Router();
@@ -19,6 +23,15 @@ router.post("/verify-registration", validate(verifyOtpSchema), AuthController.ve
 
 // Login: User
 router.post("/login", validate(loginSchema), AuthController.login);
+
+// 🔥 NEW: Refresh Access Token
+router.post("/refresh",validate(refreshTokenSchema), AuthController.refresh);
+
+// 🔥 NEW: Logout (Single Device)
+router.post("/logout", validate(logoutSchema),AuthController.logout);
+
+// 🔥 NEW: Logout from All Devices (Protected)
+router.post("/logout-all", authMiddleware, AuthController.logoutAllDevices);
 
 // Request: OTP for password reset
 router.post("/request-otp", validate(requestOtpSchema), AuthController.requestOtp);

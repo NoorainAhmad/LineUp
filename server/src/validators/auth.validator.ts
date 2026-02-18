@@ -6,6 +6,22 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
+//REFRESH TOKEN VALIDATOR
+export const refreshTokenSchema = z.object({
+  refreshToken: z
+    .string()
+    .min(10, "Invalid refresh token")
+    .nonempty("Refresh token is required"),
+});
+
+//LOGOUT SCHEMA
+export const logoutSchema = z.object({
+  refreshToken: z
+    .string()
+    .min(7, "Invalid refresh token")
+    .nonempty("Refresh token is required"),
+});
+
 // REGISTER VALIDATOR
 export const registerSchema = z.object({
   guid: z.string().min(6),
@@ -36,6 +52,8 @@ export const resetPasswordSchema = z.object({
 // EXPORT TYPES
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type RefreshInput = z.infer<typeof refreshTokenSchema>;
+export type LogotInput = z.infer<typeof logoutSchema>;
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type ResendOtpInput = z.infer<typeof requestOtpSchema>;
