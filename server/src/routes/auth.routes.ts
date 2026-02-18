@@ -9,6 +9,8 @@ import {
   resetPasswordSchema,
   verifyOtpSchema,
   requestOtpSchema,
+  logoutSchema,
+  refreshTokenSchema
 } from "../validators/auth.validator.js";
 
 const router = Router();

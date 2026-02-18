@@ -13,6 +13,24 @@ export class AuthService {
 
     // Expected shape: { user, accessToken }
     return response.data;
+    // response.data.data shape: { user, accessToken, refreshToken }
+  }
+
+  static async refresh(refreshToken: string) {
+    const response = await api.post("/auth/refresh", { refreshToken });
+    return response.data;
+    // response.data.data shape: { accessToken, refreshToken }
+  }
+
+  static async logout(refreshToken: string) {
+    const response = await api.post("/auth/logout", { refreshToken });
+    return response.data;
+  }
+
+  static async logoutAllDevices() {
+    // Access token is attached automatically by the request interceptor
+    const response = await api.post("/auth/logout-all");
+    return response.data;
   }
  
   static async refresh() {
