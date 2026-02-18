@@ -26,10 +26,7 @@ import {
   Search,
   Code2Icon,
   User as UserIcon,
-  FingerprintPatternIcon,
-  IdCardIcon,
-  Link2OffIcon,
-  GitBranchPlusIcon,
+  Trash2,
   Link2Icon,
   LockIcon,
 } from "lucide-react";
@@ -202,28 +199,13 @@ export const UserView: React.FC<UserViewProps> = ({
     },
   });
 
-  // Query for searching users
-  // const { data: searchResults = [], refetch: searchUsers } = useQuery({
-  //   queryKey: ["search-users", searchQuery],
-  //   queryFn: async () => {
-  //     if (!searchQuery.trim()) return [];
-  //     try {
-  //       const response = await UserService.searchUsers(searchQuery); 
-  //       return Array.isArray(response) ? response : [];
-  //     } catch (error) {
-  //       console.error("Error searching users:", error);
-  //       return [];
-  //     }
-  //   },
-  //   enabled: false, // We'll manually trigger search
-  // });
-
   const searchUsers = async () => {
     try {
-      const searchedUsers = subordinates.filter((user) =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.guid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone.toLowerCase().includes(searchQuery.toLowerCase()),
+      const searchedUsers = subordinates.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.guid.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.phone.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setSearchResults(searchedUsers);
     } catch (error) {
@@ -277,7 +259,7 @@ export const UserView: React.FC<UserViewProps> = ({
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [searchQuery, searchUsers]);
+  }, [searchQuery]);
 
   const copyGuid = () => {
     navigator.clipboard.writeText(user.guid);
@@ -340,6 +322,40 @@ export const UserView: React.FC<UserViewProps> = ({
     }
   };
 
+  // 🆕 NEW: Handle Delete User
+  const handleDelete = async () => {
+    // First confirmation
+    if (
+      !window.confirm(
+        `⚠️ PERMANENT DELETION\n\nAre you absolutely sure you want to delete ${user.name}?\n\nThis action CANNOT be undone. All user data will be permanently removed.`,
+      )
+    ) {
+      return;
+    }
+
+    // Second confirmation with type verification
+    const confirmText = prompt(`Type "DELETE" to confirm permanent deletion:`);
+    if (confirmText !== "DELETE") {
+      alert("Deletion cancelled - confirmation text did not match.");
+      return;
+    }
+
+    try {
+      await UserService.deleteUser(user.id);
+      alert(`User ${user.name} has been permanently deleted.`);
+
+      // Navigate back or refresh
+      if (onBack) {
+        onBack();
+      } else {
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      alert(error.message || "Failed to delete user. Please try again.");
+    }
+  };
+
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case UserRole.DEVELOPER:
@@ -376,9 +392,6 @@ export const UserView: React.FC<UserViewProps> = ({
 
   const handleUserSelect = (selectedUser: User) => {
     onSelect(selectedUser);
-    // This would navigate to the selected user's profile
-    // For now, we'll just alert the action
-    // In a real app, you would have navigation or call a callback
   };
 
   const handleStartChatWithUser = () => {
@@ -680,18 +693,19 @@ export const UserView: React.FC<UserViewProps> = ({
                     />
                   )}
                   {(currentUser?.role === UserRole.MASTER ||
-                    currentUser?.role === UserRole.DEVELOPER) && isEditing && (
-                    <EditableRow
-                      icon={LockIcon}
-                      label="New Password"
-                      value={formData.password}
-                      isEditing={isEditing}
-                      onChange={(v: any) =>
-                        setFormData({ ...formData, password: v })
-                      }
-                      disabled={!user.isActive}
-                    />
-                  )}
+                    currentUser?.role === UserRole.DEVELOPER) &&
+                    isEditing && (
+                      <EditableRow
+                        icon={LockIcon}
+                        label="New Password"
+                        value={formData.password}
+                        isEditing={isEditing}
+                        onChange={(v: any) =>
+                          setFormData({ ...formData, password: v })
+                        }
+                        disabled={!user.isActive}
+                      />
+                    )}
                   {(currentUser?.role === UserRole.MASTER ||
                     currentUser?.role === UserRole.DEVELOPER) && (
                     <EditableRow
@@ -829,7 +843,7 @@ export const UserView: React.FC<UserViewProps> = ({
                 />
               </div>
 
-              {/* Account Status Zone */}
+              {/* Account Status Zone - WITH DELETE BUTTON */}
               <div
                 className={`rounded-2xl p-6 border ${user.isActive ? "bg-green-500/5 border-green-500/10" : "bg-red-500/5 border-red-500/10"}`}
               >
@@ -843,17 +857,33 @@ export const UserView: React.FC<UserViewProps> = ({
                     ? "This account is currently active and has full system access."
                     : "This account is deactivated and cannot access the system."}
                 </p>
-                <button
-                  onClick={handleDeactivate}
-                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-medium text-sm ${
-                    user.isActive
-                      ? "bg-surface hover:bg-red-500 hover:text-white border-border hover:border-red-500 text-red-500"
-                      : "bg-surface hover:bg-green-500 hover:text-white border-border hover:border-green-500 text-green-500"
-                  }`}
-                >
-                  <Ban size={16} />
-                  {user.isActive ? "Deactivate Account" : "Activate Account"}
-                </button>
+
+                {/* Activate/Deactivate Button */}
+                {(currentUser?.role === UserRole.MASTER ||
+                  currentUser?.role === UserRole.DEVELOPER) && (
+                  <button
+                    onClick={handleDeactivate}
+                    className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-medium text-sm mb-3 ${
+                      user.isActive
+                        ? "bg-surface hover:bg-red-500 hover:text-white border-border hover:border-red-500 text-red-500"
+                        : "bg-surface hover:bg-green-500 hover:text-white border-border hover:border-green-500 text-green-500"
+                    }`}
+                  >
+                    <Ban size={16} />
+                    {user.isActive ? "Deactivate Account" : "Activate Account"}
+                  </button>
+                )}
+
+                {/* 🆕 Delete User Button - Only for MASTER/DEVELOPER */}
+                {currentUser?.role === UserRole.DEVELOPER && (
+                  <button
+                    onClick={handleDelete}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500 hover:text-white transition-all font-medium text-sm text-red-500"
+                  >
+                    <Trash2 size={16} />
+                    Delete User Permanently
+                  </button>
+                )}
               </div>
             </div>
           </div>
