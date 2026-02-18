@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
         identity,
         password,
       });
-      login(response.data.user, response.data.token);
+      login(response.data.user, response.data.accessToken, response.data.refreshToken);
       navigate("/");
     } catch (err: any) {
       const backendMessage =
