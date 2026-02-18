@@ -20,6 +20,9 @@ router.post("/", StatusController.createStatus);
 // Action: Mark a specific status as viewed (Seen By)
 router.post("/:id/view", StatusController.markAsViewed);
 
+// Action: Reply to a status (sends a DM to status owner)
+router.post("/:id/reply", StatusController.replyToStatus);
+
 // Delete: Remove a status (Handled by author)
 router.delete("/:id", StatusController.deleteStatus);
 

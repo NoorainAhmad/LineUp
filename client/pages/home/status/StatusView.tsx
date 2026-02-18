@@ -50,10 +50,12 @@ export const StatusView: React.FC<StatusViewProps> = ({
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerConfigRef = useRef<{ intervalTime: number; increment: number } | null>(null);
 
   // Determine media type
   const isVideo = status.media?.mimeType?.startsWith("video/");
@@ -94,19 +96,22 @@ export const StatusView: React.FC<StatusViewProps> = ({
     if (!isVideo) {
       const intervalTime = 50;
       const increment = (intervalTime / duration) * 100;
+      timerConfigRef.current = { intervalTime, increment };
 
-      progressIntervalRef.current = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            if (progressIntervalRef.current) {
-              clearInterval(progressIntervalRef.current);
+      if (!isReplying) {
+        progressIntervalRef.current = setInterval(() => {
+          setProgress((prev) => {
+            if (prev >= 100) {
+              if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+              }
+              onNext();
+              return 100;
             }
-            onNext();
-            return 100;
-          }
-          return prev + increment;
-        });
-      }, intervalTime);
+            return prev + increment;
+          });
+        }, intervalTime);
+      }
     }
 
     return () => {
@@ -114,7 +119,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [status, onNext, isVideo, isImage]);
+  }, [status, onNext, isVideo, isImage, isReplying]);
 
   // Handle video time update for progress
   const handleVideoTimeUpdate = () => {
@@ -170,6 +175,28 @@ export const StatusView: React.FC<StatusViewProps> = ({
     if (replyText.trim() && onReply) {
       onReply(status.id, replyText);
       setReplyText("");
+      setIsReplying(false);
+    }
+  };
+
+  const handleReplyFocus = () => {
+    setIsReplying(true);
+    // Pause the timer
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    // Also pause video if playing
+    if (isVideo && videoRef.current && !videoRef.current.paused) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleReplyBlur = () => {
+    // Only resume if the reply text is empty (user abandoned reply)
+    if (!replyText.trim()) {
+      setIsReplying(false);
     }
   };
 
@@ -232,9 +259,9 @@ export const StatusView: React.FC<StatusViewProps> = ({
               <span className="text-white/70 text-xs">
                 {status.createdAt
                   ? new Date(status.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
                   : "Just now"}
               </span>
             </div>
@@ -288,9 +315,8 @@ export const StatusView: React.FC<StatusViewProps> = ({
                   <video
                     ref={videoRef}
                     src={mediaUrl}
-                    className={`max-h-[85vh] max-w-full object-contain shadow-2xl transition-opacity duration-300 ${
-                      mediaLoaded ? "opacity-100" : "opacity-0"
-                    }`}
+                    className={`max-h-[85vh] max-w-full object-contain shadow-2xl transition-opacity duration-300 ${mediaLoaded ? "opacity-100" : "opacity-0"
+                      }`}
                     autoPlay
                     playsInline
                     loop={false}
@@ -306,9 +332,8 @@ export const StatusView: React.FC<StatusViewProps> = ({
                   <img
                     src={mediaUrl}
                     alt="Status"
-                    className={`max-h-[85vh] max-w-full object-contain shadow-2xl transition-opacity duration-300 ${
-                      mediaLoaded ? "opacity-100" : "opacity-0"
-                    }`}
+                    className={`max-h-[85vh] max-w-full object-contain shadow-2xl transition-opacity duration-300 ${mediaLoaded ? "opacity-100" : "opacity-0"
+                      }`}
                     onLoad={() => setMediaLoaded(true)}
                     onError={handleMediaError}
                   />
@@ -374,7 +399,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
       </div>
 
       {/* Footer Actions */}
-      {/* <div className="absolute bottom-0 left-0 right-0 p-8 bg-linear-to-t from-black/90 to-transparent z-30 flex flex-col items-center">
+      <div className="absolute bottom-0 left-0 right-0 p-8 bg-linear-to-t from-black/90 to-transparent z-30 flex flex-col items-center">
         {isMyStatus ? (
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-center gap-1 group">
@@ -401,6 +426,8 @@ export const StatusView: React.FC<StatusViewProps> = ({
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Reply to this status..."
                 className="w-full bg-white/10 border border-white/20 rounded-full py-3 px-6 text-white placeholder-white/50 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/20"
+                onFocus={handleReplyFocus}
+                onBlur={handleReplyBlur}
                 onKeyDown={(e) => e.stopPropagation()}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -422,7 +449,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
             </form>
           </div>
         )}
-      </div> */}
+      </div>
     </div>
   );
 };

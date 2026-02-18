@@ -9,5 +9,12 @@ export const statusCreateSchema = z.object({
   color: z.string().optional().nullable(),
   mediaId: z.string().optional().nullable()
 });
- 
+
 export type StatusCreateInput = z.infer<typeof statusCreateSchema>;
+
+// STATUS REPLY VALIDATOR
+export const statusReplySchema = z.object({
+  message: z.string().min(1).max(500),
+});
+
+export type StatusReplyInput = z.infer<typeof statusReplySchema>;
