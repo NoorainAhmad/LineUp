@@ -53,6 +53,7 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
+import { formatMessageTime } from "@/utils/time_formatter.utils";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -1602,11 +1603,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         ) : (
           <>
-            <div className="flex justify-center mb-8 sticky top-0 z-10 pointer-events-none">
+            {/* <div className="flex justify-center mb-8 sticky top-0 z-10 pointer-events-none">
               <span className="bg-surface/80 backdrop-blur text-secondary text-[10px] font-bold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide border border-border">
                 Today
               </span>
-            </div>
+            </div> */}
 
             {messages.map((msg) => {
               const isMe = msg.sender?.id === currentUserMember?.user?.id;
@@ -1843,10 +1844,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           </span>
                         )}
                         <span>
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatMessageTime(msg.createdAt)}
                         </span>
                         {isMe && !isDeleted && !isPending && (
                           <span>
