@@ -53,7 +53,7 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
-import { formatMessageTime } from "@/utils/time_formatter.utils";
+import { formatLastMessageTime, formatMessageTime } from "@/utils/time_formatter.utils";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -1536,7 +1536,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </span>
                     ) : (
                       <span className="opacity-80">
-                        {otherUser?.lastSeen || "Unknown"}
+                        {formatLastMessageTime(otherUser?.lastSeen || "") || "Unknown"}
                       </span>
                     )}
                   </span>
