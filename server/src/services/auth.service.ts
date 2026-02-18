@@ -1,5 +1,6 @@
 import z from "zod";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { prisma } from "../config/db.js";
 import { jwtUtil } from "../utils/jwt.js";
 import {
@@ -38,17 +39,14 @@ export class AuthService {
     try {
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [
-            { guid: data.guid },
-            { phone: data.phone }
-          ]
+          OR: [{ guid: data.guid }, { phone: data.phone }],
         },
         select: {
-          id:true,
+          id: true,
           guid: true,
           phone: true,
-          isActive: true
-        }
+          isActive: true,
+        },
       });
       if (existingUser && existingUser.isActive) {
         if (existingUser.guid === data.guid) {
@@ -110,7 +108,6 @@ export class AuthService {
         console.log("[Registration] Error Code:", error?.code);
         console.log("[Registration] Error Message:", error?.message);
 
-
         if (error?.message.includes("guid")) {
           throw new Error("ID is already taken; try another ID name.");
         }
@@ -155,15 +152,13 @@ export class AuthService {
           },
         });
       }
-      const token = await jwtUtil.sign(
-        { userId: user.id, userRole: user.role },
-        process.env.JWT_SECRET!,
-      );
+      const tokens = await this.issueTokenPair(user.id, user.role);
+
       console.log(`[Verification] Account for ${user.phone} verified`);
       return {
         success: true,
         message: "Account verified successfully",
-        data: { user, token },
+        data: { user, ...tokens },
       };
     } catch (error) {
       console.log(`[Verification] Error: ${error}`);
@@ -175,34 +170,93 @@ export class AuthService {
   static async login(data: z.infer<typeof loginSchema>) {
     try {
       const requestedUser = await prisma.user.findFirst({
-        where: { OR: [{ guid: data.identity }, { phone: data.identity }] },
+        where: {
+          OR: [{ guid: data.identity }, { phone: data.identity }],
+        },
       });
+
       if (!requestedUser) throw new Error("No such user exists");
+
       if (!requestedUser.isActive) {
         throw new Error(
           "Account not verified. Please verify your phone number.",
         );
       }
+
       const isPasswordValid = await bcrypt.compare(
         data.password,
         requestedUser.passwordHash,
       );
+
       if (!isPasswordValid) throw new Error("Invalid credentials");
-      const token = await jwtUtil.sign(
-        { userId: requestedUser.id, userRole: requestedUser.role },
-        process.env.JWT_SECRET!,
+
+      const tokens = await this.issueTokenPair(
+        requestedUser.id,
+        requestedUser.role,
       );
+
       const { passwordHash, ...user } = requestedUser;
       console.log(`[Login] User ${user.phone} logged in`);
       return {
         success: true,
         message: "Login successful",
-        data: { user, token },
+        data: { user, ...tokens },
       };
     } catch (error) {
       console.log(`[Login] Error: ${error}`);
       throw new Error("Login failed: " + (error as Error).message);
     }
+  }
+
+  //  Refresh ---------------------------------------------------------------------
+  static async refresh(incomingRefreshToken: string) {
+    if (!incomingRefreshToken) {
+      throw new Error("Refresh token is required");
+    }
+    const stored = await prisma.refreshToken.findUnique({
+      where: { token: incomingRefreshToken },
+      include: { user: true },
+    });
+
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new Error("Invalid or expired refresh token");
+    }
+
+    // Rotate: revoke old, issue new pair
+    await prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { revokedAt: new Date() },
+    });
+
+    const tokens = await AuthService.issueTokenPair(
+      stored.userId,
+      stored.user.role,
+      stored.id
+    );
+    return { success: true, data: tokens };
+  }
+
+  //  Logout (single device) ----------------------------------
+  static async logout(incomingRefreshToken: string) {
+    if (!incomingRefreshToken) {
+      throw new Error("Refresh token required");
+    }
+    await prisma.refreshToken.delete({
+      where: { token: incomingRefreshToken },
+      
+    });
+    console.log(`[Auth] One sessions revoked for user`);
+    return { success: true, message: "Logged out" };
+  }
+
+  //  Logout from ALL devices ----------------------------------------------
+  static async logoutAllDevices(userId: string) {
+    await prisma.refreshToken.deleteMany({
+      where: { userId },
+     
+    });
+    console.log(`[Auth] All sessions revoked for user ${userId}`);
+    return { success: true, message: "Logged out from all devices" };
   }
 
   // REQUEST PASSWORD RESET
@@ -231,24 +285,32 @@ export class AuthService {
       const requestedUser = await prisma.user.findFirst({
         where: { phone: data.phone },
       });
+
       if (!requestedUser)
         throw new Error("No account found with that phone number");
+
       const isValid = await OtpService.verify(data.phone, data.otp);
+
       if (!isValid) throw new Error("Invalid or expired verification code");
+
       console.log(`[Password Reset] OTP for ${requestedUser.phone} verified`);
+
       const user = await prisma.user.findFirst({
         where: { phone: data.phone },
         select: this.userSelection,
       });
+
       if (!user) throw new Error("No account found with that phone number");
-      const token = await jwtUtil.sign(
-        { userId: user.id, userRole: user.role },
-        process.env.JWT_SECRET!,
-      );
+      //Remove all existing sessions
+      await this.logoutAllDevices(user.id);
+
+      // Issue fresh token pair
+      const tokens = await this.issueTokenPair(user.id, user.role);
+
       return {
         success: true,
         message: "Verification successful",
-        data: { user, token },
+        data: { user, ...tokens },
       };
     } catch (error) {
       console.log(`[Password Reset] Error: ${error}`);
@@ -284,4 +346,23 @@ export class AuthService {
       throw new Error("Password reset failed: " + (error as Error).message);
     }
   }
+  private static async issueTokenPair(userId: string, userRole: string, oldTokenId?: string) {
+  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
+  const rawRefresh = jwtUtil.generateTokenId();
+
+  await prisma.$transaction([
+    // Delete old refresh token if rotating
+    ...(oldTokenId ? [prisma.refreshToken.delete({ where: { id: oldTokenId } })]: []),
+    // Create new refresh token
+    prisma.refreshToken.create({
+      data: {
+        token: rawRefresh,
+        userId,
+        expiresAt: jwtUtil.refreshExpiresAt(),
+      },
+    }),
+  ]);
+
+  return { accessToken, refreshToken: rawRefresh };
+}
 }

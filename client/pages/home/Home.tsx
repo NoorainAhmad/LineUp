@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Navigation } from "./Navigation";
 import { CreateGroupModal } from "../../components/modals/CreateGroupModal";
 import { AddUserModal } from "../../components/modals/AddUserModal";
+import { LogoutModal } from "../../components/modals/LogoutModal";
 import { Dashboard } from "./dashboard/Dashboard";
 import { ChatList } from "./chat/ChatList";
 import { ChatView } from "./chat/ChatView";
@@ -37,6 +38,7 @@ import { ChatService } from "@/services/chat.service";
 import GroupProfileView from "./chat/GroupProfileView";
 import { MyProfileView } from "./profile/MyProfileView";
 import { z } from "zod";
+import api from "@/api/axios";
 
 //State to handle create User error
 //const [error, setError] = useState<string | null>(null);
@@ -125,6 +127,8 @@ export const Home: React.FC = () => {
   );
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isCreatingStatus, setIsCreatingStatus] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingResponse, setIsCreatingResponse] = useState(false);
@@ -302,6 +306,39 @@ export const Home: React.FC = () => {
     },
     [closeModals],
   );
+  const handleLogoutDevice = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+
+      const refreshToken = localStorage.getItem("refresh_token");
+
+      if (refreshToken) {
+        await api.post("/auth/logout", { refreshToken });
+      }
+    } catch (error) {
+      console.error("Logout device error:", error);
+    } finally {
+      // Clear tokens & auth context
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      logout(); // your existing auth context logout
+    }
+  }, [logout]);
+
+  const handleLogoutAllDevices = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+
+      // Uses Bearer token automatically via axios interceptor
+      await api.post("/auth/logout-all");
+    } catch (error) {
+      console.error("Logout all devices error:", error);
+    } finally {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      logout();
+    }
+  }, [logout]);
 
   const handleChatSelect = useCallback((chat: Chat) => {
     setSelectedChat(chat);
@@ -1260,7 +1297,7 @@ export const Home: React.FC = () => {
           onTabChange={handleTabChange}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onLogout={logout}
+          onLogout={() => setShowLogoutModal(true)}
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -1305,7 +1342,7 @@ export const Home: React.FC = () => {
           onTabChange={handleTabChange}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onLogout={logout}
+          onLogout={() => setShowLogoutModal(true)}
         />
       </div>
 
@@ -1496,6 +1533,14 @@ export const Home: React.FC = () => {
           </div>
         )}
       </div>
+      {showLogoutModal && (
+        <LogoutModal
+          onClose={() => setShowLogoutModal(false)}
+          onLogoutDevice={handleLogoutDevice}
+          onLogoutAll={handleLogoutAllDevices}
+          isLoading={isLoggingOut}
+        />
+      )}
     </div>
   );
 };

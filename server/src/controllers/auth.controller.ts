@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/auth.service.js";
+import { AuthRequest } from "@/middlewares/auth.middleware.js";
 
 export class AuthController {
   // Register a new user
@@ -31,6 +32,55 @@ export class AuthController {
       res.status(200).json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  //Refresh Access Token ================---------------------=========================
+  static async refresh(req: Request, res: Response) {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken)
+        return res.status(400).json({ message: "Refresh token required" });
+      const result = await AuthService.refresh(refreshToken);
+      res.json(result);
+    } catch (e) {
+      res.status(401).json({ success: false, message: (e as Error).message });
+    }
+  }
+  //Logout from single device =======================------------------------===========
+  static async logout(req: Request, res: Response) {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken)
+        return res.status(400).json({ message: "Refresh token required" });
+      const result = await AuthService.logout(refreshToken);
+      res.json(result);
+    } catch (e) {
+      res.status(400).json({ success: false, message: (e as Error).message });
+    }
+  }
+
+  // Logout From All Devices ====================------------------------===========================
+  static async logoutAllDevices(req: AuthRequest, res: Response) {
+    try {
+      const user = req.userId;
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      const result = await AuthService.logoutAllDevices(user);
+
+      res.status(200).json(result);
+    } catch (error: any) {
+      console.log(`[LogoutAll Controller] Error: ${error}`);
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 

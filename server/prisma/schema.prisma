@@ -58,6 +58,7 @@ model User {
   name         String
   phone        String @unique
   passwordHash String
+  refreshTokens RefreshToken[]
 
   email     String?
   location  String?
@@ -257,3 +258,15 @@ model System {
 
   @@map("system")
 }
+model RefreshToken {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  revokedAt DateTime? 
+
+  @@index([userId])
+}
+
