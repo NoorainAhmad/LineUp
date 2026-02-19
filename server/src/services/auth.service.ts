@@ -353,23 +353,27 @@ export class AuthService {
       refreshToken: `${session.id}.${rawRefreshToken}`,
     };
   }
-  private static async issueTokenPair(userId: string, userRole: string, oldTokenId?: string) {
-  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
-  const rawRefresh = jwtUtil.generateTokenId();
 
-  await prisma.$transaction([
-    // Delete old refresh token if rotating
-    ...(oldTokenId ? [prisma.refreshToken.delete({ where: { id: oldTokenId } })]: []),
+  //Helper function to issue token
+  private static async issueTokenPair(userId: string, userRole: string, userAgent: string, ipAddress?: string) {
+  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
+  const {id, raw} = jwtUtil.generateTokenId();
+  const tokenHash = await bcrypt.hash(raw, 12)
+
     // Create new refresh token
-    prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
-        token: rawRefresh,
+        id,
+        token: tokenHash,
         userId,
+        ipAddress,
+        userAgent,
         expiresAt: jwtUtil.refreshExpiresAt(),
       },
-    }),
-  ]);
+    });
+    const refreshToken = id + "." + raw; // Send both ID and raw token to client
+    console.log(`[Auth] Issued new token pair for user ${userId}`);
 
-  return { accessToken, refreshToken: rawRefresh };
+  return { accessToken, refreshToken };
 }
 }

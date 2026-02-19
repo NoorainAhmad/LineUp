@@ -309,18 +309,14 @@ export const Home: React.FC = () => {
   const handleLogoutDevice = useCallback(async () => {
     try {
       setIsLoggingOut(true);
-
-      const refreshToken = localStorage.getItem("refresh_token");
-
-      if (refreshToken) {
-        await api.post("/auth/logout", { refreshToken });
-      }
-    } catch (error) {
+      // Uses Bearer token automatically via axios interceptor
+        await api.post("/auth/logout");
+      } catch (error) {
       console.error("Logout device error:", error);
     } finally {
       // Clear tokens & auth context
       localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("auth_user");
       logout(); // your existing auth context logout
     }
   }, [logout]);
@@ -335,7 +331,6 @@ export const Home: React.FC = () => {
       console.error("Logout all devices error:", error);
     } finally {
       localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
       logout();
     }
   }, [logout]);
