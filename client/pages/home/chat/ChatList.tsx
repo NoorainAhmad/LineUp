@@ -42,6 +42,7 @@ interface ProcessedChat {
   otherMember?: User;
   lastMessageTime: string;
   isMeSender: boolean;
+  displayContent: string;
 }
 
 // Memoized chat item component to prevent unnecessary re-renders
