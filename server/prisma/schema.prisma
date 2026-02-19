@@ -284,17 +284,4 @@ model System {
 
   @@map("system")
 }
-model RefreshToken {
-  id          String   @id @default(uuid())
-  token       String   @unique
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ipAddress   String   @default("0.0.0.0")
-  userAgent   String   
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-  revokedAt DateTime? 
-
-  @@index([userId])
-}
 

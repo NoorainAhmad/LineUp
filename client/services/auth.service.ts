@@ -13,22 +13,22 @@ export class AuthService {
 
     // Expected shape: { user, accessToken }
     return response.data;
-    // response.data.data shape: { user, accessToken, refreshToken }
   }
-
+ 
   static async refresh() {
+    // Cookie automatically sent via withCredentials
     const response = await api.post("/auth/refresh");
-    return response.data;
-    // response.data.data shape: { accessToken, refreshToken }
-  }
 
+    // Expected shape: { accessToken }
+    return response.data;
+  }
+ 
   static async logout() {
     const response = await api.post("/auth/logout");
     return response.data;
   }
-
+ 
   static async logoutAllDevices() {
-    // Access token is attached automatically by the request interceptor
     const response = await api.post("/auth/logout-all");
     return response.data;
   }

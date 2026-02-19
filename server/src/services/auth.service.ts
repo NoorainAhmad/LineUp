@@ -354,26 +354,123 @@ export class AuthService {
     };
   }
 
-  //Helper function to issue token
-  private static async issueTokenPair(userId: string, userRole: string, userAgent: string, ipAddress?: string) {
-  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
-  const {id, raw} = jwtUtil.generateTokenId();
-  const tokenHash = await bcrypt.hash(raw, 12)
-
-    // Create new refresh token
-    await prisma.refreshToken.create({
+    await prisma.session.update({
+      where: { id: sessionId },
       data: {
-        id,
-        token: tokenHash,
-        userId,
+        refreshTokenHash: newRefreshTokenHash,
+        tokenVersion: { increment: 1 },
         ipAddress,
         userAgent,
         expiresAt: jwtUtil.refreshExpiresAt(),
       },
     });
-    const refreshToken = id + "." + raw; // Send both ID and raw token to client
-    console.log(`[Auth] Issued new token pair for user ${userId}`);
 
-  return { accessToken, refreshToken };
-}
+    const accessToken = await jwtUtil.sign(
+      { userId: session.userId, userRole: session.user.role },
+      process.env.JWT_SECRET!,
+    );
+
+    return {
+      success: true,
+      data: {
+        accessToken,
+        refreshToken: `${sessionId}.${newRawRefreshToken}`,
+      },
+    };
+  }
+
+  static async logout(incomingRefreshToken: string) {
+    const dotIdx = incomingRefreshToken.indexOf(".");
+    if (dotIdx === -1) throw new Error("Invalid refresh token format");
+
+    const sessionId = incomingRefreshToken.substring(0, dotIdx);
+
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { isRevoked: true, revokedAt: new Date() },
+    });
+
+    return { success: true, message: "Logged out" };
+  }
+
+  static async logoutAllDevices(userId: string) {
+    await prisma.session.updateMany({
+      where: { userId },
+      data: { isRevoked: true, revokedAt: new Date() },
+    });
+
+    return { success: true, message: "Logged out from all devices" };
+  }
+
+  static async requestPasswordReset(data: z.infer<typeof requestOtpSchema>) {
+    const user = await prisma.user.findFirst({
+      where: { phone: data.phone },
+    });
+
+    if (!user) throw new Error("No account found");
+
+    await OtpService.generate(user.phone);
+
+    return {
+      success: true,
+      message: "OTP sent",
+      data: { phone: user.phone },
+    };
+  }
+
+  static async verifyPasswordReset(data: z.infer<typeof verifyOtpSchema>) {
+    const requestedUser = await prisma.user.findFirst({
+      where: { phone: data.phone },
+    });
+
+    if (!requestedUser) throw new Error("No account found");
+
+    const isValid = await OtpService.verify(data.phone, data.otp);
+    if (!isValid) throw new Error("Invalid OTP");
+
+    await this.logoutAllDevices(requestedUser.id);
+
+    return { success: true, message: "OTP verified" };
+  }
+
+  static async resetPassword(data: z.infer<typeof resetPasswordSchema>) {
+    const hashedPassword = await bcrypt.hash(data.password, 12);
+
+    await prisma.user.update({
+      where: { phone: data.phone },
+      data: { passwordHash: hashedPassword },
+    });
+
+    return { success: true, message: "Password reset successful" };
+  }
+
+  private static async issueTokenPair(
+    userId: string,
+    userRole: string,
+    userAgent: string,
+    ipAddress?: string,
+  ) {
+    const accessToken = await jwtUtil.sign(
+      { userId, userRole },
+      process.env.JWT_SECRET!,
+    );
+
+    const rawRefreshToken = crypto.randomBytes(32).toString("hex");
+    const refreshTokenHash = await bcrypt.hash(rawRefreshToken, 12);
+
+    const session = await prisma.session.create({
+      data: {
+        userId,
+        refreshTokenHash,
+        ipAddress,
+        userAgent,
+        expiresAt: jwtUtil.refreshExpiresAt(),
+      },
+    });
+
+    return {
+      accessToken,
+      refreshToken: `${session.id}.${rawRefreshToken}`,
+    };
+  }
 }
