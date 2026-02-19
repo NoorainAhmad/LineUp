@@ -17,7 +17,7 @@ export const jwtUtil = {
       jwt.sign(
         payload, 
         secret, 
-        { expiresIn: "1m" }, 
+        { expiresIn: "30s" }, 
         (err, token) => {
         if (err) {
           reject(err);
@@ -43,8 +43,10 @@ export const jwtUtil = {
   },
 
   //Refresh token ID that is sent to client
-  generateTokenId():string{
-    return crypto.randomBytes(64).toString("hex")
+  generateTokenId():{id:string; raw:string} {
+    const id = crypto.randomBytes(16).toString("hex")
+    const raw= crypto.randomBytes(64).toString("hex")
+    return {id, raw};
   },
 
   //Computing refresh Expiry date(For DB)

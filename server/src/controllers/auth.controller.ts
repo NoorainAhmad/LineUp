@@ -17,8 +17,23 @@ export class AuthController {
   // Verify user registration
   static async verifyRegistration(req: Request, res: Response) {
     try {
-      const result = await AuthService.verifyRegistration(req.body);
-      res.status(200).json(result);
+      const ipAddress = req.ip||"0.0.0.0";
+      const userAgent = req.get("User-Agent") || "Unknown";
+      // AuthService.verifyRegistration expects (data, ipAddress, userAgent)
+      const result = await AuthService.verifyRegistration(req.body, ipAddress, userAgent);
+      // If tokens were issued, store refresh token as cookie (httpOnly) and return safe payload
+      if (result?.data?.refreshToken) {
+        res.cookie("refreshToken", result.data.refreshToken, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "lax",
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+        const { refreshToken, ...safeData } = result.data;
+        return res.status(200).json(safeData);
+      }
+      // Fallback: return the data object directly (contains user/accessToken)
+      res.status(200).json(result.data || result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -27,9 +42,22 @@ export class AuthController {
   // Login a user and generate JWT
   static async login(req: Request, res: Response) {
     try {
+      const ipAddress = req.ip||"0.0.0.0";
+      const userAgent = req.get("User-Agent") || "Unknown";
       req.body.ipAddress = req.ip;
-      const result = await AuthService.login(req.body);
-      res.status(200).json(result);
+      // AuthService.login expects (data, ipAddress, userAgent)
+      const result = await AuthService.login(req.body, ipAddress, userAgent);
+      // 🔥 Store refresh token in httpOnly cookie
+      
+      res.cookie("refreshToken", result.data.refreshToken, {
+        httpOnly: true,
+        secure: false, // Set to true in production (requires HTTPS)
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      });
+
+    const { refreshToken, ...safeData } = result.data;
+      res.status(200).json(safeData);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -38,10 +66,14 @@ export class AuthController {
   //Refresh Access Token ================---------------------=========================
   static async refresh(req: Request, res: Response) {
     try {
-      const { refreshToken } = req.body;
+      const ipAddress = req.ip||"0.0.0.0";
+      const userAgent = req.get("User-Agent") || "Unknown";
+      console.log(`[AuthController] Refresh token request from IP: ${ipAddress}, User-Agent: ${userAgent}`);
+      const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken)
         return res.status(400).json({ message: "Refresh token required" });
-      const result = await AuthService.refresh(refreshToken);
+      // AuthService.refresh expects (incomingRefreshToken, ipAddress, userAgent)
+      const result = await AuthService.refresh(refreshToken, ipAddress, userAgent);
       res.json(result);
     } catch (e) {
       res.status(401).json({ success: false, message: (e as Error).message });
@@ -50,10 +82,16 @@ export class AuthController {
   //Logout from single device =======================------------------------===========
   static async logout(req: Request, res: Response) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken)
         return res.status(400).json({ message: "Refresh token required" });
       const result = await AuthService.logout(refreshToken);
+      
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false, // Set to true in production (requires HTTPS)
+      });
       res.json(result);
     } catch (e) {
       res.status(400).json({ success: false, message: (e as Error).message });
@@ -97,8 +135,12 @@ export class AuthController {
   // Verify OTP
   static async verifyOtp(req: Request, res: Response) {
     try {
-      const result = await AuthService.verifyPasswordReset(req.body);
-      res.status(200).json(result);
+      const ipAddress = req.ip||"0.0.0.0";
+      const userAgent = req.get("User-Agent") || "Unknown";
+      // AuthService.verifyPasswordReset expects (data, ipAddress, userAgent)
+      const result = await AuthService.verifyPasswordReset(req.body, ipAddress, userAgent);
+      // Return the inner data object (user, accessToken) so client receives { user, accessToken }
+      res.status(200).json(result.data || result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

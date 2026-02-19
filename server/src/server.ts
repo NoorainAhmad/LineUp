@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import dotenv from "dotenv";
 
@@ -79,6 +80,7 @@ const corsOptions = {
   maxAge: 86400, // 24 hours
 };
 app.use(cors(corsOptions));
+app.use(cookieParser(corsOptions));
 
 // Routes
 import authRoutes from "./routes/auth.routes.js";
@@ -105,6 +107,7 @@ app.use(`${API_PREFIX}/statuses`, statusRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
 app.use(`${API_PREFIX}/system`, systemRoutes);
+
 
 // Health Check (excluded from rate limiting)
 app.get("/health", (_req, res) => {

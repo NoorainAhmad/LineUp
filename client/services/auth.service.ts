@@ -14,14 +14,14 @@ export class AuthService {
     // response.data.data shape: { user, accessToken, refreshToken }
   }
 
-  static async refresh(refreshToken: string) {
-    const response = await api.post("/auth/refresh", { refreshToken });
+  static async refresh() {
+    const response = await api.post("/auth/refresh");
     return response.data;
     // response.data.data shape: { accessToken, refreshToken }
   }
 
-  static async logout(refreshToken: string) {
-    const response = await api.post("/auth/logout", { refreshToken });
+  static async logout() {
+    const response = await api.post("/auth/logout");
     return response.data;
   }
 
