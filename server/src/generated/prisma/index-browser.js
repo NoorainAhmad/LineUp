@@ -120,6 +120,14 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.OtpScalarFieldEnum = {
+  id: 'id',
+  phone: 'phone',
+  code: 'code',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   guid: 'guid',
@@ -136,6 +144,21 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role',
   permission: 'permission',
   parentId: 'parentId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  refreshTokenHash: 'refreshTokenHash',
+  tokenVersion: 'tokenVersion',
+  expiresAt: 'expiresAt',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  deviceInfo: 'deviceInfo',
+  isRevoked: 'isRevoked',
+  revokedAt: 'revokedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -221,14 +244,6 @@ exports.Prisma.CannedResponseScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.OtpScalarFieldEnum = {
-  id: 'id',
-  phone: 'phone',
-  code: 'code',
-  expiresAt: 'expiresAt',
-  createdAt: 'createdAt'
-};
-
 exports.Prisma.SystemScalarFieldEnum = {
   id: 'id',
   activeBranchId: 'activeBranchId',
@@ -309,7 +324,9 @@ exports.MediaStatus = exports.$Enums.MediaStatus = {
 };
 
 exports.Prisma.ModelName = {
+  Otp: 'Otp',
   User: 'User',
+  Session: 'Session',
   Chat: 'Chat',
   ChatMember: 'ChatMember',
   Message: 'Message',
@@ -317,7 +334,6 @@ exports.Prisma.ModelName = {
   StatusView: 'StatusView',
   Media: 'Media',
   CannedResponse: 'CannedResponse',
-  Otp: 'Otp',
   System: 'System'
 };
 

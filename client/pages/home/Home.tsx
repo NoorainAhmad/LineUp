@@ -301,34 +301,18 @@ export const Home: React.FC = () => {
     },
     [closeModals],
   );
+
   const handleLogoutDevice = useCallback(async () => {
+    if (isLoggingOut) return; // prevent double clicks
     try {
-      setIsLoggingOut(true);
-      // Uses Bearer token automatically via axios interceptor
-        await api.post("/auth/logout");
-      } catch (error) {
+      setIsLoggingOut(true);  
+      await logout();
+    } catch (error) {
       console.error("Logout device error:", error);
     } finally {
-      // Clear tokens & auth context
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("auth_user");
-      logout(); // your existing auth context logout
+      setIsLoggingOut(false);
     }
-  }, [logout]);
-
-  const handleLogoutAllDevices = useCallback(async () => {
-    try {
-      setIsLoggingOut(true);
-
-      // Uses Bearer token automatically via axios interceptor
-      await api.post("/auth/logout-all");
-    } catch (error) {
-      console.error("Logout all devices error:", error);
-    } finally {
-      localStorage.removeItem("access_token");
-      logout();
-    }
-  }, [logout]);
+  }, [logout, isLoggingOut]);
 
   const handleChatSelect = useCallback((chat: Chat) => {
     setSelectedChat(chat);
@@ -622,7 +606,7 @@ export const Home: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
     },
-    [currentUser.id, queryClient],
+    [currentUser?.id, queryClient],
   );
 
   const handleArchiveChat = useCallback(
@@ -1497,7 +1481,6 @@ export const Home: React.FC = () => {
         <LogoutModal
           onClose={() => setShowLogoutModal(false)}
           onLogoutDevice={handleLogoutDevice}
-          onLogoutAll={handleLogoutAllDevices}
           isLoading={isLoggingOut}
         />
       )}
