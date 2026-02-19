@@ -93,15 +93,17 @@ export const Verify: React.FC = () => {
           phone,
           otp: otp.join(""),
         });
+        // server returns tokens as `accessToken` — pass that as `token` to reset flow
         navigate("/reset-password", {
-          state: { token: response.data.token, phone },
+          state: { token: response.accessToken, phone },
         });
       } else {
         const response = await AuthService.verifyRegistration({
           phone: phone,
           otp: otp.join(""),
         });
-        login(response.data.user, response.data.token);
+        // AuthService returns parsed body: { user, accessToken }
+        login(response.user, response.accessToken);
         navigate("/");
       }
     } catch (err: any) {

@@ -127,7 +127,7 @@ export class AuthService {
   }
 
   // VERIFY REGISTRATION
-  static async verifyRegistration(data: z.infer<typeof verifyOtpSchema>) {
+  static async verifyRegistration(data: z.infer<typeof verifyOtpSchema>, ipAddress: string, userAgent: string) {
     try {
       const requestedUser = await prisma.user.findFirst({
         where: { phone: data.phone },
@@ -152,7 +152,7 @@ export class AuthService {
           },
         });
       }
-      const tokens = await this.issueTokenPair(user.id, user.role);
+      const tokens = await this.issueTokenPair(user.id, user.role, userAgent, ipAddress);
 
       console.log(`[Verification] Account for ${user.phone} verified`);
       return {
@@ -167,7 +167,7 @@ export class AuthService {
   }
 
   // LOGIN A USER
-  static async login(data: z.infer<typeof loginSchema>) {
+  static async login(data: z.infer<typeof loginSchema>, ipAddress: string, userAgent: string) {
     try {
       const requestedUser = await prisma.user.findFirst({
         where: {
@@ -193,6 +193,8 @@ export class AuthService {
       const tokens = await this.issueTokenPair(
         requestedUser.id,
         requestedUser.role,
+        userAgent,
+        ipAddress
       );
 
       const { passwordHash, ...user } = requestedUser;
@@ -209,17 +211,24 @@ export class AuthService {
   }
 
   //  Refresh ---------------------------------------------------------------------
-  static async refresh(incomingRefreshToken: string) {
-    if (!incomingRefreshToken) {
-      throw new Error("Refresh token is required");
+  static async refresh(incomingRefreshToken: string, ipAddress: string, userAgent: string) {
+    const dotIdx = incomingRefreshToken.indexOf(".");
+    if (dotIdx === -1) {
+      throw new Error("Invalid refresh token format");
     }
+    const id = incomingRefreshToken.substring(0, dotIdx);
+    const rawToken = incomingRefreshToken.substring(dotIdx + 1);
     const stored = await prisma.refreshToken.findUnique({
-      where: { token: incomingRefreshToken },
+      where: { id },
       include: { user: true },
     });
 
     if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
       throw new Error("Invalid or expired refresh token");
+    }
+    const isValid = await bcrypt.compare(rawToken, stored.token);
+    if (!isValid) {
+      throw new Error("Invalid refresh token");
     }
 
     // Rotate: revoke old, issue new pair
@@ -231,19 +240,33 @@ export class AuthService {
     const tokens = await AuthService.issueTokenPair(
       stored.userId,
       stored.user.role,
-      stored.id
+      userAgent, ipAddress
     );
     return { success: true, data: tokens };
   }
 
   //  Logout (single device) ----------------------------------
   static async logout(incomingRefreshToken: string) {
-    if (!incomingRefreshToken) {
-      throw new Error("Refresh token required");
+    const dotIdx = incomingRefreshToken.indexOf(".");
+    if (dotIdx === -1) {
+      throw new Error("Invalid refresh token format");
     }
-    await prisma.refreshToken.delete({
-      where: { token: incomingRefreshToken },
-      
+    const id = incomingRefreshToken.substring(0, dotIdx);
+    const rawToken = incomingRefreshToken.substring(dotIdx + 1);
+    const stored = await prisma.refreshToken.findUnique({
+      where: { id },
+    });
+
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new Error("Invalid or expired refresh token");
+    }
+    const isValid = await bcrypt.compare(rawToken, stored.token);
+    if (!isValid) {
+      throw new Error("Invalid refresh token");
+    }
+    await prisma.refreshToken.updateMany({
+      where: { id },
+      data: { revokedAt: new Date(), expiresAt: new Date() },  
     });
     console.log(`[Auth] One sessions revoked for user`);
     return { success: true, message: "Logged out" };
@@ -251,9 +274,9 @@ export class AuthService {
 
   //  Logout from ALL devices ----------------------------------------------
   static async logoutAllDevices(userId: string) {
-    await prisma.refreshToken.deleteMany({
+    await prisma.refreshToken.updateMany({
       where: { userId },
-     
+      data: { revokedAt: new Date(), expiresAt: new Date() },
     });
     console.log(`[Auth] All sessions revoked for user ${userId}`);
     return { success: true, message: "Logged out from all devices" };
@@ -280,7 +303,7 @@ export class AuthService {
   }
 
   // VERIFY PASSWORD RESET
-  static async verifyPasswordReset(data: z.infer<typeof verifyOtpSchema>) {
+  static async verifyPasswordReset(data: z.infer<typeof verifyOtpSchema>, ipAddress: string, userAgent: string) {
     try {
       const requestedUser = await prisma.user.findFirst({
         where: { phone: data.phone },
@@ -305,7 +328,7 @@ export class AuthService {
       await this.logoutAllDevices(user.id);
 
       // Issue fresh token pair
-      const tokens = await this.issueTokenPair(user.id, user.role);
+      const tokens = await this.issueTokenPair(user.id, user.role, userAgent, ipAddress);
 
       return {
         success: true,
@@ -346,23 +369,27 @@ export class AuthService {
       throw new Error("Password reset failed: " + (error as Error).message);
     }
   }
-  private static async issueTokenPair(userId: string, userRole: string, oldTokenId?: string) {
-  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
-  const rawRefresh = jwtUtil.generateTokenId();
 
-  await prisma.$transaction([
-    // Delete old refresh token if rotating
-    ...(oldTokenId ? [prisma.refreshToken.delete({ where: { id: oldTokenId } })]: []),
+  //Helper function to issue token
+  private static async issueTokenPair(userId: string, userRole: string, userAgent: string, ipAddress?: string) {
+  const accessToken = await jwtUtil.sign({ userId, userRole }, process.env.JWT_SECRET!);
+  const {id, raw} = jwtUtil.generateTokenId();
+  const tokenHash = await bcrypt.hash(raw, 12)
+
     // Create new refresh token
-    prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
-        token: rawRefresh,
+        id,
+        token: tokenHash,
         userId,
+        ipAddress,
+        userAgent,
         expiresAt: jwtUtil.refreshExpiresAt(),
       },
-    }),
-  ]);
+    });
+    const refreshToken = id + "." + raw; // Send both ID and raw token to client
+    console.log(`[Auth] Issued new token pair for user ${userId}`);
 
-  return { accessToken, refreshToken: rawRefresh };
+  return { accessToken, refreshToken };
 }
 }

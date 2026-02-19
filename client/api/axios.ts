@@ -16,6 +16,11 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 const api = axios.create({
   baseURL: "/api/v1",
+  withCredentials: true,
+});
+const authApi = axios.create({
+  baseURL: "/api/v1",
+  withCredentials: true,
 });
 
 // ── Request: attach access token ──────────────────────────────────────────
@@ -33,12 +38,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Not a 401 or already retried — just reject
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);
     }
 
-    // If already refreshing, queue this request until refresh completes
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -54,17 +57,10 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (!refreshToken) throw new Error("No refresh token");
+      const { data } = await authApi.post("/auth/refresh");
 
-      const { data } = await axios.post("/api/v1/auth/refresh", {
-        refreshToken,
-      });
-
-      const { accessToken, refreshToken: newRefreshToken } = data.data;
-
+      const { accessToken } = data.data;
       localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", newRefreshToken);
 
       processQueue(null, accessToken);
 
@@ -72,11 +68,9 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-
-      // Refresh failed — clear everything and redirect to login
-      localStorage.clear();
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("auth_user");
       window.location.href = "/login";
-
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
