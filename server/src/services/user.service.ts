@@ -158,8 +158,7 @@ export class UserService {
 
   // Search Users
   static async searchUsers(query: string) {
-    query = query.trim();
-    console.log(query);
+    query = query.trim();  
     try {
       return prisma.user.findMany({
         where: {

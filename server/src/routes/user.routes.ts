@@ -9,6 +9,9 @@ router.use(authMiddleware); // All routes below this line require a valid JWT
 router.get("/dashboard/stats", UserController.getDashboardStats);
 router.get("/stats/:id", UserController.getUserStats);
 
+// Search: Users
+router.get("/search", UserController.searchUsers);
+
 // Individual: Specific User
 router.get("/:id", UserController.getUserById);
 
@@ -17,9 +20,6 @@ router.get("/", UserController.getAllUsers);
 
 // List: User's subordinates
 router.get("/:id/subordinates", UserController.getUserSubordinates);
-
-// Search: Users
-router.get("/search", UserController.searchUsers);
 
 // Create: New User
 router.post("/", UserController.createUser);

@@ -29,12 +29,18 @@ import {
   Trash2,
   Link2Icon,
   LockIcon,
+  BarChart3,
+  MessageCircle,
+  Image,
+  Mic,
+  FileText,
 } from "lucide-react";
-import { User, UserRole, UserStatus } from "../../../types";
+import { User, UserRole, UserStatus, DashboardStats } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useQuery } from "@tanstack/react-query";
 import { UserService } from "@/services/user.service";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatMessageTime } from "@/utils/time_formatter.utils";
 
 interface UserViewProps {
   user: User;
@@ -55,7 +61,6 @@ const HierarchyNode = ({
   const hasChildren =
     user.role !== UserRole.USER || (user.children && user.children.length > 0);
 
-  // Query to fetch children/subordinates
   const { data: children = [] } = useQuery({
     queryKey: ["user-children", user.id],
     queryFn: async () => {
@@ -68,7 +73,7 @@ const HierarchyNode = ({
         return [];
       }
     },
-    enabled: isOpen && hasChildren, // Only fetch when node is expanded
+    enabled: isOpen && hasChildren,
   });
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -174,6 +179,7 @@ export const UserView: React.FC<UserViewProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -183,6 +189,52 @@ export const UserView: React.FC<UserViewProps> = ({
     email: user.email || "",
     location: user.location || "",
     role: user.role,
+  });
+
+  // 📊 Fetch user stats using DashboardStats type
+  const { data: userStats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    queryKey: ["user-stats", user.id],
+    queryFn: async () => {
+      try {
+        const response = await UserService.getUserStats(user.id);
+        return response;
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+        // Return default stats structure
+        return {
+          user: {
+            id: user.id,
+            name: user.name,
+            role: user.role,
+            unreadMessages: 0,
+          },
+          metrics: {
+            activeChats: 0,
+            onlineTeamMembers: 0,
+            messagesToday: 0,
+            totalMessages: 0,
+            unreadMessages: 0,
+            pinnedChatsCount: 0,
+          },
+          messageVolume: {
+            labels: [],
+            data: [],
+            total: 0,
+            trend: 0,
+          },
+          pinnedChats: [],
+          recentStatuses: [],
+          onlineTeam: [],
+          messageTypes: {
+            text: 0,
+            images: 0,
+            audio: 0,
+            files: 0,
+            total: 0,
+          },
+        };
+      }
+    },
   });
 
   // Query for user's subordinates
@@ -201,42 +253,14 @@ export const UserView: React.FC<UserViewProps> = ({
 
   const searchUsers = async () => {
     try {
-      const searchedUsers = subordinates.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.guid.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.phone.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-      setSearchResults(searchedUsers);
+      // apply throttle
+      const response = await UserService.searchUsers(searchQuery);
+      setSearchResults(response);
     } catch (error) {
       console.error("Error searching users:", error);
       setSearchResults([]);
     }
   };
-
-  // Query for user stats/analytics
-  const { data: userStats } = useQuery({
-    queryKey: ["user-stats", user.id],
-    queryFn: async () => {
-      try {
-        const response = await UserService.getUserStats(user.id);
-        return (
-          response || {
-            uptime: "99.9%",
-            deployments: 0,
-            avgResponse: "N/A",
-          }
-        );
-      } catch (error) {
-        console.error("Error fetching user stats:", error);
-        return {
-          uptime: "N/A",
-          deployments: 0,
-          avgResponse: "N/A",
-        };
-      }
-    },
-  });
 
   useEffect(() => {
     setFormData({
@@ -251,7 +275,6 @@ export const UserView: React.FC<UserViewProps> = ({
     setSearchQuery("");
   }, [user]);
 
-  // Handle search with debounce
   useEffect(() => {
     if (searchQuery.trim()) {
       const timer = setTimeout(() => {
@@ -322,9 +345,9 @@ export const UserView: React.FC<UserViewProps> = ({
     }
   };
 
-  // 🆕 NEW: Handle Delete User
   const handleDelete = async () => {
-    // First confirmation
+    if (deleteLoading) return;
+
     if (
       !window.confirm(
         `⚠️ PERMANENT DELETION\n\nAre you absolutely sure you want to delete ${user.name}?\n\nThis action CANNOT be undone. All user data will be permanently removed.`,
@@ -333,18 +356,17 @@ export const UserView: React.FC<UserViewProps> = ({
       return;
     }
 
-    // Second confirmation with type verification
     const confirmText = prompt(`Type "DELETE" to confirm permanent deletion:`);
     if (confirmText !== "DELETE") {
       alert("Deletion cancelled - confirmation text did not match.");
       return;
     }
 
+    setDeleteLoading(true);
     try {
       await UserService.deleteUser(user.id);
       alert(`User ${user.name} has been permanently deleted.`);
 
-      // Navigate back or refresh
       if (onBack) {
         onBack();
       } else {
@@ -353,6 +375,8 @@ export const UserView: React.FC<UserViewProps> = ({
     } catch (error: any) {
       console.error("Error deleting user:", error);
       alert(error.message || "Failed to delete user. Please try again.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -402,6 +426,42 @@ export const UserView: React.FC<UserViewProps> = ({
     onStartChat(user);
   };
 
+  const canView = currentUser?.role === UserRole.DEVELOPER || currentUser?.role === UserRole.MASTER || currentUser?.role === UserRole.ADMIN;
+  const canEdit = currentUser?.role === UserRole.DEVELOPER || currentUser?.role === UserRole.MASTER;
+  const canDelete = currentUser?.role === UserRole.DEVELOPER;
+
+  // Format message type counts
+  const messageTypeStats = [
+    { 
+      icon: MessageCircle, 
+      label: "Text", 
+      count: userStats?.messageTypes.text || 0,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    },
+    { 
+      icon: Image, 
+      label: "Images", 
+      count: userStats?.messageTypes.images || 0,
+      color: "text-purple-500",
+      bg: "bg-purple-500/10"
+    },
+    { 
+      icon: Mic, 
+      label: "Audio", 
+      count: userStats?.messageTypes.audio || 0,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10"
+    },
+    { 
+      icon: FileText, 
+      label: "Files", 
+      count: userStats?.messageTypes.files || 0,
+      color: "text-green-500",
+      bg: "bg-green-500/10"
+    },
+  ];
+
   return (
     <div className="flex-1 h-full bg-background relative overflow-hidden flex flex-col animate-in fade-in duration-300">
       {/* Mobile Back Header */}
@@ -450,14 +510,16 @@ export const UserView: React.FC<UserViewProps> = ({
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="p-2 bg-surface-hover hover:bg-secondary/20 text-text-main rounded-full transition-colors border border-border"
-                  title="Edit Profile"
-                  disabled={!user.isActive}
-                >
-                  <Pencil size={18} />
-                </button>
+                canEdit && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 bg-surface-hover hover:bg-secondary/20 text-text-main rounded-full transition-colors border border-border"
+                    title="Edit Profile"
+                    disabled={!user.isActive}
+                  >
+                    <Pencil size={18} />
+                  </button>
+                )
               )}
             </div>
 
@@ -517,7 +579,7 @@ export const UserView: React.FC<UserViewProps> = ({
                   ></div>
                   {user.status === UserStatus.ONLINE
                     ? "Online Now"
-                    : `Last seen ${user.lastSeen}`}
+                    : `Last seen ${formatMessageTime(user.lastSeen)}`}
                 </span>
               </div>
             </div>
@@ -541,6 +603,40 @@ export const UserView: React.FC<UserViewProps> = ({
                 </button>
               )}
           </div>
+
+          {/* Stats Overview Section */}
+          {userStats && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <StatCard
+                label="Active Chats"
+                value={userStats.metrics.activeChats}
+                icon={MessageSquare}
+                color="text-blue-500"
+                bg="bg-blue-500/10"
+              />
+              <StatCard
+                label="Messages Today"
+                value={userStats.metrics.messagesToday}
+                icon={BarChart3}
+                color="text-green-500"
+                bg="bg-green-500/10"
+              />
+              <StatCard
+                label="Total Messages"
+                value={userStats.metrics.totalMessages}
+                icon={MessageCircle}
+                color="text-purple-500"
+                bg="bg-purple-500/10"
+              />
+              <StatCard
+                label="Unread"
+                value={userStats.metrics.unreadMessages}
+                icon={Mail}
+                color="text-orange-500"
+                bg="bg-orange-500/10"
+              />
+            </div>
+          )}
 
           {/* Grid Layout for details */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -692,22 +788,19 @@ export const UserView: React.FC<UserViewProps> = ({
                       disabled={true}
                     />
                   )}
-                  {(currentUser?.role === UserRole.MASTER ||
-                    currentUser?.role === UserRole.DEVELOPER) &&
-                    isEditing && (
-                      <EditableRow
-                        icon={LockIcon}
-                        label="New Password"
-                        value={formData.password}
-                        isEditing={isEditing}
-                        onChange={(v: any) =>
-                          setFormData({ ...formData, password: v })
-                        }
-                        disabled={!user.isActive}
-                      />
-                    )}
-                  {(currentUser?.role === UserRole.MASTER ||
-                    currentUser?.role === UserRole.DEVELOPER) && (
+                  {canView && isEditing && (
+                    <EditableRow
+                      icon={LockIcon}
+                      label="New Password"
+                      value={formData.password}
+                      isEditing={isEditing}
+                      onChange={(v: any) =>
+                        setFormData({ ...formData, password: v })
+                      }
+                      disabled={!user.isActive}
+                    />
+                  )}
+                  {canView && (
                     <EditableRow
                       icon={Phone}
                       label="Phone Number"
@@ -719,8 +812,7 @@ export const UserView: React.FC<UserViewProps> = ({
                       disabled={!user.isActive}
                     />
                   )}
-                  {(currentUser?.role === UserRole.MASTER ||
-                    currentUser?.role === UserRole.DEVELOPER) && (
+                  {canView && (
                     <EditableRow
                       icon={Mail}
                       label="Email Address"
@@ -808,11 +900,40 @@ export const UserView: React.FC<UserViewProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Message Types Stats */}
+              {userStats && userStats.messageTypes.total > 0 && (
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-sm font-bold text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <BarChart3 size={16} /> Message Activity
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {messageTypeStats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="flex items-center gap-2 p-3 rounded-lg bg-surface-hover/50"
+                      >
+                        <div className={`p-1.5 rounded-lg ${stat.bg} ${stat.color}`}>
+                          <stat.icon size={14} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-text-main">
+                            {stat.count}
+                          </div>
+                          <div className="text-[10px] text-secondary">
+                            {stat.label}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Col: Stats & Actions */}
             <div className="space-y-6">
-              {/* Stats Cards Vertical */}
+              {/* Stats Cards */}
               <div className="space-y-3">
                 <StatsCard
                   icon={Activity}
@@ -832,18 +953,18 @@ export const UserView: React.FC<UserViewProps> = ({
                 <StatsCard
                   icon={Server}
                   label="Deployments"
-                  value={userStats?.deployments || "0"}
+                  value={userStats?.metrics?.totalMessages?.toString() || "0"}
                   color="text-blue-500"
                 />
                 <StatsCard
                   icon={Ticket}
-                  label="Avg Response"
-                  value={userStats?.avgResponse || "N/A"}
+                  label="Response Rate"
+                  value={userStats?.messageVolume?.trend ? `${userStats.messageVolume.trend}%` : "N/A"}
                   color="text-purple-500"
                 />
               </div>
 
-              {/* Account Status Zone - WITH DELETE BUTTON */}
+              {/* Account Status Zone */}
               <div
                 className={`rounded-2xl p-6 border ${user.isActive ? "bg-green-500/5 border-green-500/10" : "bg-red-500/5 border-red-500/10"}`}
               >
@@ -859,8 +980,7 @@ export const UserView: React.FC<UserViewProps> = ({
                 </p>
 
                 {/* Activate/Deactivate Button */}
-                {(currentUser?.role === UserRole.MASTER ||
-                  currentUser?.role === UserRole.DEVELOPER) && (
+                {canEdit && (
                   <button
                     onClick={handleDeactivate}
                     className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all font-medium text-sm mb-3 ${
@@ -874,13 +994,18 @@ export const UserView: React.FC<UserViewProps> = ({
                   </button>
                 )}
 
-                {/* 🆕 Delete User Button - Only for MASTER/DEVELOPER */}
-                {currentUser?.role === UserRole.DEVELOPER && (
+                {/* Delete User Button */}
+                {canDelete && (
                   <button
                     onClick={handleDelete}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500 hover:text-white transition-all font-medium text-sm text-red-500"
+                    disabled={deleteLoading}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500 hover:text-white transition-all font-medium text-sm text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Trash2 size={16} />
+                    {deleteLoading ? (
+                      <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
                     Delete User Permanently
                   </button>
                 )}
@@ -893,6 +1018,7 @@ export const UserView: React.FC<UserViewProps> = ({
   );
 };
 
+// Helper Components
 const StatsCard = ({ icon: Icon, label, value, color }: any) => (
   <div className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-primary/20 transition-colors group">
     <div className="flex items-center gap-3">
@@ -906,6 +1032,18 @@ const StatsCard = ({ icon: Icon, label, value, color }: any) => (
       </span>
     </div>
     <span className="text-lg font-black text-text-main font-mono">{value}</span>
+  </div>
+);
+
+const StatCard = ({ label, value, icon: Icon, color, bg }: any) => (
+  <div className="bg-surface border border-border rounded-xl p-4 shadow-sm">
+    <div className="flex items-center justify-between mb-2">
+      <div className={`p-2 rounded-lg ${bg} ${color}`}>
+        <Icon size={18} />
+      </div>
+      <span className="text-lg font-bold text-text-main">{value}</span>
+    </div>
+    <p className="text-xs text-secondary">{label}</p>
   </div>
 );
 
@@ -941,11 +1079,11 @@ const EditableRow = ({
         <p className="text-[10px] text-secondary font-bold uppercase tracking-wider mb-0.5">
           {label}
         </p>
-        {isEditing ? (
+        {isEditing && !disabled ? (
           <input
             type="text"
             value={value}
-            min={label == "New Password" ? 6 : 1}
+            min={label === "New Password" ? 6 : 1}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-input border border-border rounded px-2 py-1 text-sm text-text-main focus:border-primary focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
