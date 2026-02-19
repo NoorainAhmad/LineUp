@@ -429,12 +429,14 @@ export const ChatList: React.FC<ChatListProps> = ({
       })
       .filter((processedChat) => {
         const matchesSearch =
-          processedChat.displayUser.name
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (processedChat.chat.lastMessage?.content || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
+          processedChat.displayUser.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          processedChat.displayUser?.guid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          processedChat.displayUser?.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (processedChat.chat.lastMessage?.content || "").toLowerCase().includes(searchQuery.toLowerCase());
+
+        if (searchQuery === "") {
+          return matchesSearch;
+        }
 
         const matchesArchiveStatus = showArchived
           ? processedChat.isArchived
