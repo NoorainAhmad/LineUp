@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     define: { 
+      "process.env.API_BASE_URL": JSON.stringify(env.API_BASE_URL),
+      "process.env.API_VERSION": JSON.stringify(env.API_VERSION),
       "process.env.S3_BUCKET_NAME": JSON.stringify(env.VITE_S3_BUCKET),
       "process.env.AWS_REGION": JSON.stringify(env.VITE_AWS_REGION),
     },

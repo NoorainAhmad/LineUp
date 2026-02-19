@@ -10,13 +10,13 @@ export const Reset: React.FC = () => {
   const navigate = useNavigate();
 
   const location = useLocation();
-  const phone = location.state?.phone;
-  const token = location.state?.token;
+  const phone = location.state?.phone;   
 
-  if (!phone || !token) {
-    navigate("/forgot-password");
-    return null;
-  }
+  useEffect(() => {
+    if (!phone) {
+      navigate("/forgot");
+    }
+  }, [navigate, phone]);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,36 +25,44 @@ export const Reset: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  useEffect(() => {
-    if (!phone) {
-      setError("Session expired or invalid. Please start the process again.");
-      setTimeout(() => navigate("/forgot-password"), 3000);
-    }
-  }, [phone, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+
+    if (isLoading) return;
+
+    const cleanPhone = String(phone).trim(); 
+
+    setError(null);
+
+    if (!password || !confirmPassword) {
+      setError("Please fill all fields.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-    if (!phone) {
-      setError("Missing verification data. Please request a new code.");
-      return;
-    }
+
     setIsLoading(true);
+
     try {
       await AuthService.resetPassword({
-        phone,
-        token,
+        phone: cleanPhone, 
         password,
       });
+
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 3000);
+
+      setTimeout(() => navigate("/login", { replace: true }), 2000);
     } catch (err: any) {
       const backendMessage =
-        err?.response?.data?.readableMessage || 
+        err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
@@ -127,7 +135,12 @@ export const Reset: React.FC = () => {
           </div>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={
+              isLoading ||
+              !password ||
+              !confirmPassword ||
+              password !== confirmPassword
+            }
             className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-2 mt-6 disabled:opacity-70"
           >
             {isLoading ? (

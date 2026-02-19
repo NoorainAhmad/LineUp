@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "../types";
+import { AuthService } from "../services/auth.service";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, accessToken: string) => void; // ← refreshToken param removed
+  login: (user: User, accessToken: string) => void;
   logout: () => Promise<void>;
   logoutAllDevices: () => Promise<void>;
 }
@@ -19,30 +20,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("auth_user");
-    const accessToken = localStorage.getItem("access_token");
+    try {
+      const savedUser = localStorage.getItem("auth_user");
+      const accessToken = localStorage.getItem("access_token");
 
-    if (savedUser && accessToken) {
-      setUser(JSON.parse(savedUser));
+      if (!accessToken) {
+        clearAuth();
+        return;
+      }
+
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch {
+      // Corrupt storage → reset cleanly
+      clearAuth();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = (userData: User, accessToken: string) => {
     setUser(userData);
     localStorage.setItem("auth_user", JSON.stringify(userData));
     localStorage.setItem("access_token", accessToken);
-    // refresh token is set as httpOnly cookie by server — nothing to do here
   };
 
   const logout = async () => {
     try {
-      // Cookie is sent automatically — server will delete the DB row and clear the cookie
-      await import("../services/auth.service").then(({ AuthService }) =>
-        AuthService.logout()
-      );
+      await AuthService.logout();
     } catch {
-      // Always clear client state even if server call fails
+      // Ignore server errors — always clear client state
     } finally {
       clearAuth();
     }
@@ -50,11 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logoutAllDevices = async () => {
     try {
-      await import("../services/auth.service").then(({ AuthService }) =>
-        AuthService.logoutAllDevices()
-      );
+      await AuthService.logoutAllDevices();
     } catch {
-      // Always clear client state
+    // Ignore server errors — always clear client state
     } finally {
       clearAuth();
     }
@@ -64,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(null);
     localStorage.removeItem("auth_user");
     localStorage.removeItem("access_token");
-    // Can't clear the cookie from JS — server clears it via Set-Cookie on logout
   };
 
   return (
