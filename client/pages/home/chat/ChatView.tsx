@@ -53,7 +53,10 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
-import { formatLastMessageTime, formatMessageTime } from "@/utils/time_formatter.utils";
+import {
+  formatLastMessageTime,
+  formatMessageTime,
+} from "@/utils/time_formatter.utils";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -1317,7 +1320,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
     [deleteMessageMutation],
   );
 
-  const handleStartEdit = useCallback((msg: Message) => {
+  const handleStartEdit = useCallback((msg: Message) => { 
+    const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+    const isEditableUnder5Minutes = (Date.now() - createdAt) <= 5 * 60 * 1000;
+    if (!isEditableUnder5Minutes) {
+      alert("You can only edit messages sent within the last 5 minutes.");
+      return;
+    }
     setEditingMessage(msg);
     setInputValue(msg.content);
     setReplyingTo(null);
@@ -1536,7 +1545,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </span>
                     ) : (
                       <span className="opacity-80">
-                        {formatLastMessageTime(otherUser?.lastSeen || "") || "Unknown"}
+                        {formatLastMessageTime(otherUser?.lastSeen || "") ||
+                          "Unknown"}
                       </span>
                     )}
                   </span>
@@ -1618,7 +1628,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
               const isSearchResult = searchResults.includes(msg.id);
-
+              const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+              const isEditableUnder5Minutes = (Date.now() - createdAt) <= 5 * 60 * 1000;
+  
               return (
                 <div
                   key={msg.id}
@@ -1707,11 +1719,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             user?.role === UserRole.BRANCH ||
                             (user?.role === UserRole.ADMIN && chat.isGroup) ||
                             (user?.role === UserRole.MASTER && chat.isGroup)) &&
-                          msg.type === MessageType.TEXT && (
+                          msg.type === MessageType.TEXT &&
+                          isEditableUnder5Minutes && (
                             <>
                               <button
                                 onClick={(e) => {
-                                  e.stopPropagation();
+                                  e.stopPropagation(); 
                                   handleStartEdit(msg);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
@@ -1843,9 +1856,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             (edited)
                           </span>
                         )}
-                        <span>
-                          {formatMessageTime(msg.createdAt)}
-                        </span>
+                        <span>{formatMessageTime(msg.createdAt)}</span>
                         {isMe && !isDeleted && !isPending && (
                           <span>
                             <CheckCheck size={14} />
@@ -2102,62 +2113,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 accept="image/*,video/*,.pdf,.doc,.docx,.txt"
               />
             </div>
-
-            {/* Text Input */}
-            {/* <div className="flex-1 min-h-12.5 flex items-center relative">
-              {isRecording ? (
-                <div className="absolute inset-0 flex items-center px-0 z-20 animate-pulse text-red-500 gap-2">
-                  <div className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full bg-red-500 animate-ping"></div>
-                  <span className="font-mono font-bold text-sm md:text-lg">
-                    {formatTime(recordingDuration)}
-                  </span>
-                  <span className="text-xs md:text-sm font-medium">rec...</span>
-                  <div className="flex-1"></div>
-                  <button
-                    onClick={() => stopRecording(true)}
-                    className="p-2 hover:bg-red-500/50 bg-red-500/80 text-text-main rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="w-full relative">
-                    <div
-                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-2 py-3 text-base"
-                      style={{ minHeight: "44px" }}
-                    >
-                      {inputValue || "placeholder"}
-                    </div>
-                    <textarea
-                      ref={inputRef}
-                      placeholder={
-                        replyingTo
-                          ? "Type your reply..."
-                          : editingMessage
-                            ? "Edit your msg..."
-                            : "Type a msg..."
-                      }
-                      className="absolute inset-0 w-full bg-transparent text-text-main px-2 py-3 focus:outline-none placeholder-secondary text-base resize-none overflow-y-auto"
-                      style={{ minHeight: "44px", maxHeight: "120px" }}
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      disabled={sendMessageMutation.isPending}
-                      rows={1}
-                    />
-                  </div>
-                  {!inputValue &&
-                    !isRecording &&
-                    !sendMessageMutation.isPending && (
-                      <div className="absolute right-0 pointer-events-none opacity-30 flex items-center gap-1 pr-2">
-                        <Command size={14} />
-                        <span className="text-xs">/</span>
-                      </div>
-                    )}
-                </>
-              )}
-            </div> */}
 
             {/* Text Input */}
             <div className="flex-1 min-w-0 relative min-h-12.5">
