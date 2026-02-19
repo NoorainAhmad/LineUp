@@ -237,12 +237,11 @@ export const UserList: React.FC<UserListProps> = ({
                 >
                   <span className="capitalize">{user.role.toLowerCase()}</span>
                   {" • "}
-                  {user.email || "No email"}
+                  {user.guid || "No email"} <br />
                   {user.parentId && (
-                    <>
-                      {" • "}
+                    <> 
                       <span className="text-xs opacity-70">
-                        Reports to: {users.find(u => u.id === user.parentId)?.name || 'Unknown'}
+                        reports to: <b>{users.find(u => u.id === user.parentId)?.name || 'Unknown'}</b>
                       </span>
                     </>
                   )}

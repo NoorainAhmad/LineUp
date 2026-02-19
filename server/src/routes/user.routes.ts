@@ -12,6 +12,9 @@ router.get("/stats/:id", UserController.getUserStats);
 // Search: Users
 router.get("/search", UserController.searchUsers);
 
+// Search: Team Members
+router.get("/team/search", UserController.searchTeamMembers);
+
 // Individual: Specific User
 router.get("/:id", UserController.getUserById);
 

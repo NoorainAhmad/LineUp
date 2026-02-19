@@ -32,6 +32,12 @@ export class UserService {
     return response.data;
   }
 
+  // Search team members
+  static async searchTeamMembers(query: string) {
+    const response = await api.get(`/users/team/search?q=${query}`); 
+    return response.data;
+  }
+
   // Get dashboard stats for current user
   static async getDashboardStats(): Promise<DashboardStats> {
     try {

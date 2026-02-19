@@ -51,6 +51,41 @@ export class UserController {
     }
   }
 
+  // In user.controller.ts
+  static async searchTeamMembers(req: AuthRequest, res: Response) {
+    try {
+      const currentUserId = req.userId as string;
+      const query = req.query.q as string;
+
+      if (!currentUserId) {
+        return res.status(401).json({
+          success: false,
+          error: "Unauthorized",
+        });
+      }
+
+      if (!query) {
+        return res.status(400).json({
+          success: false,
+          error: "Missing search query",
+        });
+      }
+
+      const results = await UserService.searchTeamMembers(
+        currentUserId,
+        query,
+      );
+
+      return res.status(200).json(results);
+    } catch (error: any) {
+      console.error("Team search error:", error);
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
   // Create a new user
   static async createUser(req: Request, res: Response) {
     try {
@@ -65,7 +100,7 @@ export class UserController {
   // Update a user
   static async updateUser(req: Request, res: Response) {
     try {
-      const validatedData = userUpdateSchema.parse(req.body); 
+      const validatedData = userUpdateSchema.parse(req.body);
       const user = await UserService.updateUser(
         req.params.id as string,
         validatedData,
@@ -82,18 +117,20 @@ export class UserController {
       const { currentPassword, newPassword } = req.body;
 
       if (!currentPassword || !newPassword) {
-        return res.status(400).json({ error: "Current password and new password are required" });
+        return res
+          .status(400)
+          .json({ error: "Current password and new password are required" });
       }
-      
+
       const user = await UserService.changePassword(
         req.params.id as string,
         currentPassword,
         newPassword,
       );
-      
-      return res.status(200).json({ 
+
+      return res.status(200).json({
         message: "Password changed successfully",
-        user 
+        user,
       });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -108,15 +145,15 @@ export class UserController {
       if (!avatarUrl) {
         return res.status(400).json({ error: "Avatar URL is required" });
       }
-      
+
       const user = await UserService.updateProfilePhoto(
         req.params.id as string,
         avatarUrl,
       );
-      
-      return res.status(200).json({ 
+
+      return res.status(200).json({
         message: "Profile photo updated successfully",
-        user 
+        user,
       });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -133,15 +170,15 @@ export class UserController {
     }
   }
 
-    // Get dashboard stats
+  // Get dashboard stats
   static async getDashboardStats(req: AuthRequest, res: Response) {
     try {
       const userId = req.userId; // From auth middleware
-      
+
       if (!userId) {
-        return res.status(401).json({ 
-          success: false, 
-          error: "Unauthorized - User not authenticated" 
+        return res.status(401).json({
+          success: false,
+          error: "Unauthorized - User not authenticated",
         });
       }
 
@@ -154,19 +191,20 @@ export class UserController {
       });
     } catch (error: any) {
       console.error(`[Dashboard Stats Controller] Error:`, error);
-      
+
       // Handle specific errors
       if (error.message.includes("User not found")) {
-        return res.status(404).json({ 
-          success: false, 
-          error: "User not found" 
+        return res.status(404).json({
+          success: false,
+          error: "User not found",
         });
       }
 
-      return res.status(500).json({ 
-        success: false, 
+      return res.status(500).json({
+        success: false,
         error: "Failed to fetch dashboard statistics",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   }
@@ -178,9 +216,9 @@ export class UserController {
       const requestingUserId = req.userId;
 
       if (!requestingUserId) {
-        return res.status(401).json({ 
-          success: false, 
-          error: "Unauthorized" 
+        return res.status(401).json({
+          success: false,
+          error: "Unauthorized",
         });
       }
 
@@ -196,9 +234,9 @@ export class UserController {
       });
     } catch (error: any) {
       console.error(`[User Stats Controller] Error:`, error);
-      return res.status(500).json({ 
-        success: false, 
-        error: error.message 
+      return res.status(500).json({
+        success: false,
+        error: error.message,
       });
     }
   }

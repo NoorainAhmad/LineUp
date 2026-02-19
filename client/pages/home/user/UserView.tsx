@@ -254,7 +254,7 @@ export const UserView: React.FC<UserViewProps> = ({
   const searchUsers = async () => {
     try {
       // apply throttle
-      const response = await UserService.searchUsers(searchQuery);
+      const response = await UserService.searchTeamMembers(searchQuery);
       setSearchResults(response);
     } catch (error) {
       console.error("Error searching users:", error);
