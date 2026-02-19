@@ -413,7 +413,7 @@ export const Home: React.FC = () => {
     },
     [createUserMutation, currentUser, queryClient],
   );
-  
+
   const handleCreateUser = useCallback(
     async (details: {
       guid: string;
@@ -983,6 +983,36 @@ export const Home: React.FC = () => {
     }
   }, [selectedStatusId, statusesData]);
 
+  // Reply to a status — sends a DM to the status owner and navigates to chat
+  const handleStatusReply = useCallback(
+    async (statusId: string, message: string) => {
+      try {
+        const result = await StatusService.replyToStatus(statusId, message);
+        const chatId = result.data?.chatId;
+
+        if (chatId) {
+          // Refresh chats so the DM appears in the list
+          await queryClient.invalidateQueries({ queryKey: ["chats"] });
+
+          // Wait briefly for the cache to update, then select the chat
+          setTimeout(() => {
+            const updatedChats = queryClient.getQueryData<Chat[]>(["chats"]) || [];
+            const targetChat = updatedChats.find((c) => c.id === chatId);
+            if (targetChat) {
+              setSelectedChat(targetChat);
+            }
+            setActiveTab("chat");
+            setSelectedStatusId(null);
+          }, 500);
+        }
+      } catch (error: any) {
+        console.error("Status reply failed:", error);
+        alert(error.message || "Failed to send reply. Please try again.");
+      }
+    },
+    [queryClient],
+  );
+
   // Derived Active View
   const renderMainContent = () => {
     if (isCreatingStatus || isCreatingGroup || isAddingUser || isCreatingUser) {
@@ -1019,6 +1049,7 @@ export const Home: React.FC = () => {
             onNext={handleNextStatus}
             onPrev={handlePrevStatus}
             onDelete={handleDeleteStatus}
+            onReply={handleStatusReply}
           />
         );
       }
@@ -1079,6 +1110,10 @@ export const Home: React.FC = () => {
           onToggleProfile={toggleProfile}
           cannedResponses={responsesData}
           onTogglePin={handleTogglePin}
+          onStatusClick={(statusId) => {   // to redirect to status view
+            handleStatusSelect(statusId);
+            setActiveTab("status");
+          }}
         />
       );
     }
@@ -1392,13 +1427,13 @@ export const Home: React.FC = () => {
               <ProfileView
                 userId={
                   currentUser?.role === UserRole.USER ||
-                  currentUser?.role === UserRole.BRANCH
+                    currentUser?.role === UserRole.BRANCH
                     ? selectedChat.members.find(
-                        (m) => m.user.id !== currentUser!.id,
-                      )?.user?.id || selectedChat.members[0].user?.id
+                      (m) => m.user.id !== currentUser!.id,
+                    )?.user?.id || selectedChat.members[0].user?.id
                     : selectedChat.members.find(
-                        (m) => m.user.role === UserRole.BRANCH,
-                      )?.user?.id || selectedChat.members[0].user?.id
+                      (m) => m.user.role === UserRole.BRANCH,
+                    )?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}

@@ -65,7 +65,7 @@ export class StatusService {
           fileName: file.name,
           fileSize: file.size,
           mimeType: file.type,
-        }; 
+        };
       } catch (error) {
         console.error("❌ Status media upload failed:", error);
         throw new Error("Failed to upload status media");
@@ -92,6 +92,12 @@ export class StatusService {
   // Delete a status
   static async deleteStatus(id: string) {
     const response = await api.delete(`/statuses/${id}`);
+    return response.data;
+  }
+
+  // Reply to a status (sends a DM to the status owner)
+  static async replyToStatus(statusId: string, message: string) {
+    const response = await api.post(`/statuses/${statusId}/reply`, { message });
     return response.data;
   }
 }

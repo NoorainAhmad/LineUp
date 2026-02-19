@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../config/db.js";
-import { statusCreateSchema } from "../validators/status.validator.js";
+import { statusCreateSchema, statusReplySchema } from "../validators/status.validator.js";
 
 export class StatusService {
   private static statusSelection = {
@@ -148,6 +148,103 @@ export class StatusService {
     } catch (error) {
       console.log(`[Status Deletion] Error: ${error}`);
       throw new Error("Status deletion failed: " + (error as Error).message);
+    }
+  }
+
+  // Reply to a status — sends a DM to the status owner
+  static async replyToStatus(
+    statusId: string,
+    replierId: string,
+    data: z.infer<typeof statusReplySchema>,
+  ) {
+    try {
+      // 1. Get the status with owner info
+      const status = await prisma.status.findUnique({
+        where: { id: statusId },
+        select: {
+          id: true,
+          type: true,
+          content: true,
+          userId: true,
+          user: { select: { id: true, name: true } },
+        },
+      });
+      if (!status) throw new Error("Status not found");
+      if (status.userId === replierId)
+        throw new Error("Cannot reply to your own status");
+
+      const statusOwnerId = status.userId;
+
+      // 2. Find or create a DM chat between replier and status owner
+      return prisma.$transaction(async (tx) => {
+        let chat = await tx.chat.findFirst({
+          where: {
+            isGroup: false,
+            AND: [
+              { members: { some: { userId: replierId } } },
+              { members: { some: { userId: statusOwnerId } } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (!chat) {
+          chat = await tx.chat.create({
+            data: {
+              isGroup: false,
+              members: {
+                create: [
+                  { userId: replierId },
+                  { userId: statusOwnerId },
+                ],
+              },
+            },
+            select: { id: true },
+          });
+        }
+
+        // 3. Build status context for the message
+        const statusPreview =
+          status.type === "TEXT"
+            ? (status.content?.substring(0, 100) || "Text status").replace(/\n/g, " ")
+            : status.type === "IMAGE"
+              ? "📷 Photo status"
+              : "🎥 Video status";
+
+        const messageContent = `[Status Reply|${statusId}: ${statusPreview}]\n${data.message}`;
+
+        // 4. Send the reply message
+        const message = await tx.message.create({
+          data: {
+            type: "TEXT",
+            content: messageContent,
+            senderId: replierId,
+            chatId: chat.id,
+          },
+          include: {
+            sender: { select: { id: true, name: true, avatarUrl: true } },
+          },
+        });
+
+        // 5. Update chat's last message and unread counts
+        await tx.chat.update({
+          where: { id: chat.id },
+          data: {
+            lastMessageId: message.id,
+            updatedAt: new Date(),
+          },
+        });
+
+        await tx.chatMember.updateMany({
+          where: { chatId: chat.id, userId: { not: replierId } },
+          data: { unreadCount: { increment: 1 } },
+        });
+
+        return { chatId: chat.id, message };
+      });
+    } catch (error) {
+      console.log(`[Status Reply] Error: ${error}`);
+      throw new Error("Status reply failed: " + (error as Error).message);
     }
   }
 }
