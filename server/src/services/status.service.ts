@@ -206,7 +206,7 @@ export class StatusService {
         // 3. Build status context for the message
         const statusPreview =
           status.type === "TEXT"
-            ? status.content?.substring(0, 100) || "Text status"
+            ? (status.content?.substring(0, 100) || "Text status").replace(/\n/g, " ")
             : status.type === "IMAGE"
               ? "📷 Photo status"
               : "🎥 Video status";

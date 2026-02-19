@@ -19,6 +19,7 @@ import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormattedText } from "@/components/ui/FormattedText";
 import { formatLastMessageTime } from "@/utils/time_formatter.utils";
+import { extractReplyMessage } from "../../../components/ui/TextMessage";
 
 interface ChatListProps {
   chats: Chat[];
@@ -73,6 +74,7 @@ const ChatListItem = memo(
       isMeSender,
     } = processedChat;
     const lastMessage = chat.lastMessage;
+    const { displayContent } = processedChat;
 
     const handleClick = useCallback(() => {
       onChatSelect(chat);
@@ -174,9 +176,9 @@ const ChatListItem = memo(
               )}
               <FormattedText
                 text={
-                  ((lastMessage?.content || "").length < 28
-                    ? lastMessage?.content
-                    : lastMessage?.content?.slice(0, 28) + "...") ||
+                  ((displayContent || "").length < 28
+                    ? displayContent
+                    : displayContent?.slice(0, 28) + "...") ||
                   "Start a conversation"
                 }
               />
@@ -409,6 +411,9 @@ export const ChatList: React.FC<ChatListProps> = ({
         // Check if the last message was sent by me
         const isMeSender = chat.lastMessage?.senderId === currentUserId;
 
+        // Extract the actual reply message from status reply format
+        const displayContent = chat.lastMessage ? extractReplyMessage(chat.lastMessage.content || "") : "";
+
         return {
           chat,
           displayUser,
@@ -418,6 +423,7 @@ export const ChatList: React.FC<ChatListProps> = ({
           otherMember: otherMember?.user,
           lastMessageTime,
           isMeSender,
+          displayContent,
         };
       })
       .filter((processedChat) => {

@@ -2,9 +2,18 @@ import React, { useMemo } from 'react';
 import { Link as LinkIcon, Phone, Mail, Code, MessageCircle } from 'lucide-react';
 import { FormattedText } from './FormattedText';
 
-// Regex to detect status reply messages: [Status Reply|<statusId>: <preview>]\n<actual message>
-// Also supports old format without statusId: [Status Reply: <preview>]\n<actual message>
-const STATUS_REPLY_REGEX = /^\[Status Reply(?:\|([a-zA-Z0-9_-]+))?: (.+?)\]\n([\s\S]*)$/;
+
+// Uses [\s\S]+? to match preview that may contain newlines
+const STATUS_REPLY_REGEX = /^\[Status Reply(?:\|([a-zA-Z0-9_-]+))?: ([\s\S]+?)\]\n([\s\S]*)$/;
+
+// Extract the actual reply
+export const extractReplyMessage = (content: string): string => {
+  const match = content.match(STATUS_REPLY_REGEX);
+  if (match) {
+    return match[3]; // Return the actual reply message
+  }
+  return content; // Return original if not a status reply
+};
 
 interface TextMessageProps {
   msg: {
