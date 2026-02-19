@@ -33,7 +33,8 @@ export const Login: React.FC = () => {
         identity,
         password,
       });
-      login(response.data.user, response.data.accessToken, response.data.refreshToken);
+      // AuthService returns the parsed response body: { user, accessToken }
+      login(response.user, response.accessToken);
       navigate("/");
     } catch (err: any) {
       const backendMessage =
@@ -60,6 +61,7 @@ export const Login: React.FC = () => {
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
             <AlertCircle size={16} />
+            
             {error}
           </div>
         )}
