@@ -22,18 +22,35 @@ export const Forgot: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLoading) return;
+
+    const cleanPhone = phone.replace(/\s+/g, "");
+
+    if (!cleanPhone) {
+      setError("Please enter your mobile number.");
+      return;
+    }
+
+    if (!/^\d{10,15}$/.test(cleanPhone)) {
+      setError("Enter a valid mobile number.");
+      return;
+    }
+
     setError("");
     setIsLoading(true);
+
     try {
-      await AuthService.requestPasswordReset({ phone: phone });
-      navigate(`/verify/reset`, { state: { phone } });
+      await AuthService.requestPasswordReset({ phone: cleanPhone });
+
+      navigate(`/verify/reset`, { state: { phone: cleanPhone } });
     } catch (err: any) {
       const backendMessage =
         err?.response?.data?.readableMessage ||
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        "Password reset failed";
+        "Failed to request password reset.";
 
       setError(backendMessage);
     } finally {
@@ -65,6 +82,7 @@ export const Forgot: React.FC = () => {
             placeholder="Mobile Number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            autoFocus
             required
             className="w-full bg-input text-text-main pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-primary/50 focus:bg-surface focus:outline-none transition-all placeholder-secondary"
           />
