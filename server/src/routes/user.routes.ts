@@ -5,6 +5,10 @@ import { authMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 router.use(authMiddleware); // All routes below this line require a valid JWT
 
+// Dashboard Stats
+router.get("/dashboard/stats", UserController.getDashboardStats);
+router.get("/stats/:id", UserController.getUserStats);
+
 // Individual: Specific User
 router.get("/:id", UserController.getUserById);
 

@@ -4,6 +4,7 @@ import {
   userCreateSchema,
   userUpdateSchema,
 } from "@/validators/user.validator.js";
+import { AuthRequest } from "@/middlewares/auth.middleware.js";
 
 export class UserController {
   // Get a single user
@@ -129,6 +130,76 @@ export class UserController {
       return res.status(204).send();
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
+    }
+  }
+
+    // Get dashboard stats
+  static async getDashboardStats(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.userId; // From auth middleware
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          success: false, 
+          error: "Unauthorized - User not authenticated" 
+        });
+      }
+
+      const stats = await UserService.getDashboardStats(userId);
+
+      return res.status(200).json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error(`[Dashboard Stats Controller] Error:`, error);
+      
+      // Handle specific errors
+      if (error.message.includes("User not found")) {
+        return res.status(404).json({ 
+          success: false, 
+          error: "User not found" 
+        });
+      }
+
+      return res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch dashboard statistics",
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  }
+
+  // Get stats for a specific user (admin only)
+  static async getUserStats(req: AuthRequest, res: Response) {
+    try {
+      const targetUserId = req.params.id as string;
+      const requestingUserId = req.userId;
+
+      if (!requestingUserId) {
+        return res.status(401).json({ 
+          success: false, 
+          error: "Unauthorized" 
+        });
+      }
+
+      // Optional: Add permission check here
+      // Check if requesting user has permission to view stats of target user
+
+      const stats = await UserService.getDashboardStats(targetUserId);
+
+      return res.status(200).json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error(`[User Stats Controller] Error:`, error);
+      return res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
     }
   }
 }

@@ -1,3 +1,4 @@
+import { DashboardStats } from "@/types";
 import api from "../api/axios";
 import {
   userCreateSchema,
@@ -31,10 +32,26 @@ export class UserService {
     return response.data;
   }
 
-  // Get User's stats
-  static async getUserStats(userId: string) {
-    console.log(userId);
-    return null;
+  // Get dashboard stats for current user
+  static async getDashboardStats(): Promise<DashboardStats> {
+    try {
+      const response = await api.get("/users/dashboard/stats");
+      return response.data.data; // The API returns { success: true, data: stats }
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      throw error;
+    }
+  }
+
+  // Get stats for a specific user (admin only)
+  static async getUserStats(userId: string): Promise<DashboardStats> {
+    try {
+      const response = await api.get(`/users/stats/${userId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error(`Error fetching stats for user ${userId}:`, error);
+      throw error;
+    }
   }
 
   // Create a new user
@@ -81,7 +98,7 @@ export class UserService {
       const permanentFileUrl = finalizeResponse.data.data.publicUrl;
 
       const response = await api.patch(`/users/${userId}/profile-photo`, {
-        avatarUrl: permanentFileUrl
+        avatarUrl: permanentFileUrl,
       });
 
       return response.data;
@@ -107,5 +124,45 @@ export class UserService {
   static async deleteUser(id: string) {
     const response = await api.delete(`/users/${id}`);
     return response.data;
+  }
+
+  // Helper: Format relative time (same as backend for consistency)
+  static formatRelativeTime(date: string | Date): string {
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return then.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
+
+  // Helper: Get greeting based on time
+  static getTimeGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  // Helper: Calculate trend percentage
+  static calculateTrend(current: number, previous: number): number {
+    if (previous === 0) return 100;
+    return Math.round(((current - previous) / previous) * 100);
+  }
+
+  // Helper: Format storage bytes to human readable
+  static formatStorage(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   }
 }

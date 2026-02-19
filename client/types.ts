@@ -38,6 +38,77 @@ export enum MessageType {
   VIDEO = "VIDEO",
   FILE = "FILE",
 }
+ 
+export interface DashboardStats {
+  user: {
+    id: string;
+    name: string;
+    role: string;
+    unreadMessages: number;
+  };
+  metrics: {
+    activeChats: number;
+    onlineTeamMembers: number;
+    messagesToday: number;
+    totalMessages: number;
+    unreadMessages: number;
+    pinnedChatsCount: number;
+  };  messageVolume: {
+    labels: string[];
+    data: number[];
+    total: number;
+    trend: number;
+  };
+  pinnedChats: Array<{
+    id: string;
+    name: string;
+    isGroup: boolean;
+    avatar?: any;
+    lastMessage?: {
+      content: string;
+      sender: string;
+      time: string;
+      isMe: boolean;
+    };
+    unreadCount: number;
+    members?: Array<any>;
+  }>;
+  recentStatuses: Array<{
+    id: string;
+    user: {
+      id: string;
+      name: string;
+      avatarUrl?: string | null;
+    };
+    type: string;
+    content?: string;
+    time: string;
+  }>;
+  onlineTeam: Array<{
+    id: string;
+    name: string;
+    avatarUrl?: string | null;
+    role: string;
+    status: string;
+  }>;
+  messageTypes: {
+    text: number;
+    images: number;
+    audio: number;
+    files: number;
+    total: number;
+  };
+  adminStats?: {
+    totalUsers: number;
+    byRole: Record<string, number>;
+    activeUsers: number;
+    inactiveUsers: number;
+    newUsersToday: number;
+    totalChats: number;
+    totalGroups: number;
+    storageUsed: string;
+  };
+}
 
 export interface User {
   id: string;
