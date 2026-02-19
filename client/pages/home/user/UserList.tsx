@@ -57,6 +57,8 @@ export const UserList: React.FC<UserListProps> = ({
 
     return visibleUsers.filter((user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.guid.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
