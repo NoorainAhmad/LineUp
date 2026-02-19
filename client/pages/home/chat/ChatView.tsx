@@ -1322,7 +1322,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleStartEdit = useCallback((msg: Message) => { 
     const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-    const isEditableUnder5Minutes = (Date.now() - createdAt) <= 5 * 60 * 1000;
+    const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
     if (!isEditableUnder5Minutes) {
       alert("You can only edit messages sent within the last 5 minutes.");
       return;
@@ -1629,7 +1629,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               const isDeleted = msg.isDeleted;
               const isSearchResult = searchResults.includes(msg.id);
               const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-              const isEditableUnder5Minutes = (Date.now() - createdAt) <= 5 * 60 * 1000;
+              const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
   
               return (
                 <div
