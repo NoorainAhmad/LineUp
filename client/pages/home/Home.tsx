@@ -169,7 +169,7 @@ export const Home: React.FC = () => {
   } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const response = await UserService.getAllUsers();
+      const response = currentUser?.role == UserRole.USER ? [] : await UserService.getAllUsers();
       return (response.data || response).map(normalizeUserData);
     },
     refetchOnWindowFocus: false,
@@ -183,7 +183,7 @@ export const Home: React.FC = () => {
   } = useQuery({
     queryKey: ["canned-responses"],
     queryFn: async () => {
-      const response = await CannedResponseService.getAllCannedResponses();
+      const response = currentUser?.role == UserRole.USER ? [] : await CannedResponseService.getAllCannedResponses();
       return (response.data || response).map(normalizeCannedResponseData);
     },
     refetchOnWindowFocus: false,
@@ -590,7 +590,7 @@ export const Home: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
     },
-    [currentUser.id, queryClient],
+    [currentUser?.id, queryClient],
   );
 
   const handleArchiveChat = useCallback(
@@ -996,7 +996,8 @@ export const Home: React.FC = () => {
 
           // Wait briefly for the cache to update, then select the chat
           setTimeout(() => {
-            const updatedChats = queryClient.getQueryData<Chat[]>(["chats"]) || [];
+            const updatedChats =
+              queryClient.getQueryData<Chat[]>(["chats"]) || [];
             const targetChat = updatedChats.find((c) => c.id === chatId);
             if (targetChat) {
               setSelectedChat(targetChat);
@@ -1110,7 +1111,8 @@ export const Home: React.FC = () => {
           onToggleProfile={toggleProfile}
           cannedResponses={responsesData}
           onTogglePin={handleTogglePin}
-          onStatusClick={(statusId) => {   // to redirect to status view
+          onStatusClick={(statusId) => {
+            // to redirect to status view
             handleStatusSelect(statusId);
             setActiveTab("status");
           }}
@@ -1399,7 +1401,7 @@ export const Home: React.FC = () => {
                 setError(null); // reset when closing
               }}
               onAdd={handleCreateUser}
-              //error={error} // 
+              //error={error} //
               showRoleSelection={true}
               masters={masters}
               admins={adminUsers}
@@ -1427,13 +1429,13 @@ export const Home: React.FC = () => {
               <ProfileView
                 userId={
                   currentUser?.role === UserRole.USER ||
-                    currentUser?.role === UserRole.BRANCH
+                  currentUser?.role === UserRole.BRANCH
                     ? selectedChat.members.find(
-                      (m) => m.user.id !== currentUser!.id,
-                    )?.user?.id || selectedChat.members[0].user?.id
+                        (m) => m.user.id !== currentUser!.id,
+                      )?.user?.id || selectedChat.members[0].user?.id
                     : selectedChat.members.find(
-                      (m) => m.user.role === UserRole.BRANCH,
-                    )?.user?.id || selectedChat.members[0].user?.id
+                        (m) => m.user.role === UserRole.BRANCH,
+                      )?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}

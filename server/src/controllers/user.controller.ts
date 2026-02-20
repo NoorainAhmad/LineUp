@@ -5,10 +5,19 @@ import {
   userUpdateSchema,
 } from "@/validators/user.validator.js";
 import { AuthRequest } from "@/middlewares/auth.middleware.js";
+import { UserRole } from "@/generated/prisma/index.js";
 
 export class UserController {
   // Get a single user
-  static async getUserById(req: Request, res: Response) {
+  static async getUserById(req: AuthRequest, res: Response) {
+    const userId = req.userId;
+    const requestedUserId = req.params.id as string;
+    const userRole = req.userRole;
+    if (userRole == UserRole.USER) {
+      if (userId !== requestedUserId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
     try {
       const user = await UserService.getUserById(req.params.id as string);
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -71,10 +80,7 @@ export class UserController {
         });
       }
 
-      const results = await UserService.searchTeamMembers(
-        currentUserId,
-        query,
-      );
+      const results = await UserService.searchTeamMembers(currentUserId, query);
 
       return res.status(200).json(results);
     } catch (error: any) {
@@ -98,8 +104,16 @@ export class UserController {
   }
 
   // Update a user
-  static async updateUser(req: Request, res: Response) {
+  static async updateUser(req: AuthRequest, res: Response) {
     try {
+      const userId = req.userId;
+      const requestedUserId = req.params.id as string;
+      const userRole = req.userRole;
+      if (userRole == UserRole.USER) {
+        if (userId !== requestedUserId) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
       const validatedData = userUpdateSchema.parse(req.body);
       const user = await UserService.updateUser(
         req.params.id as string,
@@ -112,10 +126,17 @@ export class UserController {
   }
 
   // Change password
-  static async changePassword(req: Request, res: Response) {
+  static async changePassword(req: AuthRequest, res: Response) {
     try {
+      const userId = req.userId;
+      const requestedUserId = req.params.id as string;
+      const userRole = req.userRole;
+      if (userRole == UserRole.USER) {
+        if (userId !== requestedUserId) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
       const { currentPassword, newPassword } = req.body;
-
       if (!currentPassword || !newPassword) {
         return res
           .status(400)
@@ -138,19 +159,24 @@ export class UserController {
   }
 
   // Update profile photo
-  static async updateProfilePhoto(req: Request, res: Response) {
+  static async updateProfilePhoto(req: AuthRequest, res: Response) {
     try {
+      const userId = req.userId;
+      const requestedUserId = req.params.id as string;
+      const userRole = req.userRole;
+      if (userRole == UserRole.USER) {
+        if (userId !== requestedUserId) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
       const { avatarUrl } = req.body;
-
       if (!avatarUrl) {
         return res.status(400).json({ error: "Avatar URL is required" });
       }
-
       const user = await UserService.updateProfilePhoto(
         req.params.id as string,
         avatarUrl,
       );
-
       return res.status(200).json({
         message: "Profile photo updated successfully",
         user,

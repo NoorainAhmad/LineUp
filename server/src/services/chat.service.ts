@@ -577,6 +577,7 @@ export class ChatService {
         where: { id: messageId },
         data: {
           isDeleted: true,
+          content: "This message has been deleted",
           fileUrl: null,
           fileName: null,
         },
