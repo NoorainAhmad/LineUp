@@ -501,6 +501,7 @@ export const Home: React.FC = () => {
         }
 
         setError(readableMessage);
+        setTimeout(() => { setError(null); }, 4000);
       }
     },
     [createUserMutation],

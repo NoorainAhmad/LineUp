@@ -570,6 +570,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     null,
   );
 
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -999,9 +1000,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
   );
 
   const handleTextSend = useCallback(() => {
+    if (!chat) return;
+
+    // ⭐ CASE 1: Media is selected (image/file)
+    if (pendingFile) {
+      const isImage = pendingFile.type.startsWith("image/");
+      handleSendMessage(
+        isImage ? MessageType.IMAGE : MessageType.FILE,
+        inputValue || (isImage ? "Photo" : pendingFile.name),
+        {
+         file: pendingFile,
+          fileName: pendingFile.name,
+          fileSize: formatBytes(pendingFile.size),
+          mimeType: pendingFile.type,
+        }
+      );
+      // Clear after send
+      setPendingFile(null); return;
+    }
     if (!inputValue.trim()) return;
     handleSendMessage(MessageType.TEXT, inputValue);
-  }, [inputValue, handleSendMessage]);
+  }, [chat, pendingFile, inputValue, handleSendMessage]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1144,22 +1163,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
           }
         }
 
-        try {
-          await sendMessageMutation.mutateAsync({
-            content: isImage ? "Photo" : file.name,
-            type: isImage ? MessageType.IMAGE : MessageType.FILE,
-            fileData: {
-              file,
-              fileName: file.name,
-              fileSize: formatBytes(file.size),
-              mimeType: file.type,
-            },
-          });
+        // try {
+        //   await sendMessageMutation.mutateAsync({
+        //     content: isImage ? "Photo" : file.name,
+        //     type: isImage ? MessageType.IMAGE : MessageType.FILE,
+        //     fileData: {
+        //       file,
+        //       fileName: file.name,
+        //       fileSize: formatBytes(file.size),
+        //       mimeType: file.type,
+        //     },
+        //     replyToId: replyingTo?.id,
+        //   });
+          setPendingFile(file);
           setShowAttachMenu(false);
-        } catch (error) {
-          console.error("Error sending file:", error);
-          alert("Failed to send file. Please try again.");
-        }
+        // } catch (error) {
+        //   console.error("Error sending file:", error);
+        //   alert("Failed to send file. Please try again.");
+        // }
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
@@ -1177,16 +1198,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
             type: "image/jpeg",
           });
 
-          sendMessageMutation.mutate({
-            content: "Photo",
-            type: MessageType.IMAGE,
-            fileData: {
-              file,
-              fileName: file.name,
-              fileSize: formatBytes(blob.size),
-              mimeType: file.type,
-            },
-          });
+          // sendMessageMutation.mutate({
+          //   content: "Photo",
+          //   type: MessageType.IMAGE,
+          //   fileData: {
+          //     file,
+          //     fileName: file.name,
+          //     fileSize: formatBytes(blob.size),
+          //     mimeType: file.type,
+          //     replyToId: replyingTo?.id,
+          //   },
+          // });
+          setPendingFile(file);
           setShowAttachMenu(false);
         })
         .catch((error) => {
@@ -1234,6 +1257,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               fileSize: formatBytes(audioBlob.size),
               mimeType: "audio/webm",
             },
+            replyToId: replyingTo?.id,
           });
         } catch (error) {
           console.error("Error sending audio message:", error);
@@ -2050,7 +2074,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <Smile size={24} />
                 </button>
 
-                {!editingMessage && !replyingTo && (
+                {!editingMessage && (
                   <div className="relative">
                     <button
                       onClick={() => {
@@ -2194,7 +2218,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
               {/* Send Button */}
               <div className="pb-1 pr-1">
-                {inputValue.trim() || isRecording ? (
+                {inputValue.trim() || isRecording || pendingFile? (
                   <button
                     onClick={
                       isRecording
