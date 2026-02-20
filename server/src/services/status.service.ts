@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../config/db.js";
 import { statusCreateSchema, statusReplySchema } from "../validators/status.validator.js";
+import { UserRole } from "@/generated/prisma/index.js";
 
 export class StatusService {
   private static statusSelection = {
@@ -47,7 +48,7 @@ export class StatusService {
     }
   }
 
-  // Get all statuses
+  // Get all statuses (deprecated - use getStatusesRoleBased instead)
   static async getAllStatuses() {
     try {
       return prisma.status.findMany({
@@ -57,6 +58,127 @@ export class StatusService {
     } catch (error) {
       console.log(`[All Statuses] Error: ${error}`);
       throw new Error("All statuses not found: " + (error as Error).message);
+    }
+  }
+
+  // Get statuses based on user role and hierarchy
+  static async getStatusesRoleBased(userId: string, userRole: string) {
+    try {
+      // First get the current user with their role and relationships
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          role: true,
+          parentId: true,
+        },
+      });
+
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      let userIdsToFetch: string[] = [currentUser.id]; // include own statuses
+
+      // Role-based filtering to determine which users' statuses to include
+      switch (currentUser.role) {
+        case UserRole.DEVELOPER:
+          // Developer can see ALL statuses - fetch all users with statuses
+          const allUsers = await prisma.user.findMany({
+            where: {
+              statuses: {
+                some: {}, // Has at least one status
+              },
+            },
+            select: { id: true },
+          });
+          userIdsToFetch = allUsers.map((u) => u.id);
+          break;
+
+        case UserRole.MASTER:
+          // Master can see statuses from:
+          // 1. Direct ADMIN subordinates
+          // 2. BRANCH subordinates under those ADMINs
+          // 3. USER subordinates under those BRANCHes
+          const masterSubordinates = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Direct ADMINs
+                { parent: { parentId: currentUser.id } }, // BRANCHes under ADMINs
+                { parent: { parent: { parentId: currentUser.id } } }, // USERs under BRANCHes
+              ],
+            },
+            select: { id: true },
+          });
+          userIdsToFetch = [currentUser.id, ...masterSubordinates.map((u) => u.id)];
+          break;
+
+        case UserRole.ADMIN:
+          // Admin can see statuses from:
+          // 1. Direct BRANCH subordinates
+          // 2. USER subordinates under those BRANCHes
+          // 3. Immediate superior (MASTER)
+          const adminSubordinates = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Direct BRANCHes
+                { parent: { parentId: currentUser.id } }, // USERs under BRANCHes
+              ],
+            },
+            select: { id: true },
+          });
+          userIdsToFetch = [currentUser.id, ...adminSubordinates.map((u) => u.id)];
+          // Add immediate superior (MASTER)
+          if (currentUser.parentId) {
+            userIdsToFetch.push(currentUser.parentId);
+          }
+          break;
+
+        case UserRole.BRANCH:
+          // Branch can see statuses from:
+          // 1. Direct USER subordinates
+          // 2. Immediate superior (ADMIN)
+          const branchSubordinates = await prisma.user.findMany({
+            where: {
+              parentId: currentUser.id, // Direct USERs
+            },
+            select: { id: true },
+          });
+          userIdsToFetch = [currentUser.id, ...branchSubordinates.map((u) => u.id)];
+          // Add immediate superior (ADMIN)
+          if (currentUser.parentId) {
+            userIdsToFetch.push(currentUser.parentId);
+          }
+          break;
+
+        case UserRole.USER:
+          // Regular user can only see:
+          // 1. Their own status
+          // 2. Immediate superior's status (BRANCH)
+          if (currentUser.parentId) {
+            userIdsToFetch.push(currentUser.parentId);
+          }
+          break;
+
+        default:
+          // Fallback: only user's own statuses
+          userIdsToFetch = [currentUser.id];
+      }
+
+      // Fetch statuses for the determined users
+      return prisma.status.findMany({
+        where: {
+          userId: { in: userIdsToFetch },
+          expiresAt: { gt: new Date() }, // Only non-expired statuses
+        },
+        orderBy: { createdAt: "desc" },
+        select: this.statusSelection,
+      });
+    } catch (error) {
+      console.log(`[Statuses by Role] Error: ${error}`);
+      throw new Error(
+        "Failed to fetch statuses: " + (error as Error).message,
+      );
     }
   }
 

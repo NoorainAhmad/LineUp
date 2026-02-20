@@ -15,10 +15,15 @@ export class StatusController {
     }
   }
 
-  // Get all statuses
+  // Get all statuses based on user hierarchy
   static async getAllStatuses(req: AuthRequest, res: Response) {
     try {
-      const statuses = await StatusService.getAllStatuses();
+      const userId = req.userId as string;
+      const userRole = req.userRole as string;
+      const statuses = await StatusService.getStatusesRoleBased(
+        userId,
+        userRole,
+      );
       return res.status(200).json({
         success: true,
         data: statuses,
