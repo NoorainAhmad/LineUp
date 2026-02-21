@@ -30,6 +30,7 @@ export class ChatService {
       // Step 2: Upload directly to S3
       await api.put(uploadUrl, file, {
         headers: { "Content-Type": file.type },
+        withCredentials:false,
         transformRequest: [
           (rawData, headers) => {
             if (headers) {

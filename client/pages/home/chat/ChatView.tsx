@@ -2136,6 +2136,40 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   accept="image/*,video/*,.pdf,.doc,.docx,.txt"
                 />
               </div>
+              {pendingFile && (
+    <div className="flex items-center gap-3 px-2 py-2 bg-black/5 dark:bg-white/5 rounded-xl">
+      
+      {/* Thumbnail */}
+      {pendingFile.type.startsWith("image/") ? (
+        <img
+          src={URL.createObjectURL(pendingFile)}
+          className="w-12 h-12 rounded-lg object-cover"
+        />
+      ) : (
+        <div className="w-12 h-12 rounded-lg bg-surface-hover flex items-center justify-center">
+          <FileText size={18} />
+        </div>
+      )}
+
+      {/* File Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">
+          {pendingFile.name}
+        </p>
+        <p className="text-xs text-secondary">
+          {(pendingFile.size / 1024).toFixed(1)} KB
+        </p>
+      </div>
+
+      {/* Remove Button */}
+      <button
+        onClick={() => setPendingFile(null)}
+        className="p-1.5 hover:bg-surface-hover rounded-full"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  )}
 
               {/* Text Input */}
               <div className="flex-1 min-w-0 relative min-h-12.5">
@@ -2242,7 +2276,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   </button>
                 ) : (
                   !editingMessage &&
-                  !replyingTo && (
+                  !pendingFile && (
                     <button
                       onClick={startRecording}
                       disabled={sendMessageMutation.isPending}
