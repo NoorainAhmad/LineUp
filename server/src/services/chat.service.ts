@@ -439,13 +439,13 @@ export class ChatService {
   }
 
   // Get messages for a specific chat
-  static async getMessages(userId: string, chatId: string, limit = 50, cursor?: string) {
+  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, cursor?: string) {
     try {
       if (!chatId) return [];
-      const authorized = await prisma.chatMember.findFirst({
+      const isMember = await prisma.chatMember.findFirst({
         where: { chatId, userId },
       });
-      if (!authorized) throw new Error("Not authorized");
+      if (!isMember && (userRole == UserRole.USER || userRole == UserRole.BRANCH)) return [];
       return await prisma.message.findMany({
         where: { chatId },
         take: limit,
