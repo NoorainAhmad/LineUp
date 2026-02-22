@@ -7,8 +7,8 @@ import { checkRole } from "@/middlewares/role.middleware.js";
 const router = Router();
 router.use(authMiddleware);
 
-// Create a new group chat
-router.post("/", checkRole([UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), ChatController.createChat);
+// Create a new chat
+router.post("/", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), ChatController.createChat);
 
 // Send a new message
 router.post("/messages", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), ChatController.sendMessage);

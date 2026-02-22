@@ -26,7 +26,7 @@ import {
   UserPermission,
   MessageType,
 } from "../../types";
-import { Users2, Zap } from "lucide-react";
+import { LucideMessageCircleWarning, Users2, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -132,8 +132,7 @@ export const Home: React.FC = () => {
     useState("system-dashboard");
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-
-  // React Query hooks for data fetching
+ 
   const {
     data: chatsData = [],
     isLoading: isLoadingChats,
@@ -144,8 +143,8 @@ export const Home: React.FC = () => {
       const response = await ChatService.getInbox();
       return (response.data || response).map(normalizeChatData);
     },
-    refetchOnWindowFocus: false,
-    refetchInterval: 1000,
+    enabled: activeTab === "chat" || activeTab === "dashboard",
+    refetchInterval: activeTab === "chat" ? 1000 : 10000,
   });
 
   const {
@@ -158,8 +157,8 @@ export const Home: React.FC = () => {
       const response = await StatusService.getAllStatuses();
       return (response.data || response).map(normalizeStatusData);
     },
-    refetchOnWindowFocus: false,
-    refetchInterval: 2000,
+    enabled: activeTab === "status" || activeTab === "dashboard",
+    refetchInterval: activeTab === "status" ? 2000 : 20000,
   });
 
   const {
@@ -169,11 +168,14 @@ export const Home: React.FC = () => {
   } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const response = currentUser?.role == UserRole.USER ? [] : await UserService.getAllUsers();
+      const response =
+        currentUser?.role == UserRole.USER
+          ? []
+          : await UserService.getAllUsers();
       return (response.data || response).map(normalizeUserData);
     },
-    refetchOnWindowFocus: false,
-    refetchInterval: 3000,
+    enabled: activeTab === "user" || activeTab === "dashboard",
+    refetchInterval: activeTab === "user" ? 3000 : 30000,
   });
 
   const {
@@ -183,11 +185,14 @@ export const Home: React.FC = () => {
   } = useQuery({
     queryKey: ["canned-responses"],
     queryFn: async () => {
-      const response = currentUser?.role == UserRole.USER ? [] : await CannedResponseService.getAllCannedResponses();
+      const response =
+        currentUser?.role == UserRole.USER
+          ? []
+          : await CannedResponseService.getAllCannedResponses();
       return (response.data || response).map(normalizeCannedResponseData);
     },
-    refetchOnWindowFocus: false,
-    refetchInterval: 4000,
+    enabled: activeTab === "response" || activeTab === "dashboard",
+    refetchInterval: activeTab === "response" ? 4000 : 40000,
   });
 
   // Derived data
@@ -931,9 +936,7 @@ export const Home: React.FC = () => {
         setSelectedUser(null);
 
         // Show error message
-        alert(
-          "Note: This chat is created locally. It may not sync across devices.",
-        );
+        alert("Note: This chat is created locally. It may not sync across devices.");
       }
     },
     [chatsData, currentUser, queryClient],
@@ -1242,21 +1245,23 @@ export const Home: React.FC = () => {
   if (chatsError || statusesError || usersError || responsesError) {
     return (
       <div className="flex flex-col md:flex-row h-screen supports-[height:100dvh]:h-dvh w-full bg-background text-text-main overflow-hidden relative transition-colors duration-300">
-        <Navigation
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          onLogout={logout}
-        />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
-            <h2 className="text-2xl font-light mb-4 text-text-main">
-              Error Loading Data
+            <h2 className="text-3xl font-light mb-2 text-text-main flex flex-col justify-center items-center gap-6"> 
+              <LucideMessageCircleWarning size={64} className="text-primary" />
+              <span>Something went wrong</span>
             </h2>
-            <p className="max-w-md mx-auto text-secondary">
-              Please try refreshing the page.
-            </p>
+            <p className="max-w-md mx-auto text-secondary"> 
+              Please try refreshing the page. <br />Session may have expired.
+            </p>  
+            <div className="mt-6">
+              <button
+                className="bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-hover transition-colors duration-300"
+                onClick={logout}
+              >
+                Re-Log In
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -67,13 +67,14 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // 5. CORS configuration
 const corsOptions = {
   origin: [
-    "http://localhost:5173",
+    "http://localhost",
     "http://lineup24x7.com",
     "https://lineup24x7.com",
     "https://www.lineup24x7.com",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization"], 
+  preflightContinue: false,
   credentials: true,
   maxAge: 86400, // 24 hours
 };

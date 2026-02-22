@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgresql_password_123
       POSTGRES_DB: lineup
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data 
 
@@ -19,7 +19,7 @@ services:
     container_name: redis_cache
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
 

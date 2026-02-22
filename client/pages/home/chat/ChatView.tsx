@@ -39,8 +39,7 @@ import {
   Message,
   UserStatus,
   CannedResponse,
-  MessageType,
-  User,
+  MessageType, 
   UserRole,
 } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -53,7 +52,10 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
-import { formatLastMessageTime, formatMessageTime } from "@/utils/time_formatter.utils";
+import {
+  formatLastMessageTime,
+  formatMessageTime,
+} from "@/utils/time_formatter.utils";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -548,9 +550,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-  const [activeReactionMessageId, setActiveReactionMessageId] = useState<
-    string | null
-  >(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null);
   const [showCannedMenu, setShowCannedMenu] = useState(false);
   const [cannedSearchTerm, setCannedSearchTerm] = useState("");
   const [selectedCannedIndex, setSelectedCannedIndex] = useState(0);
@@ -558,17 +558,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
-    null,
-  );
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [showMuteDialog, setShowMuteDialog] = useState(false);
-  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
-    null,
-  );
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -604,7 +600,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
     },
     enabled: !!chat?.id,
-    refetchInterval: 3000, // Poll every 3 seconds
+    refetchInterval: 1000, // Poll every 3 seconds
     refetchOnWindowFocus: false,
     staleTime: 2000,
     select: (data) => {
@@ -833,10 +829,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
       // Clear pending messages
       queryClient.setQueryData(["pending-messages", chat.id], []);
 
-      // Mark as read
-      if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
-        markAsRead();
-
       // Scroll to bottom
       setTimeout(() => {
         scrollToBottom("auto");
@@ -857,6 +849,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
       if (isScrolledToBottomRef.current) {
         setTimeout(() => scrollToBottom("smooth"), 100);
       }
+
+      // Mark as read
+      if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
+        markAsRead();
     }
     prevMessagesLengthRef.current = messages.length;
   }, [messages]);
@@ -987,7 +983,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       setInputValue("");
       setReplyingTo(null);
-      setShowCannedMenu(false);
+      setShowCannedMenu(false); 
     },
     [
       chat,
@@ -1085,6 +1081,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // DESKTOP: Shift+Enter = new line (let browser handle it)
         // Do nothing - let textarea handle Shift+Enter naturally
       }
+       
+      inputRef.current?.focus();
+      return;
     },
     [
       showCannedMenu,
@@ -1323,7 +1322,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleStartEdit = useCallback((msg: Message) => {
     const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-    const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
+    const isEditableUnder5Minutes = Date.now() - createdAt <= 15 * 60 * 1000;
     if (!isEditableUnder5Minutes) {
       alert("You can only edit messages sent within the last 5 minutes.");
       return;
@@ -1546,7 +1545,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </span>
                     ) : (
                       <span className="opacity-80">
-                        {formatLastMessageTime(otherUser?.lastSeen || "") || "Unknown"}
+                        {formatLastMessageTime(otherUser?.lastSeen || "") ||
+                          "Unknown"}
                       </span>
                     )}
                   </span>
@@ -1628,9 +1628,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
               const isSearchResult = searchResults.includes(msg.id);
-              const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-              const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
-  
+              const createdAt = msg.createdAt
+                ? new Date(msg.createdAt).getTime()
+                : 0;
+              const isEditableUnder5Minutes =
+                Date.now() - createdAt <= 15 * 60 * 1000;
+
               return (
                 <div
                   key={msg.id}
@@ -1661,65 +1664,66 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplyingTo(msg);
-                                  setSelectedMessageId(null);
-                                  setEditingMessage(null);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                              >
-                                <Reply size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingTo(msg);
+                                setSelectedMessageId(null);
+                                setEditingMessage(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Reply size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Forward */}
                         {(user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setForwardingMessage(msg);
-                                  setSelectedMessageId(null);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                                title="Forward"
-                              >
-                                <Share2 size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setForwardingMessage(msg);
+                                setSelectedMessageId(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                              title="Forward"
+                            >
+                              <Share2 size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Reactions */}
                         {(user?.role === UserRole.USER ||
                           user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openReactionPicker(msg.id);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                              >
-                                <Smile size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReactionPicker(msg.id);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Smile size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Edit */}
                         {isMe &&
                           (user?.role === UserRole.USER ||
                             user?.role === UserRole.BRANCH ||
                             (user?.role === UserRole.ADMIN && chat.isGroup) ||
                             (user?.role === UserRole.MASTER && chat.isGroup)) &&
-                          msg.type === MessageType.TEXT && isEditableUnder5Minutes && (
+                          msg.type === MessageType.TEXT &&
+                          isEditableUnder5Minutes && (
                             <>
                               <button
                                 onClick={(e) => {
@@ -1780,11 +1784,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     <div
                       className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
-                        ${isDeleted
-                          ? "bg-surface text-secondary border border-border"
-                          : isMe
-                            ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
-                            : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
+                        ${
+                          isDeleted
+                            ? "bg-surface text-secondary border border-border"
+                            : isMe
+                              ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
+                              : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
                         }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                       `}
@@ -1821,8 +1826,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             {repliedMsg.sender?.id === user?.id
                               ? "You"
                               : chat.members.find(
-                                (m) => m.user.id === repliedMsg.sender?.id,
-                              )?.user.name || "Unknown"}
+                                  (m) => m.user.id === repliedMsg.sender?.id,
+                                )?.user.name || "Unknown"}
                           </p>
                           <p className="opacity-80 truncate">
                             {repliedMsg.content || "Attachment"}
@@ -1843,7 +1848,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           toggleAudio,
                           searchQuery,
                           audioRefs,
-                          onStatusClick
+                          onStatusClick,
                         )
                       )}
                       {/* Message Meta */}
@@ -1855,9 +1860,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             (edited)
                           </span>
                         )}
-                        <span>
-                          {formatMessageTime(msg.createdAt)}
-                        </span>
+                        <span>{formatMessageTime(msg.createdAt)}</span>
                         {isMe && !isDeleted && !isPending && (
                           <span>
                             <CheckCheck size={14} />
@@ -1882,10 +1885,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                   e.stopPropagation();
                                   toggleReaction(msg.id, emoji);
                                 }}
-                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${(users as string[]).includes(user?.id || "")
-                                  ? "bg-primary/20 border-primary/50 text-text-main"
-                                  : "bg-surface border-border text-secondary hover:bg-surface-hover"
-                                  }`}
+                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${
+                                  (users as string[]).includes(user?.id || "")
+                                    ? "bg-primary/20 border-primary/50 text-text-main"
+                                    : "bg-surface border-border text-secondary hover:bg-surface-hover"
+                                }`}
                               >
                                 <span>{emoji}</span>
                                 <span className="font-mono">
@@ -1926,8 +1930,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                    (m) => m.user.id === replyingTo.sender?.id,
-                  )?.user.name || "Unknown"}
+                      (m) => m.user.id === replyingTo.sender?.id,
+                    )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -1981,10 +1985,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-surface-hover border border-transparent"
-                      }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
+                      index === selectedCannedIndex
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-surface-hover border border-transparent"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
@@ -2015,222 +2020,223 @@ export const ChatView: React.FC<ChatViewProps> = ({
           user?.role == UserRole.BRANCH ||
           (user?.role == UserRole.ADMIN && chat.isGroup) ||
           (user?.role == UserRole.MASTER && chat.isGroup)) && (
-            <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
-              {showEmojiPicker && (
+          <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
+            {showEmojiPicker && (
+              <div
+                className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
+              >
                 <div
-                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
-                >
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  ></div>
-                  <EmojiPicker
-                    onSelect={handleEmojiSelect}
-                    onClose={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Attachments & Emoji */}
-              <div className="flex items-center pl-1 pb-1">
-                <button
+                  className="fixed inset-0 z-40"
                   onClick={() => {
-                    setShowEmojiPicker(!showEmojiPicker);
+                    setShowEmojiPicker(false);
                     setActiveReactionMessageId(null);
-                    setShowAttachMenu(false);
                   }}
-                  className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                >
-                  <Smile size={24} />
-                </button>
-
-                {!editingMessage && !replyingTo && (
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setShowAttachMenu(!showAttachMenu);
-                        setShowEmojiPicker(false);
-                      }}
-                      className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                    >
-                      <Plus
-                        size={24}
-                        className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
-                      />
-                    </button>
-
-                    {showAttachMenu && (
-                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                        <button
-                          onClick={() => setShowCamera(true)}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                            <Camera size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Camera
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                            <Image size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Photos & Videos
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                            <FileText size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Document
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                ></div>
+                <EmojiPicker
+                  onSelect={handleEmojiSelect}
+                  onClose={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
                 />
               </div>
+            )}
 
-              {/* Text Input */}
-              <div className="flex-1 min-w-0 relative min-h-12.5">
-                {" "}
-                {/* Changed from min-h-12.5 flex items-center */}
-                {isRecording ? (
-                  <div className="absolute inset-0 flex items-center px-0 z-20 animate-pulse text-red-500 gap-2">
-                    <div className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full bg-red-500 animate-ping"></div>
-                    <span className="font-mono font-bold text-sm md:text-lg">
-                      {formatTime(recordingDuration)}
-                    </span>
-                    <span className="text-xs md:text-sm font-medium">rec...</span>
-                    <div className="flex-1"></div>
-                    <button
-                      onClick={() => stopRecording(true)}
-                      className="p-2 hover:bg-red-500/50 bg-red-500/80 text-text-main rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="w-full relative">
-                    {/* Hidden measuring div - exact same styling as textarea */}
-                    <div
-                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
-                      style={{
-                        minHeight: "44px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                    >
-                      {inputValue || "placeholder"}
-                    </div>
+            {/* Attachments & Emoji */}
+            <div className="flex items-center pl-1 pb-1">
+              <button
+                onClick={() => {
+                  setShowEmojiPicker(!showEmojiPicker);
+                  setActiveReactionMessageId(null);
+                  setShowAttachMenu(false);
+                }}
+                className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+              >
+                <Smile size={24} />
+              </button>
 
-                    {/* Actual textarea */}
-                    <textarea
-                      ref={inputRef}
-                      placeholder={
-                        replyingTo
-                          ? "Reply..."
-                          : editingMessage
-                            ? "Edit message..."
-                            : "Message"
-                      }
-                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                      style={{
-                        minHeight: "44px",
-                        maxHeight: "120px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      disabled={sendMessageMutation.isPending}
-                      rows={1}
-                      wrap="soft"
-                      inputMode="text"
-                      // enterKeyHint="send"
-                      enterKeyHint="enter"
-                      autoCapitalize="sentences"
-                      autoCorrect="on"
-                      spellCheck="true"
-                    />
-
-                    {/* Command hint - absolutely positioned */}
-                    {!inputValue &&
-                      !isRecording &&
-                      !sendMessageMutation.isPending && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                          <Command size={14} className="hidden sm:block" />
-                          <span className="text-xs hidden sm:inline">/</span>
-                          <span className="text-xs sm:hidden">/</span>{" "}
-                          {/* Mobile fallback */}
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-
-              {/* Send Button */}
-              <div className="pb-1 pr-1">
-                {inputValue.trim() || isRecording ? (
+              {!editingMessage && !replyingTo && (
+                <div className="relative">
                   <button
-                    onClick={
-                      isRecording
-                        ? () => stopRecording(false)
-                        : editingMessage
-                          ? handleEndEdit
-                          : handleTextSend
-                    }
-                    disabled={sendMessageMutation.isPending}
-                    className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    onClick={() => {
+                      setShowAttachMenu(!showAttachMenu);
+                      setShowEmojiPicker(false);
+                    }}
+                    className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
                   >
-                    {sendMessageMutation.isPending ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : editingMessage ? (
-                      <Check size={24} />
-                    ) : isRecording ? (
-                      <Send size={24} />
-                    ) : (
-                      <Send size={24} />
-                    )}
+                    <Plus
+                      size={24}
+                      className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
+                    />
                   </button>
-                ) : (
-                  !editingMessage &&
-                  !replyingTo && (
-                    <button
-                      onClick={startRecording}
-                      disabled={sendMessageMutation.isPending}
-                      className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Mic size={24} />
-                    </button>
-                  )
-                )}
-              </div>
+
+                  {showAttachMenu && (
+                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                      <button
+                        onClick={() => setShowCamera(true)}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                          <Camera size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Camera
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                          <Image size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Photos & Videos
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                          <FileText size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Document
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+              />
             </div>
-          )}
+
+            {/* Text Input */}
+            <div className="flex-1 min-w-0 relative min-h-12.5">
+              {" "}
+              {/* Changed from min-h-12.5 flex items-center */}
+              {isRecording ? (
+                <div className="absolute inset-0 flex items-center px-0 z-20 animate-pulse text-red-500 gap-2">
+                  <div className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full bg-red-500 animate-ping"></div>
+                  <span className="font-mono font-bold text-sm md:text-lg">
+                    {formatTime(recordingDuration)}
+                  </span>
+                  <span className="text-xs md:text-sm font-medium">rec...</span>
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => stopRecording(true)}
+                    className="p-2 hover:bg-red-500/50 bg-red-500/80 text-text-main rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full relative">
+                  {/* Hidden measuring div - exact same styling as textarea */}
+                  <div
+                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
+                    style={{
+                      minHeight: "44px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    {inputValue || "placeholder"}
+                  </div>
+
+                  {/* Actual textarea */}
+                  <textarea
+                    ref={inputRef}
+                    placeholder={
+                      replyingTo
+                        ? "Reply..."
+                        : editingMessage
+                          ? "Edit message..."
+                          : "Message"
+                    }
+                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "120px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    disabled={sendMessageMutation.isPending}
+                    rows={1}
+                    wrap="soft"
+                    inputMode="text"
+                    // enterKeyHint="send"
+                    enterKeyHint="enter"
+                    autoCapitalize="sentences"
+                    autoCorrect="on"
+                    spellCheck="true"
+                    autoFocus
+                  />
+
+                  {/* Command hint - absolutely positioned */}
+                  {!inputValue &&
+                    !isRecording &&
+                    !sendMessageMutation.isPending && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                        <Command size={14} className="hidden sm:block" />
+                        <span className="text-xs hidden sm:inline">/</span>
+                        <span className="text-xs sm:hidden">/</span>{" "}
+                        {/* Mobile fallback */}
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
+
+            {/* Send Button */}
+            <div className="pb-1 pr-1">
+              {inputValue.trim() || isRecording ? (
+                <button
+                  onClick={
+                    isRecording
+                      ? () => stopRecording(false)
+                      : editingMessage
+                        ? handleEndEdit
+                        : handleTextSend
+                  }
+                  disabled={sendMessageMutation.isPending}
+                  className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {sendMessageMutation.isPending ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : editingMessage ? (
+                    <Check size={24} />
+                  ) : isRecording ? (
+                    <Send size={24} />
+                  ) : (
+                    <Send size={24} />
+                  )}
+                </button>
+              ) : (
+                !editingMessage &&
+                !replyingTo && (
+                  <button
+                    onClick={startRecording}
+                    disabled={sendMessageMutation.isPending}
+                    className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Mic size={24} />
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
