@@ -26,7 +26,7 @@ import {
   UserPermission,
   MessageType,
 } from "../../types";
-import { LucideMessageCircleWarning, Users2, Zap } from "lucide-react";
+import { ImageIcon, LucideMessageCircleWarning, PlusIcon, Users2, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -1145,15 +1145,43 @@ export const Home: React.FC = () => {
             <div
               className="w-24 h-24 rounded-full border-2 border-dashed border-secondary mb-6 flex items-center justify-center hover:bg-surface-hover cursor-pointer transition-colors"
               onClick={() => {
+                if (currentUser.role === UserRole.USER) {
+                  return;
+                }
                 closeModals();
                 setIsCreatingStatus(true);
               }}
             >
               <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-3xl text-primary">+</span>
+                <span className="text-3xl text-primary">
+                  {
+                    currentUser.role === UserRole.USER ? (
+                      <ImageIcon size={32} />
+                    ) : (
+                      <PlusIcon size={32} />
+                    )
+                  }
+                </span>
               </div>
             </div>
-            <p>Click + or select a contact to view their status.</p>
+            {
+              !(currentUser.role === UserRole.USER) ? (
+                <div className="text-center">
+                  <h2 className="text-2xl font-light mb-4 text-text-main">
+                    All Status Directory
+                  </h2>
+                  <p className="max-w-md mx-auto text-secondary">
+                    Select or add a new status to the system.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center">
+                   <p className="max-w-md mx-auto text-secondary">
+                    Select a status to view details.
+                  </p>
+                </div>
+              )
+            }
           </>
         ) : activeTab === "user" ? (
           <div className="text-center p-8">

@@ -32,10 +32,10 @@ export class CannedResponseController {
   }
 
   // Get all canned responses
-  static async getAllCannedResponses(_req: Request, res: Response) {
+  static async getAllCannedResponses(_req: AuthRequest, res: Response) {
     try {
-      const canned_responses =
-        await CannedResponseService.getAllCannedResponses();
+      const userId = _req.userId as string;
+      const canned_responses = await CannedResponseService.getAllCannedResponses(userId);
       return res.status(200).json(canned_responses);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

@@ -50,7 +50,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const fetchUser = async () => {
     try {
-      const user = await UserService.getUserById(userId); 
+      const user = currentUser?.role === UserRole.USER ? await UserService.getBranchInfo() : await UserService.getUserById(userId); 
       setUser(user);
     } catch (error) {
       console.error("Error fetching user:", error);

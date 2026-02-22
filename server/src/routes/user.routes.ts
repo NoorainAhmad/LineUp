@@ -17,11 +17,14 @@ router.get("/search", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTE
 // Search: Team Members
 router.get("/team/search", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.searchTeamMembers);
 
-// Individual: Specific User
-router.get("/:id", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserById);
+// My Branch info
+router.get("/branch", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getBranchInfo);
 
 // List: All Users
 router.get("/", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getAllUsers);
+
+// Individual: Specific User
+router.get("/:id", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserById);
 
 // List: User's subordinates
 router.get("/:id/subordinates", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserSubordinates);

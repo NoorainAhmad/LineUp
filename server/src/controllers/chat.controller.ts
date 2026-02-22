@@ -79,9 +79,11 @@ export class ChatController {
   // Get messages for a chat
   static async getMessages(req: AuthRequest, res: Response) {
     try {
+      const userId = req.userId as string;
       const { chatId } = req.params as { chatId: string };
       const { limit, cursor } = req.query;
       const messages = await ChatService.getMessages(
+        userId,
         chatId,
         limit ? parseInt(limit as string) : 50,
         cursor as string,

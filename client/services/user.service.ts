@@ -20,6 +20,12 @@ export class UserService {
     return response.data;
   }
 
+  // Get my branch info
+  static async getBranchInfo() {
+    const response = await api.get("/users/branch");
+    return response.data;
+  }
+
   // Get User's subordinates
   static async getUserSubordinates(userId: string) {
     const response = await api.get(`/users/${userId}/subordinates`);

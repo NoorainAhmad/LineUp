@@ -142,6 +142,35 @@ export class UserService {
     }
   }
 
+  // Get my branch info
+  static async getBranchInfo(id: string) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (!user) {
+        throw new Error("User not found");
+      }
+      if (user.parentId) {
+        return prisma.user.findUnique({
+          where: { id: user.parentId },
+          select: {
+            id: true,
+            guid: true,
+            name: true, 
+            email: true,
+            location: true,
+            avatarUrl: true,
+            status: true,
+            lastSeen: true,  
+            role: true 
+          },
+        });
+      } 
+    } catch (error) {
+      console.log(`[User] Error: ${error}`);
+      throw new Error("User not found: " + (error as Error).message);
+    }
+  }
+
   // Get User's subordinates
   static async getUserSubordinates(userId: string) {
     try {

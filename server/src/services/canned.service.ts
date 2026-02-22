@@ -43,11 +43,12 @@ export class CannedResponseService {
   }
 
   // Get all canned responses
-  static async getAllCannedResponses() {
+  static async getAllCannedResponses(userId: string) {
     try {
       return prisma.cannedResponse.findMany({
         orderBy: { createdAt: "desc" },
         select: this.cannedResponseSelection,
+        where: { userId },
       });
     } catch (error) {
       console.log(`[Canned Response] Error: ${error}`);

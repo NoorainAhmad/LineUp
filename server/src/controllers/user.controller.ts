@@ -37,6 +37,17 @@ export class UserController {
     }
   }
 
+  // Get branch info of a User
+  static async getBranchInfo(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.userId as string; 
+      const branchInfo = await UserService.getBranchInfo(userId);
+      return res.status(200).json(branchInfo);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  } 
+
   // Get user subordinates
   static async getUserSubordinates(req: Request, res: Response) {
     try {
