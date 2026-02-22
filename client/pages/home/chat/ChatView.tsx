@@ -39,7 +39,8 @@ import {
   Message,
   UserStatus,
   CannedResponse,
-  MessageType, 
+  MessageType,
+  User,
   UserRole,
 } from "../../../types";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -550,7 +551,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-  const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState<
+    string | null
+  >(null);
   const [showCannedMenu, setShowCannedMenu] = useState(false);
   const [cannedSearchTerm, setCannedSearchTerm] = useState("");
   const [selectedCannedIndex, setSelectedCannedIndex] = useState(0);
@@ -558,13 +561,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
+    null,
+  );
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [showMuteDialog, setShowMuteDialog] = useState(false);
-  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
+    null,
+  );
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -983,7 +990,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       setInputValue("");
       setReplyingTo(null);
-      setShowCannedMenu(false); 
+      setShowCannedMenu(false);
     },
     [
       chat,
@@ -1081,7 +1088,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // DESKTOP: Shift+Enter = new line (let browser handle it)
         // Do nothing - let textarea handle Shift+Enter naturally
       }
-       
+
       inputRef.current?.focus();
       return;
     },
@@ -1641,15 +1648,18 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     messageRefs.current[msg.id] = el;
                   }}
                   className={`flex shrink ${isMe ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isPending ? "opacity-70" : ""} ${isSearchResult ? "z-10" : ""}`}
-                >
-                  {/* Pending indicator */}
-                  {isPending && (
-                    <div className="absolute -left-6 top-1/2 -translate-y-1/2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    </div>
-                  )}
-
+                > 
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
+                    {/* Pending indicator */}
+                    {isPending && (
+                      <div className="rounded-2xl relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
+                        <div className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                          <p className="text-text-main">Sending...</p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Floating Actions */}
                     {!isDeleted && !isPending && (
                       <div
@@ -1781,8 +1791,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     )}
 
                     {/* Message Bubble */}
-                    <div
-                      className={`
+                    {!isPending && (
+                      <div
+                        className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
                         ${
                           isDeleted
@@ -1793,81 +1804,82 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                       `}
-                      onClick={(e) =>
-                        handleMessageClick(e, msg.id, !!isDeleted)
-                      }
-                    >
-                      {/* Forwarded Label */}
-                      {!isDeleted && msg.forwardedFromId && (
-                        <div
-                          className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
-                        >
-                          <Share2 size={12} />
-                          <span>
-                            Forwarded
-                            {msg.originalSenderName
-                              ? ` from ${msg.originalSenderName}`
-                              : ""}
-                          </span>
-                        </div>
-                      )}
-                      {/* Reply Quote */}
-                      {!isDeleted && repliedMsg && (
-                        <div
-                          className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            scrollToMessage(repliedMsg.id);
-                          }}
-                        >
-                          <p
-                            className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
-                          >
-                            {repliedMsg.sender?.id === user?.id
-                              ? "You"
-                              : chat.members.find(
-                                  (m) => m.user.id === repliedMsg.sender?.id,
-                                )?.user.name || "Unknown"}
-                          </p>
-                          <p className="opacity-80 truncate">
-                            {repliedMsg.content || "Attachment"}
-                          </p>
-                        </div>
-                      )}
-                      {isDeleted ? (
-                        <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
-                          <Ban size={14} className="text-secondary" />
-                          <span>This message was deleted</span>
-                        </div>
-                      ) : (
-                        renderMessageContent(
-                          msg,
-                          isMe,
-                          chat,
-                          playingAudioId,
-                          toggleAudio,
-                          searchQuery,
-                          audioRefs,
-                          onStatusClick,
-                        )
-                      )}
-                      {/* Message Meta */}
-                      <div
-                        className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
+                        onClick={(e) =>
+                          handleMessageClick(e, msg.id, !!isDeleted)
+                        }
                       >
-                        {!isDeleted && msg.isEdited && (
-                          <span className="italic opacity-80 mr-1">
-                            (edited)
-                          </span>
+                        {/* Forwarded Label */}
+                        {!isDeleted && msg.forwardedFromId && (
+                          <div
+                            className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
+                          >
+                            <Share2 size={12} />
+                            <span>
+                              Forwarded
+                              {msg.originalSenderName
+                                ? ` from ${msg.originalSenderName}`
+                                : ""}
+                            </span>
+                          </div>
                         )}
-                        <span>{formatMessageTime(msg.createdAt)}</span>
-                        {isMe && !isDeleted && !isPending && (
-                          <span>
-                            <CheckCheck size={14} />
-                          </span>
+                        {/* Reply Quote */}
+                        {!isDeleted && repliedMsg && (
+                          <div
+                            className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollToMessage(repliedMsg.id);
+                            }}
+                          >
+                            <p
+                              className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
+                            >
+                              {repliedMsg.sender?.id === user?.id
+                                ? "You"
+                                : chat.members.find(
+                                    (m) => m.user.id === repliedMsg.sender?.id,
+                                  )?.user.name || "Unknown"}
+                            </p>
+                            <p className="opacity-80 truncate">
+                              {repliedMsg.content || "Attachment"}
+                            </p>
+                          </div>
                         )}
+                        {isDeleted ? (
+                          <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
+                            <Ban size={14} className="text-secondary" />
+                            <span>This message was deleted</span>
+                          </div>
+                        ) : (
+                          renderMessageContent(
+                            msg,
+                            isMe,
+                            chat,
+                            playingAudioId,
+                            toggleAudio,
+                            searchQuery,
+                            audioRefs,
+                            onStatusClick,
+                          )
+                        )}
+                        {/* Message Meta */}
+                        <div
+                          className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
+                        >
+                          {!isDeleted && msg.isEdited && (
+                            <span className="italic opacity-80 mr-1">
+                              (edited)
+                            </span>
+                          )}
+                          <span>{formatMessageTime(msg.createdAt)}</span>
+                          {isMe && !isDeleted && !isPending && (
+                            <span>
+                              <CheckCheck size={14} />
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Reactions */}
                     {!isDeleted &&
