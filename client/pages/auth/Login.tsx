@@ -53,8 +53,8 @@ export const Login: React.FC = () => {
     <Layout
       theme={theme}
       onToggleTheme={toggleTheme}
-      title="Welcome back"
-      subtitle="Sign in with your ID or Phone Number"
+      title="LineUp 24x7"
+      subtitle="Secure sign-in to your account"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -71,7 +71,7 @@ export const Login: React.FC = () => {
             />
             <input
               type="text"
-              placeholder="Identity (Unique ID or Phone)"
+              placeholder="GUID or Phone Number"
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
               required

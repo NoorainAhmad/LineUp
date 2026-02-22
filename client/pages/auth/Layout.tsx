@@ -46,11 +46,26 @@ export const Layout: React.FC<LayoutProps> = ({
             <p className="text-secondary text-sm">{subtitle}</p>
           </div>
           {children}
+          <p className="text-xs text-secondary text-center mt-2">
+            LineUp 24x7 is a secure communication platform.
+          </p>
         </div>
         {/* Footer - Aligned with your SaaS aesthetic */}
-        <div className="mt-8 text-center text-xs text-secondary/60 font-medium tracking-wide">
-          &copy; {new Date().getFullYear()} LINEUP INC. &bull; ALL RIGHTS
-          RESERVED
+        <div className="pt-8 text-center text-sm text-secondary">
+          © {new Date().getFullYear()} LineUp 24x7
+          <div className="mt-1 text-xs">
+            <a href="/privacy" className="hover:underline">
+              Privacy
+            </a>
+            {" • "}
+            <a href="/terms" className="hover:underline">
+              Terms
+            </a>
+            {" • "}
+            <a href="/contact" className="hover:underline">
+              Support
+            </a>
+          </div>
         </div>
       </div>
     </div>

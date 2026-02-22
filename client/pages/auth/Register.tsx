@@ -72,8 +72,8 @@ export const Register: React.FC = () => {
     <Layout
       theme={theme}
       onToggleTheme={toggleTheme}
-      title="Create account"
-      subtitle="Join LineUp with a unique identity"
+      title="LineUp 24x7"
+      subtitle="Join LineUp with your GUID and access secure communications."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
