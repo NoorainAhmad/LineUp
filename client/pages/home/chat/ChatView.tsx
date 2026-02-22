@@ -572,6 +572,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   );
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showMediaModal, setShowMediaModal] = useState(false);
+const [mediaCaption, setMediaCaption] = useState("");
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -1163,25 +1165,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
             }
           }
         }
-
-        // try {
-        //   await sendMessageMutation.mutateAsync({
-        //     content: isImage ? "Photo" : file.name,
-        //     type: isImage ? MessageType.IMAGE : MessageType.FILE,
-        //     fileData: {
-        //       file,
-        //       fileName: file.name,
-        //       fileSize: formatBytes(file.size),
-        //       mimeType: file.type,
-        //     },
-        //     replyToId: replyingTo?.id,
-        //   });
           setPendingFile(file);
+          setShowMediaModal(true);
           setShowAttachMenu(false);
-        // } catch (error) {
-        //   console.error("Error sending file:", error);
-        //   alert("Failed to send file. Please try again.");
-        // }
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
@@ -1211,6 +1197,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           //   },
           // });
           setPendingFile(file);
+          setShowMediaModal(true);
           setShowAttachMenu(false);
         })
         .catch((error) => {
@@ -2170,40 +2157,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   accept="image/*,video/*,.pdf,.doc,.docx,.txt"
                 />
               </div>
-              {pendingFile && (
-    <div className="flex items-center gap-3 px-2 py-2 bg-black/5 dark:bg-white/5 rounded-xl">
-      
-      {/* Thumbnail */}
-      {pendingFile.type.startsWith("image/") ? (
-        <img
-          src={URL.createObjectURL(pendingFile)}
-          className="w-12 h-12 rounded-lg object-cover"
-        />
-      ) : (
-        <div className="w-12 h-12 rounded-lg bg-surface-hover flex items-center justify-center">
-          <FileText size={18} />
-        </div>
-      )}
-
-      {/* File Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">
-          {pendingFile.name}
-        </p>
-        <p className="text-xs text-secondary">
-          {(pendingFile.size / 1024).toFixed(1)} KB
-        </p>
-      </div>
-
-      {/* Remove Button */}
-      <button
-        onClick={() => setPendingFile(null)}
-        className="p-1.5 hover:bg-surface-hover rounded-full"
-      >
-        <X size={16} />
-      </button>
-    </div>
-  )}
 
               {/* Text Input */}
               <div className="flex-1 min-w-0 relative min-h-12.5">
@@ -2286,7 +2239,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
               {/* Send Button */}
               <div className="pb-1 pr-1">
-                {inputValue.trim() || isRecording || pendingFile? (
+                {inputValue.trim() || isRecording? (
                   <button
                     onClick={
                       isRecording
@@ -2309,8 +2262,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     )}
                   </button>
                 ) : (
-                  !editingMessage &&
-                  !pendingFile && (
+                  !editingMessage && (
                     <button
                       onClick={startRecording}
                       disabled={sendMessageMutation.isPending}
