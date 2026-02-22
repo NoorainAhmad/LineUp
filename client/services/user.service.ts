@@ -39,8 +39,14 @@ export class UserService {
   }
 
   // Search team members
+  static async teamMembers() {
+    const response = await api.get(`/users/team`);
+    return response.data;
+  }
+
+  // Search team members
   static async searchTeamMembers(query: string) {
-    const response = await api.get(`/users/team/search?q=${query}`); 
+    const response = await api.get(`/users/team/search?q=${query}`);
     return response.data;
   }
 

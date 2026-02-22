@@ -171,7 +171,7 @@ export const Home: React.FC = () => {
       const response =
         currentUser?.role == UserRole.USER
           ? []
-          : await UserService.getAllUsers();
+          : currentUser?.role == UserRole.DEVELOPER ? await UserService.getAllUsers() : await UserService.teamMembers();
       return (response.data || response).map(normalizeUserData);
     },
     enabled: activeTab === "user" || activeTab === "dashboard",

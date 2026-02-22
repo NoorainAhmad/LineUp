@@ -207,6 +207,75 @@ export class UserService {
     }
   }
 
+    // Team hierarchy (all subordinates at all levels)
+  static async teamMembers(userId: string) {
+    try {  
+      // First, get all subordinate IDs recursively
+      const allTeamIds = await this.getAllSubordinateIds(userId);
+
+      // Add the current user to the list
+      allTeamIds.push(userId); 
+
+      // Search for users that match the query AND are in the team
+      const results = await prisma.user.findMany({
+        where: {
+          AND: [
+            {
+              id: { in: allTeamIds }, // Only search within team
+            } 
+          ],
+        },
+        orderBy: [
+          { role: "asc" }, // Sort by role first (DEVELOPER first, then MASTER, etc.)
+          { name: "asc" },
+        ],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          status: true,
+          isActive: true,
+          avatarUrl: true,
+          location: true,
+          createdAt: true,
+          parentId: true,
+          parent: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+          children: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      // Enhance results with hierarchy info
+      const enhancedResults = results.map((user) => ({
+        ...user,
+        hierarchy: {
+          level: this.getHierarchyLevel(user.role),
+          hasChildren: user.children && user.children.length > 0,
+          parentName: user.parent?.name || null,
+          childCount: user.children?.length || 0,
+        },
+      })); 
+
+      return enhancedResults;
+    } catch (error) {
+      console.error(`[Team] Error: ${error}`);
+      throw new Error("Team failed: " + (error as Error).message);
+    }
+  }
+
   // Search through entire team hierarchy (all subordinates at all levels)
   static async searchTeamMembers(userId: string, query: string) {
     try {

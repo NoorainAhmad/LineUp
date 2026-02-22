@@ -71,7 +71,32 @@ export class UserController {
     }
   }
 
-  // In user.controller.ts
+    // Team members
+  static async teamMembers(req: AuthRequest, res: Response) {
+    try {
+      const currentUserId = req.userId as string; 
+      const userRole = req.userRole; 
+
+      if (!currentUserId && !(userRole == UserRole.USER)) {
+        return res.status(401).json({
+          success: false,
+          error: "Unauthorized",
+        });
+      } 
+
+      const results = await UserService.teamMembers(currentUserId);
+
+      return res.status(200).json(results);
+    } catch (error: any) {
+      console.error("Team error:", error);
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  // Search team members
   static async searchTeamMembers(req: AuthRequest, res: Response) {
     try {
       const currentUserId = req.userId as string;
