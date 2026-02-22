@@ -22,6 +22,9 @@ router.post("/", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, Us
 // Action: Mark a specific status as viewed (Seen By)
 router.post("/:id/view", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), StatusController.markAsViewed);
 
+// Detail: Get who viewed a specific status (Seen By list)
+router.get("/:id/viewers", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), StatusController.getViewers);
+
 // Action: Reply to a status (sends a DM to status owner)
 router.post("/:id/reply", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), StatusController.replyToStatus);
 

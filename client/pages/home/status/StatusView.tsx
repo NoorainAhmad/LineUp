@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { StatusViewers } from "./StatusViewers";
+import { StatusService } from "@/services/status.service";
 
 interface StatusViewProps {
   status: any; // Matching your backend JSON object
@@ -51,6 +53,9 @@ export const StatusView: React.FC<StatusViewProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isReplying, setIsReplying] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
+  const [viewersData, setViewersData] = useState<{ total: number; viewers: any[] }>({ total: 0, viewers: [] });
+  const [viewersLoading, setViewersLoading] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -98,7 +103,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
       const increment = (intervalTime / duration) * 100;
       timerConfigRef.current = { intervalTime, increment };
 
-      if (!isReplying) {
+      if (!isReplying && !showViewers) {
         progressIntervalRef.current = setInterval(() => {
           setProgress((prev) => {
             if (prev >= 100) {
@@ -119,7 +124,16 @@ export const StatusView: React.FC<StatusViewProps> = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [status, onNext, isVideo, isImage, isReplying]);
+  }, [status, onNext, isVideo, isImage, isReplying, showViewers]);
+
+  // Mark as viewed when status changes
+  useEffect(() => {
+    if (status && CurrentUser && status.user?.id !== CurrentUser.id) {
+      StatusService.markAsViewed(status.id).catch((err) => {
+        console.error("Failed to mark status as viewed:", err);
+      });
+    }
+  }, [status.id, CurrentUser?.id]);
 
   // Handle video time update for progress
   const handleVideoTimeUpdate = () => {
@@ -398,18 +412,73 @@ export const StatusView: React.FC<StatusViewProps> = ({
         )}
       </div>
 
+      {/* Viewers Panel */}
+      {showViewers && (
+        <StatusViewers
+          viewers={viewersData.viewers}
+          total={viewersData.total}
+          isLoading={viewersLoading}
+          onClose={() => {
+            setShowViewers(false);
+            // Resume timer
+            if (!isVideo && timerConfigRef.current) {
+              const { intervalTime, increment } = timerConfigRef.current;
+              progressIntervalRef.current = setInterval(() => {
+                setProgress((prev) => {
+                  if (prev >= 100) {
+                    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+                    onNext();
+                    return 100;
+                  }
+                  return prev + increment;
+                });
+              }, intervalTime);
+            }
+            if (isVideo && videoRef.current) {
+              videoRef.current.play();
+              setIsPlaying(true);
+            }
+          }}
+        />
+      )}
+
       {/* Footer Actions */}
       <div className="absolute bottom-0 left-0 right-0 p-8 bg-linear-to-t from-black/90 to-transparent z-30 flex flex-col items-center">
         {isMyStatus ? (
           <div className="flex items-center gap-8">
-            <div className="flex flex-col items-center gap-1 group">
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                setShowViewers(true);
+                setViewersLoading(true);
+                // Pause timer
+                if (progressIntervalRef.current) {
+                  clearInterval(progressIntervalRef.current);
+                  progressIntervalRef.current = null;
+                }
+                if (isVideo && videoRef.current && !videoRef.current.paused) {
+                  videoRef.current.pause();
+                  setIsPlaying(false);
+                }
+                try {
+                  const res = await StatusService.getStatusViewers(status.id);
+                  setViewersData(res.data);
+                } catch (err) {
+                  console.error("Failed to fetch viewers:", err);
+                  setViewersData({ total: 0, viewers: [] });
+                } finally {
+                  setViewersLoading(false);
+                }
+              }}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white/20 transition-all">
                 <Eye size={24} className="text-white" />
               </div>
               <span className="text-white text-xs font-semibold">
                 {status._count?.viewers || status.viewers?.length || 0} views
               </span>
-            </div>
+            </button>
             <div className="flex flex-col items-center gap-1 group">
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white/20 transition-all">
                 <Share2 size={24} className="text-white" />
