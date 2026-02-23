@@ -18,6 +18,8 @@ interface AudioMessageProps {
   msg: {
     id: string;
     fileUrl?: string;
+    fileName?: string;
+    duration?: number;
     fileSize?: string;
     createdAt: string;
     sender?: {
@@ -52,15 +54,18 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
   toggleAudio,
   chat
 }) => {
-  const [duration, setDuration] = useState<string>('0:00');
+  const [duration, setDuration] = useState<string>(
+  msg.duration ? `${Math.floor(msg.duration / 60)}:${String(msg.duration % 60).padStart(2, '0')}` : '0:00');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     // Reset state when message changes
-    setDuration('0:00');
-    setIsLoading(true);
-    setLoadError(false);
+    if(msg.duration){
+      setIsLoading(false);
+      setLoadError(false);
+      return;
+    }
 
     if (!msg.fileUrl) {
       setDuration('0:00');
@@ -75,6 +80,7 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
     // Set up event handlers before setting src
     const handleLoadedMetadata = () => {
       try {
+        //console.log('Audio metadata loaded for message:', msg.id, 'Duration:', msg.fileName);
         const minutes = Math.floor(audio.duration / 60);
         const seconds = Math.floor(audio.duration % 60);
         const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;

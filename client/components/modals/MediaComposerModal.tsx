@@ -33,7 +33,7 @@ export const MediaComposerModal: React.FC<MediaComposerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-[420px] max-w-[95vw] bg-surface rounded-2xl shadow-2xl border border-border p-4 animate-in zoom-in-95">
+      <div className="w-420px max-w-[95vw] bg-surface rounded-2xl shadow-2xl border border-border p-4 animate-in zoom-in-95">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
