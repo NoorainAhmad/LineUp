@@ -55,6 +55,7 @@ export class ChatService {
         fileUrl: permanentFileUrl,
         fileName: file.name,
         fileSize: file.size.toString(),
+        duration: data.duration,
         mimeType: file.type,
         mediaId,
       };

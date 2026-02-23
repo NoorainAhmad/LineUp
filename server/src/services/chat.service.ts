@@ -21,6 +21,7 @@ export class ChatService {
         fileUrl: true,
         fileName: true,
         fileSize: true,
+        duration: true,
         mimeType: true,
         replyToId: true,
         forwardedFromId: true,
