@@ -55,16 +55,12 @@ export const Layout: React.FC<LayoutProps> = ({
           © {new Date().getFullYear()} LineUp 24x7
           <div className="mt-1 text-xs">
             <a href="/privacy" className="hover:underline">
-              Privacy
+              Privacy Policy
             </a>
             {" • "}
             <a href="/terms" className="hover:underline">
-              Terms
-            </a>
-            {" • "}
-            <a href="/contact" className="hover:underline">
-              Support
-            </a>
+              Terms of Service
+            </a> 
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { Verify } from "./pages/auth/Verify";
 import { Forgot } from "./pages/auth/Forgot";
 import { Reset } from "./pages/auth/Reset"; 
 import { Home } from "./pages/home/Home";
+import { LandingPage } from "./pages/Landing";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -30,7 +31,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
+        <Routes>          
+          {/* Public (No Auth Required) */}
+          <Route path="/landing" element={<LandingPage />} />
+
           {/* Public Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} /> 
@@ -44,7 +48,7 @@ function App() {
             <Route path="/" element={<Home />} />
           </Route>
           {/* Fallback Route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>
       </BrowserRouter> 
     </QueryClientProvider>
