@@ -200,7 +200,7 @@ const testimonials = [
   },
 ];
 
-export const LandingPage: React.FC = () => {
+export const Landing: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 

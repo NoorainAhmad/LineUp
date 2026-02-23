@@ -10,7 +10,12 @@ import { Verify } from "./pages/auth/Verify";
 import { Forgot } from "./pages/auth/Forgot";
 import { Reset } from "./pages/auth/Reset"; 
 import { Home } from "./pages/home/Home";
-import { LandingPage } from "./pages/Landing";
+
+import { Landing } from "./pages/Landing";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
+import { DataProcessing } from "./pages/DataProcessing";
+import { Compliance } from "./pages/Compliance";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -33,7 +38,12 @@ function App() {
       <BrowserRouter>
         <Routes>          
           {/* Public (No Auth Required) */}
-          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/landing" element={<Landing />} />
+
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/data-processing" element={<DataProcessing />} />
+          <Route path="/compliance" element={<Compliance />} />
 
           {/* Public Routes */}
           <Route element={<PublicRoute />}>

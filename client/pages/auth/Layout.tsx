@@ -1,5 +1,6 @@
 import React from "react";
 import { Sun, Moon, MessageCircleCodeIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({
   title,
   subtitle,
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="h-screen w-full bg-background text-text-main flex flex-col items-center justify-start md:justify-center p-6 md:py-12 relative overflow-y-auto selection:bg-primary/20">
       {/* Background decoration - Fixed position to stay while scrolling */}
@@ -37,10 +39,12 @@ export const Layout: React.FC<LayoutProps> = ({
       <div className="w-full max-w-115 z-10 animate-in fade-in slide-in-from-bottom-8 duration-500 my-auto">
         <div className="bg-surface border border-border rounded-3xl shadow-2xl overflow-hidden p-8 md:p-10">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-primary/30 mb-6">
+            <div className="cursor-pointer w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-primary/30 mb-6"
+              onClick={() => navigate("/")}>
               <MessageCircleCodeIcon size={24} />
             </div>
-            <h1 className="text-2xl font-bold text-text-main mb-2 tracking-tight">
+            <h1 className="cursor-pointer text-2xl font-bold text-text-main mb-2 tracking-tight"
+              onClick={() => navigate("/")}>
               {title}
             </h1>
             <p className="text-secondary text-sm">{subtitle}</p>
