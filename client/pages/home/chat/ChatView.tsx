@@ -568,7 +568,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
-  const [showMuteDialog, setShowMuteDialog] = useState(false);
+  const [processingMute, setProcessingMute] = useState(false);
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
     null,
   );
@@ -1127,47 +1127,56 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0] && chat) {
-        let file = e.target.files[0];
-        const isImage = file.type.startsWith("image/");
-        const isVideo = file.type.startsWith("video/");
-        const isAudio = file.type.startsWith("audio/");
+      try {
+        if (e.target.files && e.target.files[0] && chat) {
+          let file = e.target.files[0];
+          const isImage = file.type.startsWith("image/");
+          const isVideo = file.type.startsWith("video/");
+          const isAudio = file.type.startsWith("audio/");
 
-        // Check if video/audio has audio track
-        if (isVideo || isAudio) {
-          const hasAudioTrack = await MediaUtils.hasAudio(file);
-          if (hasAudioTrack) {
-            const result = window.confirm(
-              "Do you want to mute the audio? It has an audio track.",
-            );
-            if (result) {
-              if (isVideo) {
-                file = await MediaUtils.muteVideo(file);
-              } else if (isAudio) {
-                file = await MediaUtils.muteAudio(file);
+          // Check if video/audio has audio track
+          if (isVideo || isAudio) {
+            const hasAudioTrack = await MediaUtils.hasAudio(file);
+            if (hasAudioTrack) {
+              const result = window.confirm(
+                "Do you want to mute the audio? It has an audio track.",
+              );
+              if (result) {        
+                setProcessingMute(true);
+                if (isVideo) {
+                  file = await MediaUtils.muteVideo(file);
+                } else if (isAudio) {
+                  file = await MediaUtils.muteAudio(file);
+                }
+                setProcessingMute(false);
               }
             }
           }
-        }
 
-        try {
-          await sendMessageMutation.mutateAsync({
-            content: isImage ? "Photo" : file.name,
-            type: isImage ? MessageType.IMAGE : MessageType.FILE,
-            fileData: {
-              file,
-              fileName: file.name,
-              fileSize: formatBytes(file.size),
-              mimeType: file.type,
-            },
-          });
-          setShowAttachMenu(false);
-        } catch (error) {
-          console.error("Error sending file:", error);
-          alert("Failed to send file. Please try again.");
+          try {
+            await sendMessageMutation.mutateAsync({
+              content: isImage ? "Photo" : file.name,
+              type: isImage ? MessageType.IMAGE : MessageType.FILE,
+              fileData: {
+                file,
+                fileName: file.name,
+                fileSize: formatBytes(file.size),
+                mimeType: file.type,
+              },
+            });
+            setShowAttachMenu(false);
+          } catch (error) {
+            console.error("Error sending file:", error);
+            alert("Failed to send file. Please try again.");
+          }
         }
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } catch (error) {
+        console.error("Error sending file:", error);
+        alert("Failed to send file. Please try again.");
+      } finally {
+        setProcessingMute(false);
       }
-      if (fileInputRef.current) fileInputRef.current.value = "";
     },
     [chat, sendMessageMutation],
   );
@@ -1648,12 +1657,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     messageRefs.current[msg.id] = el;
                   }}
                   className={`flex shrink ${isMe ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isPending ? "opacity-70" : ""} ${isSearchResult ? "z-10" : ""}`}
-                > 
+                >
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Pending indicator */}
                     {isPending && (
                       <div className="rounded-2xl relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
-                        <div className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}>
+                        <div
+                          className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}
+                        >
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                           <p className="text-text-main">Sending...</p>
                         </div>
@@ -1916,6 +1927,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </div>
               );
             })}
+
+            {processingMute && (
+              <div className="float-right rounded-2xl inline-flex relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
+                <div
+                  className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}
+                >
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <p className="text-text-main">Processing mute...</p>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </>
         )}
