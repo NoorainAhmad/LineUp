@@ -365,13 +365,13 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="mb-6">
           <div
             className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-xl cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/app")}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                navigate("/");
+                navigate("/app");
               }
             }}
             aria-label="Home"

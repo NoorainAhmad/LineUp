@@ -37,15 +37,16 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>          
-          {/* Public (No Auth Required) */}
-          <Route path="/landing" element={<Landing />} />
+          {/* 🏠 PUBLIC ROOT - Landing Page (No Auth Required) */}
+          <Route path="/" element={<Landing />} />
 
+          {/* 📄 Public Legal Pages */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/data-processing" element={<DataProcessing />} />
           <Route path="/compliance" element={<Compliance />} />
 
-          {/* Public Routes */}
+          {/* 🔓 Public Auth Routes (redirect if authenticated) */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} /> 
             <Route path="/register" element={<Register />} /> 
@@ -53,12 +54,14 @@ function App() {
             <Route path="/forgot-password" element={<Forgot />} />
             <Route path="/reset-password" element={<Reset />} />
           </Route>
-          {/* Protected Routes */}
+          
+          {/* 🔒 Protected Routes (require authentication) */}
           <Route element={<ProtectedRoute />}> 
-            <Route path="/" element={<Home />} />
+            <Route path="/app" element={<Home />} /> 
           </Route>
-          {/* Fallback Route */}
-          <Route path="*" element={<Navigate to="/landing" replace />} />
+          
+          {/* 🔄 Fallback Route - redirect to landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter> 
     </QueryClientProvider>
