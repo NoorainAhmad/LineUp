@@ -52,12 +52,25 @@ enum MessageType {
 
 // --- Models ---
 
+model Otp {
+  id    String @id @default(uuid())
+  phone String @unique
+  code  String
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("otps")
+}
+
 model User {
   id           String @id @default(uuid())
   guid         String @unique @default(uuid())
   name         String
   phone        String @unique
   passwordHash String
+  sessions  Session[]
 
   email     String?
   location  String?
@@ -87,6 +100,32 @@ model User {
 
   @@index([guid, name, phone])
   @@map("users")
+}
+
+model Session {
+  id                 String   @id @default(uuid())
+
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshTokenHash   String   @unique // Hash of refresh token not the token itself
+  tokenVersion       Int      @default(0) // Helps detect token reuse / rotation attacks
+
+  expiresAt          DateTime // Expiry of refresh token
+ 
+  ipAddress          String? // IP address of the client - can be used to detect geolocation
+  userAgent          String? // User agent of the client - can be used to detect bots
+  deviceInfo         String?  // Device info of the client - detects browser, OS, etc
+ 
+  isRevoked          Boolean  @default(false) // Session has been revoked
+  revokedAt          DateTime? // When the session was revoked
+
+  createdAt          DateTime @default(now()) // When the session was created
+  updatedAt          DateTime @updatedAt // Last time the session was updated
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
 }
 
 model Chat {
@@ -226,18 +265,6 @@ model CannedResponse {
   @@map("canned_responses")
 }
 
-model Otp {
-  id    String @id @default(uuid())
-  phone String @unique
-  code  String
-
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([phone])
-  @@map("otp")
-}
-
 model System {
   id String @id @default(uuid())
 
@@ -257,3 +284,4 @@ model System {
 
   @@map("system")
 }
+

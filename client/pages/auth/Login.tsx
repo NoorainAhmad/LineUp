@@ -25,29 +25,39 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await AuthService.login({
-        identity,
-        password,
-      });
-      login(response.data.user, response.data.token);
-      navigate("/");
-    } catch (err: any) {
-      const backendMessage =
-        err?.response?.data?.readableMessage || // ⭐ FIRST PRIORITY (Zod detailed errors)
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Login failed.";
+  e.preventDefault();
 
-      setError(backendMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (isLoading) return;
+
+  if (!identity.trim() || !password.trim()) {
+    setError("Please enter your credentials.");
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const response = await AuthService.login({
+      identity: identity.trim(),
+      password: password.trim(),
+    });
+
+    login(response.user, response.accessToken);
+    navigate("/");
+  } catch (err: any) { 
+    const backendMessage =
+      err?.response?.data?.readableMessage ||
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Login failed."; 
+    setError(backendMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <Layout
@@ -60,6 +70,7 @@ export const Login: React.FC = () => {
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
             <AlertCircle size={16} />
+            
             {error}
           </div>
         )}
@@ -74,6 +85,7 @@ export const Login: React.FC = () => {
               placeholder="GUID or Phone Number"
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
+              autoFocus
               required
               className="w-full bg-input text-text-main pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-primary/50 focus:bg-surface focus:outline-none transition-all placeholder-secondary"
             />
@@ -87,7 +99,7 @@ export const Login: React.FC = () => {
               type="password"
               placeholder="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)} 
               required
               className="w-full bg-input text-text-main pl-12 pr-4 py-3.5 rounded-xl border border-transparent focus:border-primary/50 focus:bg-surface focus:outline-none transition-all placeholder-secondary"
             />
@@ -96,7 +108,7 @@ export const Login: React.FC = () => {
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => navigate("/forgot-password")}
+            onClick={() => navigate("/forgot")}
             className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Forgot password?

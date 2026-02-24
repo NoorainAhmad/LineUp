@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "../types";
+import { AuthService } from "../services/auth.service";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (user: User, accessToken: string) => void;
+  logout: () => Promise<void>;
+  logoutAllDevices: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,41 +17,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("auth_user");
-    const savedToken = localStorage.getItem("auth_token");
-    if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
-      setToken(savedToken);
+    try {
+      const savedUser = localStorage.getItem("auth_user");
+      const accessToken = localStorage.getItem("access_token");
+
+      if (!accessToken) {
+        clearAuth();
+        return;
+      }
+
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch {
+      // Corrupt storage → reset cleanly
+      clearAuth();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  const login = (userData: User, authToken: string) => {
+  const login = (userData: User, accessToken: string) => {
     setUser(userData);
-    setToken(authToken);
     localStorage.setItem("auth_user", JSON.stringify(userData));
-    localStorage.setItem("auth_token", authToken);
+    localStorage.setItem("access_token", accessToken);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await AuthService.logout();
+    } catch {
+      // Ignore server errors — always clear client state
+    } finally {
+      clearAuth();
+    }
+  };
+
+  const logoutAllDevices = async () => {
+    try {
+      await AuthService.logoutAllDevices();
+    } catch {
+    // Ignore server errors — always clear client state
+    } finally {
+      clearAuth();
+    }
+  };
+
+  const clearAuth = () => {
     setUser(null);
-    setToken(null);
     localStorage.removeItem("auth_user");
-    localStorage.removeItem("auth_token");
+    localStorage.removeItem("access_token");
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
-        isAuthenticated: !!token,
+        isAuthenticated: !!user,
+        isLoading,
         login,
         logout,
+        logoutAllDevices,
       }}
     >
       {!isLoading && children}

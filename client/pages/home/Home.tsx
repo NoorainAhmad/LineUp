@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Navigation } from "./Navigation";
 import { CreateGroupModal } from "../../components/modals/CreateGroupModal";
 import { AddUserModal } from "../../components/modals/AddUserModal";
+import { LogoutModal } from "../../components/modals/LogoutModal";
 import { Dashboard } from "./dashboard/Dashboard";
 import { ChatList } from "./chat/ChatList";
 import { ChatView } from "./chat/ChatView";
@@ -37,6 +38,7 @@ import { ChatService } from "@/services/chat.service";
 import GroupProfileView from "./chat/GroupProfileView";
 import { MyProfileView } from "./profile/MyProfileView";
 import { z } from "zod";
+import api from "@/api/axios";
 
 //State to handle create User error
 //const [error, setError] = useState<string | null>(null);
@@ -126,6 +128,8 @@ export const Home: React.FC = () => {
   );
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isCreatingStatus, setIsCreatingStatus] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isCreatingResponse, setIsCreatingResponse] = useState(false);
@@ -303,6 +307,18 @@ export const Home: React.FC = () => {
     },
     [closeModals],
   );
+
+  const handleLogoutDevice = useCallback(async () => {
+    if (isLoggingOut) return; // prevent double clicks
+    try {
+      setIsLoggingOut(true);  
+      await logout();
+    } catch (error) {
+      console.error("Logout device error:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [logout, isLoggingOut]);
 
   const handleChatSelect = useCallback((chat: Chat) => {
     setSelectedChat(chat);
@@ -1261,7 +1277,7 @@ export const Home: React.FC = () => {
           onTabChange={handleTabChange}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onLogout={logout}
+          onLogout={() => setShowLogoutModal(true)}
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -1274,6 +1290,13 @@ export const Home: React.FC = () => {
   if (chatsError || statusesError || usersError || responsesError) {
     return (
       <div className="flex flex-col md:flex-row h-screen supports-[height:100dvh]:h-dvh w-full bg-background text-text-main overflow-hidden relative transition-colors duration-300">
+        <Navigation
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onLogout={() => -(true)}
+        />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
             <h2 className="text-3xl font-light mb-2 text-text-main flex flex-col justify-center items-center gap-6"> 
@@ -1306,7 +1329,7 @@ export const Home: React.FC = () => {
           onTabChange={handleTabChange}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onLogout={logout}
+          onLogout={() => setShowLogoutModal(true)}
         />
       </div>
 
@@ -1497,6 +1520,13 @@ export const Home: React.FC = () => {
           </div>
         )}
       </div>
+      {showLogoutModal && (
+        <LogoutModal
+          onClose={() => setShowLogoutModal(false)}
+          onLogoutDevice={handleLogoutDevice}
+          isLoading={isLoggingOut}
+        />
+      )}
     </div>
   );
 };

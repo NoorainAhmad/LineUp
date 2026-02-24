@@ -25,6 +25,7 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^3.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",

@@ -24,6 +24,7 @@ export const authMiddleware = (
     }
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    //console.log("Decoded token is ", decoded)
     req.userId = decoded.userId;
     req.userRole = decoded.userRole;
     req.ipAddress = req.ip;

@@ -1,50 +1,63 @@
 import api from "../api/axios";
-import {
-  type LoginInput,
-  type RegisterInput,
-  type ResetPasswordInput,
-  type RequestOtpInput,
-  type VerifyOtpInput,
+import type {
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+  RequestOtpInput,
+  VerifyOtpInput,
 } from "../validators/auth.validator";
 
-export class AuthService {
-  // Login user and generate JWT
+export class AuthService { 
   static async login(data: LoginInput) {
     const response = await api.post("/auth/login", data);
+
+    // Expected shape: { user, accessToken }
     return response.data;
   }
+ 
+  static async refresh() {
+    // Cookie automatically sent via withCredentials
+    const response = await api.post("/auth/refresh");
 
-  // Register user and request OTP
+    // Expected shape: { accessToken }
+    return response.data;
+  }
+ 
+  static async logout() {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  }
+ 
+  static async logoutAllDevices() {
+    const response = await api.post("/auth/logout-all");
+    return response.data;
+  }
+ 
   static async register(data: RegisterInput) {
     const response = await api.post("/auth/register", data);
     return response.data;
   }
-
-  // Verify user registration OTP
+ 
   static async verifyRegistration(data: VerifyOtpInput) {
     const response = await api.post("/auth/verify-registration", data);
     return response.data;
   }
-
-  // Request password reset OTP
+ 
   static async requestPasswordReset(data: RequestOtpInput) {
     const response = await api.post("/auth/request-otp", data);
     return response.data;
   }
 
-  // Verify password reset OTP
   static async verifyPasswordReset(data: VerifyOtpInput) {
     const response = await api.post("/auth/verify-otp", data);
     return response.data;
   }
 
-  // Password reset - update user password
   static async resetPassword(data: ResetPasswordInput) {
     const response = await api.post("/auth/reset-password", data);
     return response.data;
   }
-
-  // Resend OTP for verification or password reset requests
+ 
   static async resendOtp(data: RequestOtpInput) {
     const response = await api.post("/auth/request-otp", data);
     return response.data;

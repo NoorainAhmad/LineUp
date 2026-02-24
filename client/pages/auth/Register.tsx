@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Phone,
   Lock,
@@ -32,9 +32,11 @@ export const Register: React.FC = () => {
     parentId: "",
   });
 
-  if (parentId) {
-    formData.parentId = parentId;
-  }
+  useEffect(() => {
+    if (parentId) {
+      setFormData((prev) => ({ ...prev, parentId }));
+    }
+  }, [parentId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +99,7 @@ export const Register: React.FC = () => {
               onChange={(e) =>
                 setFormData({ ...formData, guid: e.target.value })
               }
+              autoFocus
               required
               className="w-full bg-input text-text-main pl-12 pr-4 py-3.5 rounded-xl border border-border/50 focus:border-primary/50 focus:bg-surface focus:outline-none transition-all placeholder-secondary/70"
             />
@@ -129,6 +132,7 @@ export const Register: React.FC = () => {
             <input
               type="tel"
               placeholder="Phone Number"
+              inputMode="numeric"
               value={formData.phone}
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })

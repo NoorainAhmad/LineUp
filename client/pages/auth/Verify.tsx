@@ -14,10 +14,13 @@ export const Verify: React.FC = () => {
 
   const { context } = useParams();
   const location = useLocation();
+
   const phone = location.state?.phone;
-  if (!phone) {
-    navigate("/login");
-  }
+  useEffect(() => {
+    if (!phone) {
+      navigate("/login");
+    }
+  }, [phone, navigate]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,33 +78,58 @@ export const Verify: React.FC = () => {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text").trim();
+
+    if (!/^\d{6}$/.test(pasted)) return;
+
+    const digits = pasted.split("");
+    setOtp(digits);
+
+    digits.forEach((d, i) => {
+      if (inputRefs.current[i]) {
+        inputRefs.current[i]!.value = d;
+      }
+    });
+
+    inputRefs.current[5]?.focus();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length !== 6) {
+
+    if (isLoading) return;
+
+    if (otp.join("").length !== 6) {
       setError("Please enter a valid 6-digit code.");
       return;
     }
+
+    if (!phone || (context !== "auth" && context !== "reset")) {
+      setError("Invalid verification context.");
+      return;
+    }
+
     setError("");
     setIsLoading(true);
+
     try {
-      if ((context !== "auth" && context !== "reset") || !phone) {
-        setError("Invalid verification context.");
-        return;
-      }
       if (context === "reset") {
         const response = await AuthService.verifyPasswordReset({
           phone,
           otp: otp.join(""),
         });
-        navigate("/reset-password", {
-          state: { token: response.data.token, phone },
+
+        navigate("/reset", {
+          state: { token: response.accessToken, phone },
         });
       } else {
         const response = await AuthService.verifyRegistration({
-          phone: phone,
+          phone,
           otp: otp.join(""),
         });
-        login(response.data.user, response.data.token);
+
+        login(response.user, response.accessToken);
         navigate("/");
       }
     } catch (err: any) {
@@ -111,7 +139,6 @@ export const Verify: React.FC = () => {
         err?.response?.data?.error ||
         err?.message ||
         "OTP verification failed.";
-
       setError(backendMessage);
     } finally {
       setIsLoading(false);
@@ -142,6 +169,7 @@ export const Verify: React.FC = () => {
               type="text"
               maxLength={1}
               value={digit}
+              onPaste={handlePaste}
               onChange={(e) => handleChange(idx, e.target.value)}
               onKeyDown={(e) => handleKeyDown(idx, e)}
               className="w-10 h-12 text-center text-xl font-bold bg-input border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-text-main"

@@ -37,18 +37,12 @@ export class StatusService {
           ticketResponse.data.data;
 
         // Step 2: Upload directly to S3 using pre-signed URL
-        await api.put(uploadUrl, file, {
-          headers: { "Content-Type": file.type },
-          transformRequest: [
-            (rawData, headers) => {
-              if (headers) {
-                delete headers.common?.["Authorization"];
-                delete headers?.["Authorization"];
-                delete headers?.["Authorization-Bearer"];
-              }
-              return rawData;
-            },
-          ],
+        await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
         });
 
         // Step 3: Finalize upload in database

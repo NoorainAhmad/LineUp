@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+
 import {
   loginSchema,
   registerSchema,
@@ -11,29 +13,30 @@ import {
 
 const router = Router();
 
-// Register: New User
 router.post("/register", validate(registerSchema), AuthController.register);
 
-// Verify: Registration OTP
 router.post("/verify-registration", validate(verifyOtpSchema), AuthController.verifyRegistration);
 
-// Login: User
 router.post("/login", validate(loginSchema), AuthController.login);
 
-// Request: OTP for password reset
+// Refresh token comes from cookie → no validator needed
+router.post("/refresh", AuthController.refresh);
+
+// Refresh token from cookie → no validator needed
+router.post("/logout", AuthController.logout);
+
+router.post("/logout-all", authMiddleware, AuthController.logoutAllDevices);
+
 router.post("/request-otp", validate(requestOtpSchema), AuthController.requestOtp);
 
-// Verify: OTP for password reset
 router.post("/verify-otp", validate(verifyOtpSchema), AuthController.verifyOtp);
 
-// Reset: User password
 router.post("/reset-password", validate(resetPasswordSchema), AuthController.resetPassword);
 
-// Health check
 router.get("/health", (req, res) => {
   res.status(200).json({
     status: "success",
-    message: "LineUp Auth Service is active",
+    message: "Auth Service is active",
     timestamp: new Date().toISOString(),
   });
 });
