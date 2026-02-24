@@ -89,6 +89,12 @@ export class StatusService {
     return response.data;
   }
 
+  // Get viewers of a status (who viewed and when)
+  static async getStatusViewers(statusId: string) {
+    const response = await api.get(`/statuses/${statusId}/viewers`);
+    return response.data;
+  }
+
   // Reply to a status (sends a DM to the status owner)
   static async replyToStatus(statusId: string, message: string) {
     const response = await api.post(`/statuses/${statusId}/reply`, { message });
