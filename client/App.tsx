@@ -51,8 +51,8 @@ function App() {
             <Route path="/login" element={<Login />} /> 
             <Route path="/register" element={<Register />} /> 
             <Route path="/verify/:context" element={<Verify />} />
-            <Route path="/forgot-password" element={<Forgot />} />
-            <Route path="/reset-password" element={<Reset />} />
+            <Route path="/forgot" element={<Forgot />} />
+            <Route path="/reset" element={<Reset />} />
           </Route>
           
           {/* 🔒 Protected Routes (require authentication) */}

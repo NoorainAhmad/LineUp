@@ -28,8 +28,7 @@ export const verifyOtpSchema = z.object({
 
 // PASSWORD RESET VALIDATOR
 export const resetPasswordSchema = z.object({
-  phone: z.string().min(10),
-  token: z.string().min(1),
+  phone: z.string().min(10), 
   password: z.string().min(6),
 });
 
@@ -37,6 +36,5 @@ export const resetPasswordSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
-export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
-export type ResendOtpInput = z.infer<typeof requestOtpSchema>;
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>; 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

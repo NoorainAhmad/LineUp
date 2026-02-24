@@ -4,6 +4,22 @@ import { z } from "zod";
 export const loginSchema = z.object({
   identity: z.string().min(6),
   password: z.string().min(6),
+}); 
+
+//REFRESH TOKEN VALIDATOR
+export const refreshTokenSchema = z.object({
+  refreshToken: z
+    .string()
+    .min(10, "Invalid refresh token")
+    .nonempty("Refresh token is required"),
+});
+
+//LOGOUT SCHEMA
+export const logoutSchema = z.object({
+  refreshToken: z
+    .string()
+    .min(7, "Invalid refresh token")
+    .nonempty("Refresh token is required"),
 });
 
 // REGISTER VALIDATOR
@@ -28,15 +44,13 @@ export const verifyOtpSchema = z.object({
 
 // PASSWORD RESET VALIDATOR
 export const resetPasswordSchema = z.object({
-  phone: z.string().min(10),
-  token: z.string().min(1),
+  phone: z.string().min(10), 
   password: z.string().min(6),
 });
 
 // EXPORT TYPES
 export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;  
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
-export type ResendOtpInput = z.infer<typeof requestOtpSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

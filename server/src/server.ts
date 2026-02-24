@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import dotenv from "dotenv";
 
@@ -67,7 +68,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // 5. CORS configuration
 const corsOptions = {
   origin: [
-    "http://localhost",
+    "http://localhost:5173",
     "http://lineup24x7.com",
     "https://lineup24x7.com",
     "https://www.lineup24x7.com",
@@ -79,7 +80,7 @@ const corsOptions = {
   maxAge: 86400, // 24 hours
 };
 app.use(cors(corsOptions));
-
+app.use(cookieParser());
 // Routes
 import authRoutes from "./routes/auth.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
@@ -105,6 +106,7 @@ app.use(`${API_PREFIX}/statuses`, statusRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
 app.use(`${API_PREFIX}/system`, systemRoutes);
+
 
 // Health Check (excluded from rate limiting)
 app.get("/health", (_req, res) => {
