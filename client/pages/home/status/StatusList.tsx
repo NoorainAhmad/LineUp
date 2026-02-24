@@ -72,7 +72,7 @@ export const StatusList: React.FC<StatusListProps> = ({
     } else {
       return (
         status.content?.substring(0, 30) +
-          (status.content && status.content.length > 30 ? "..." : "") ||
+        (status.content && status.content.length > 30 ? "..." : "") ||
         "Status update"
       );
     }
@@ -149,15 +149,12 @@ export const StatusList: React.FC<StatusListProps> = ({
             }
           }
 
-          // Track viewer count (unique viewers across all statuses)
-          const uniqueViewers = new Set();
+          // Track viewer count (sum of views across all statuses)
+          let totalViews = 0;
           acc[userId].statuses.forEach((s) => {
-            (s.viewers || []).forEach((v: any) => {
-              const viewerId = v.userId || v.user?.id;
-              if (viewerId) uniqueViewers.add(viewerId);
-            });
+            totalViews += s._count?.viewers || 0;
           });
-          acc[userId].viewerCount = uniqueViewers.size;
+          acc[userId].viewerCount = totalViews;
 
           return acc;
         },
@@ -239,11 +236,10 @@ export const StatusList: React.FC<StatusListProps> = ({
             >
               <div className="relative">
                 <div
-                  className={`p-0.5 rounded-full ${
-                    hasMyStatus
-                      ? "ring-3 ring-primary ring-offset-1 ring-offset-surface"
-                      : "ring-2 ring-border ring-offset-1 ring-offset-surface"
-                  }`}
+                  className={`p-0.5 rounded-full ${hasMyStatus
+                    ? "ring-3 ring-primary ring-offset-1 ring-offset-surface"
+                    : "ring-2 ring-border ring-offset-1 ring-offset-surface"
+                    }`}
                 >
                   <Avatar
                     user={currentUser || undefined}

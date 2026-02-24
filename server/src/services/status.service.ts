@@ -258,6 +258,43 @@ export class StatusService {
     }
   }
 
+  // Get viewers of a status (only accessible by status owner)
+  static async getStatusViewers(statusId: string, ownerId: string) {
+    try {
+      const status = await prisma.status.findUnique({
+        where: { id: statusId },
+        select: { userId: true },
+      });
+      if (!status) throw new Error("Status not found");
+      if (status.userId !== ownerId)
+        throw new Error("Only the status owner can view viewers");
+
+      const viewers = await prisma.statusView.findMany({
+        where: { statusId },
+        orderBy: { viewedAt: "desc" },
+        select: {
+          id: true,
+          viewedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      return { total: viewers.length, viewers };
+    } catch (error) {
+      console.log(`[Status Viewers] Error: ${error}`);
+      throw new Error(
+        "Failed to fetch status viewers: " + (error as Error).message,
+      );
+    }
+  }
+
   // Delete a status by ID
   static async deleteStatus(id: string, userId: string) {
     try {

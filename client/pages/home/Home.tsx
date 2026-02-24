@@ -69,6 +69,7 @@ const normalizeStatusData = (apiStatus: any): Status => {
     userId: apiStatus.userId,
     user: apiStatus.user,
     viewers: apiStatus.viewers || [],
+    _count: apiStatus._count,
     expiresAt: apiStatus.expiresAt,
     createdAt: apiStatus.createdAt,
   };
@@ -1478,13 +1479,13 @@ export const Home: React.FC = () => {
               <ProfileView
                 userId={
                   currentUser?.role === UserRole.USER ||
-                  currentUser?.role === UserRole.BRANCH
+                    currentUser?.role === UserRole.BRANCH
                     ? selectedChat.members.find(
-                        (m) => m.user.id !== currentUser!.id,
-                      )?.user?.id || selectedChat.members[0].user?.id
+                      (m) => m.user.id !== currentUser!.id,
+                    )?.user?.id || selectedChat.members[0].user?.id
                     : selectedChat.members.find(
-                        (m) => m.user.role === UserRole.BRANCH,
-                      )?.user?.id || selectedChat.members[0].user?.id
+                      (m) => m.user.role === UserRole.BRANCH,
+                    )?.user?.id || selectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}
