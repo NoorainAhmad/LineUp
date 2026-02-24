@@ -352,6 +352,7 @@ export class AuthService {
       accessToken,
       refreshToken: `${session.id}.${rawRefreshToken}`,
     };
+<<<<<<< HEAD
   }
 
     await prisma.session.update({
@@ -472,5 +473,7 @@ export class AuthService {
       accessToken,
       refreshToken: `${session.id}.${rawRefreshToken}`,
     };
+=======
+>>>>>>> f2b5bfb159d1573241e92c53a8519b7903ae14f3
   }
 }

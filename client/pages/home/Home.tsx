@@ -307,30 +307,6 @@ export const Home: React.FC = () => {
     [closeModals],
   );
 
-  const handleLogoutDevice = useCallback(async () => {
-    if (isLoggingOut) return; // prevent double clicks
-    try {
-      setIsLoggingOut(true);  
-      await logout();
-    } catch (error) {
-      console.error("Logout device error:", error);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }, [logout, isLoggingOut]);
-
-  const handleLogoutDevice = useCallback(async () => {
-    if (isLoggingOut) return; // prevent double clicks
-    try {
-      setIsLoggingOut(true);  
-      await logout();
-    } catch (error) {
-      console.error("Logout device error:", error);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }, [logout, isLoggingOut]);
-
   const handleChatSelect = useCallback((chat: Chat) => {
     setSelectedChat(chat);
   }, []);
@@ -1301,6 +1277,13 @@ export const Home: React.FC = () => {
   if (chatsError || statusesError || usersError || responsesError) {
     return (
       <div className="flex flex-col md:flex-row h-screen supports-[height:100dvh]:h-dvh w-full bg-background text-text-main overflow-hidden relative transition-colors duration-300">
+        <Navigation
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onLogout={logout}
+        />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
             <h2 className="text-3xl font-light mb-2 text-text-main flex flex-col justify-center items-center gap-6"> 
