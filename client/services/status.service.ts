@@ -37,18 +37,12 @@ export class StatusService {
           ticketResponse.data.data;
 
         // Step 2: Upload directly to S3 using pre-signed URL
-        await api.put(uploadUrl, file, {
-          headers: { "Content-Type": file.type },
-          transformRequest: [
-            (rawData, headers) => {
-              if (headers) {
-                delete headers.common?.["Authorization"];
-                delete headers?.["Authorization"];
-                delete headers?.["Authorization-Bearer"];
-              }
-              return rawData;
-            },
-          ],
+        await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
         });
 
         // Step 3: Finalize upload in database
@@ -92,6 +86,12 @@ export class StatusService {
   // Delete a status
   static async deleteStatus(id: string) {
     const response = await api.delete(`/statuses/${id}`);
+    return response.data;
+  }
+
+  // Get viewers of a status (who viewed and when)
+  static async getStatusViewers(statusId: string) {
+    const response = await api.get(`/statuses/${statusId}/viewers`);
     return response.data;
   }
 

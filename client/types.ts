@@ -38,7 +38,7 @@ export enum MessageType {
   VIDEO = "VIDEO",
   FILE = "FILE",
 }
- 
+
 export interface DashboardStats {
   user: {
     id: string;
@@ -53,7 +53,7 @@ export interface DashboardStats {
     totalMessages: number;
     unreadMessages: number;
     pinnedChatsCount: number;
-  };  messageVolume: {
+  }; messageVolume: {
     labels: string[];
     data: number[];
     total: number;
@@ -206,6 +206,9 @@ export interface Status {
   user: User;
 
   viewers: StatusView[];
+  _count?: {
+    viewers: number;
+  };
 
   expiresAt: string;
   createdAt: string;

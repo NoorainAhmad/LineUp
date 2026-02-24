@@ -85,6 +85,18 @@ export class StatusController {
     }
   }
 
+  // Get viewers of a status
+  static async getViewers(req: AuthRequest, res: Response) {
+    try {
+      const { id: statusId } = req.params as { id: string };
+      const userId = req.userId as string;
+      const result = await StatusService.getStatusViewers(statusId, userId);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
   // Delete a status by ID
   static async deleteStatus(req: AuthRequest, res: Response) {
     try {
