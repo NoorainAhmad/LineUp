@@ -18,58 +18,56 @@ export class ChatService {
   static async sendMessage(data: any, file?: File) {
     let mediaPayload = {};
 
-    if (file) {
-      // Step 1: Get pre-signed URL from your backend
-      const ticketResponse = await api.post("/media/upload-url", {
-        fileName: file.name.replace(/[^a-zA-Z0-9.]/g, "_"),
-        fileType: file.type,
-      });
+    try {
+      if (file) {
+        // Step 1: Get pre-signed URL from your backend
+        const ticketResponse = await api.post("/media/upload-url", {
+          fileName: file.name.replace(/[^a-zA-Z0-9.]/g, "_"),
+          fileType: file.type,
+        });
 
-      const { uploadUrl, mediaId, fileKey } = ticketResponse.data.data;
+        const { uploadUrl, mediaId, fileKey } = ticketResponse.data.data;
 
-      // Step 2: Upload directly to S3
-      await api.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type },
-        withCredentials:false,
-        transformRequest: [
-          (rawData, headers) => {
-            if (headers) {
-              delete headers.common?.["Authorization"];
-              delete headers?.["Authorization"];
-            }
-            return rawData;
+        // Step 2: Upload directly to S3
+        await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
           },
-        ],
+        });
+
+        // Step 3: Finalize and get permanent URL from backend
+        const finalizeResponse = await api.post("/media/finalize", {
+          fileKey,
+          fileSize: file.size,
+        });
+
+        // Backend returns the permanent S3 URL
+        const permanentFileUrl = finalizeResponse.data.data.publicUrl;
+
+        mediaPayload = {
+          fileUrl: permanentFileUrl,
+          fileName: file.name,
+          fileSize: file.size.toString(),
+          mimeType: file.type,
+          mediaId,
+        };
+      }
+
+      const validatedData = sendMessageSchema.parse({
+        ...data,
+        ...mediaPayload,
       });
 
-      // Step 3: Finalize and get permanent URL from backend
-      const finalizeResponse = await api.post("/media/finalize", {
-        fileKey,
-        fileSize: file.size,
-      });
-
-      // Backend returns the permanent S3 URL
-      const permanentFileUrl = finalizeResponse.data.data.publicUrl;
-
-      mediaPayload = {
-        fileUrl: permanentFileUrl,
-        fileName: file.name,
-        fileSize: file.size.toString(),
-        mimeType: file.type,
-        mediaId,
-      };
+      const response = await api.post("/chats/messages", validatedData);
+      return response.data;
+    } catch (error) {
+      console.error(error);
     }
-
-    const validatedData = sendMessageSchema.parse({
-      ...data,
-      ...mediaPayload,
-    });
-
-    const response = await api.post("/chats/messages", validatedData);
-    return response.data;
   }
 
-  // Edit a message 
+  // Edit a message
   static async editMessage(messageId: string, data: any) {
     const response = await api.patch(`/chats/messages/${messageId}`, data);
     return response.data;
@@ -122,7 +120,10 @@ export class ChatService {
   }
 
   // Forward a message to one or more chats
-  static async forwardMessage(originalMessageId: string, targetChatIds: string[]) {
+  static async forwardMessage(
+    originalMessageId: string,
+    targetChatIds: string[],
+  ) {
     const response = await api.post("/chats/messages/forward", {
       originalMessageId,
       targetChatIds,

@@ -231,6 +231,7 @@ export class UserService {
         ],
         select: {
           id: true,
+          guid: true,
           name: true,
           email: true,
           phone: true,

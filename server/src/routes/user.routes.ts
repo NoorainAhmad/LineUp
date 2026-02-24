@@ -27,7 +27,7 @@ router.get("/branch", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN,
 router.get("/", checkRole([UserRole.DEVELOPER]), UserController.getAllUsers);
 
 // Individual: Specific User
-router.get("/:id", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserById);
+router.get("/:id", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserById);
 
 // List: User's subordinates
 router.get("/:id/subordinates", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), UserController.getUserSubordinates);
