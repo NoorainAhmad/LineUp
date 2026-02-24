@@ -1,18 +1,23 @@
 import React, { useMemo } from 'react';
-import { Link as LinkIcon, Phone, Mail, Code, MessageCircle } from 'lucide-react';
+import { Link as LinkIcon, Phone, Mail, Code, MessageCircle, Share2 } from 'lucide-react';
 import { FormattedText } from './FormattedText';
 
 
 // Uses [\s\S]+? to match preview that may contain newlines
 const STATUS_REPLY_REGEX = /^\[Status Reply(?:\|([a-zA-Z0-9_-]+))?: ([\s\S]+?)\]\n([\s\S]*)$/;
+const STATUS_SHARE_REGEX = /^\[Status Share\|([a-zA-Z0-9_-]+): ([\s\S]+?)\]$/;
 
 // Extract the actual reply
 export const extractReplyMessage = (content: string): string => {
-  const match = content.match(STATUS_REPLY_REGEX);
-  if (match) {
-    return match[3]; // Return the actual reply message
+  const replyMatch = content.match(STATUS_REPLY_REGEX);
+  if (replyMatch) {
+    return replyMatch[3]; // Return the actual reply message
   }
-  return content; // Return original if not a status reply
+  const shareMatch = content.match(STATUS_SHARE_REGEX);
+  if (shareMatch) {
+    return `📤 ${shareMatch[2]}`; // Return clean preview with share icon for chat list
+  }
+  return content; // Return original if not a status reply/share
 };
 
 interface TextMessageProps {
@@ -292,6 +297,44 @@ const TextMessage: React.FC<TextMessageProps> = ({ msg, searchQuery = '', onStat
         <p className="text-sm sm:text-[15px] leading-relaxed wrap-break-word whitespace-pre-wrap">
           <HighlightedText text={replyMessage} />
         </p>
+      </div>
+    );
+  }
+
+  // Check if this is a status share message
+  const statusShareMatch = useMemo(() => {
+    return msg.content.match(STATUS_SHARE_REGEX);
+  }, [msg.content]);
+
+  if (statusShareMatch) {
+    const statusId = statusShareMatch[1];
+    const statusPreview = statusShareMatch[2];
+
+    const isClickable = statusId && onStatusClick;
+
+    return (
+      <div className="px-3 py-2">
+        {/* Status share quote bubble */}
+        <div
+          className={`bg-emerald-500/10 dark:bg-emerald-500/20 border-l-4 border-emerald-500 rounded-lg px-3 py-2 ${isClickable ? "cursor-pointer hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30 transition-colors" : ""
+            }`}
+          onClick={isClickable ? () => onStatusClick(statusId) : undefined}
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <Share2 size={12} className="text-emerald-500" />
+            <span className="text-[11px] font-semibold text-emerald-500 uppercase tracking-wide">
+              Shared Status
+            </span>
+            {isClickable && (
+              <span className="text-[10px] text-emerald-500/60 ml-auto">
+                Tap to view
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-secondary leading-snug line-clamp-2">
+            {statusPreview}
+          </p>
+        </div>
       </div>
     );
   }
