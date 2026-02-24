@@ -124,7 +124,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [status, onNext, isVideo, isImage, isReplying, showViewers]);
+  }, [status, onNext, isVideo, isImage]);
 
   // Mark as viewed when status changes
   useEffect(() => {
@@ -211,6 +211,25 @@ export const StatusView: React.FC<StatusViewProps> = ({
     // Only resume if the reply text is empty (user abandoned reply)
     if (!replyText.trim()) {
       setIsReplying(false);
+      // Resume timer
+      if (!isVideo && timerConfigRef.current) {
+        const { intervalTime, increment } = timerConfigRef.current;
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = setInterval(() => {
+          setProgress((prev) => {
+            if (prev >= 100) {
+              if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+              onNext();
+              return 100;
+            }
+            return prev + increment;
+          });
+        }, intervalTime);
+      }
+      if (isVideo && videoRef.current) {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
     }
   };
 
