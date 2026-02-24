@@ -95,17 +95,12 @@ export class UserService {
 
       const { uploadUrl, fileKey } = ticketResponse.data.data;
 
-      await api.put(uploadUrl, file, {
-        headers: { "Content-Type": file.type },
-        transformRequest: [
-          (rawData, headers) => {
-            if (headers) {
-              delete headers.common?.["Authorization"];
-              delete headers?.["Authorization"];
-            }
-            return rawData;
-          },
-        ],
+      await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
       });
 
       const finalizeResponse = await api.post("/media/finalize", {
