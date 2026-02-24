@@ -31,6 +31,9 @@ router.post("/:id/reply", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.AD
 // Delete: Remove a status (Handled by author)
 router.delete("/:id", checkRole([UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), StatusController.deleteStatus);
 
+// Action: Share a status to one or more chats
+router.post("/:id/share", checkRole([UserRole.USER, UserRole.BRANCH, UserRole.ADMIN, UserRole.MASTER, UserRole.DEVELOPER]), StatusController.shareStatus);
+
 // Health check: High-end SaaS standard
 router.get("/health", (req, res) => {
   res.status(200).json({

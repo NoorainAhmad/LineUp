@@ -16,6 +16,8 @@ import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatusViewers } from "./StatusViewers";
 import { StatusService } from "@/services/status.service";
+import { ShareStatusModal } from "../../../components/modals/ShareStatusModal";
+import { Chat } from "../../../types";
 
 interface StatusViewProps {
   status: any; // Matching your backend JSON object
@@ -26,6 +28,8 @@ interface StatusViewProps {
   onDelete: (statusId: string) => void;
   onReply?: (statusId: string, message: string) => void;
   onReact?: (statusId: string) => void;
+  onShare?: (statusId: string, targetChatIds: string[]) => Promise<void>;
+  chats?: Chat[];
 }
 
 // Get public S3 URL
@@ -44,6 +48,8 @@ export const StatusView: React.FC<StatusViewProps> = ({
   onDelete,
   onReply,
   onReact,
+  onShare,
+  chats = [],
 }) => {
   const { user: CurrentUser } = useAuth();
   const [progress, setProgress] = useState(0);
@@ -56,6 +62,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
   const [showViewers, setShowViewers] = useState(false);
   const [viewersData, setViewersData] = useState<{ total: number; viewers: any[] }>({ total: 0, viewers: [] });
   const [viewersLoading, setViewersLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -103,7 +110,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
       const increment = (intervalTime / duration) * 100;
       timerConfigRef.current = { intervalTime, increment };
 
-      if (!isReplying && !showViewers) {
+      if (!isReplying && !showViewers && !showShareModal) {
         progressIntervalRef.current = setInterval(() => {
           setProgress((prev) => {
             if (prev >= 100) {
@@ -124,7 +131,7 @@ export const StatusView: React.FC<StatusViewProps> = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [status, onNext, isVideo, isImage]);
+  }, [status, onNext, isVideo, isImage, isReplying, showShareModal, showViewers]);
 
   // Mark as viewed when status changes
   useEffect(() => {
@@ -190,6 +197,20 @@ export const StatusView: React.FC<StatusViewProps> = ({
       onReply(status.id, replyText);
       setReplyText("");
       setIsReplying(false);
+    }
+  };
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
+    // Pause the timer
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    // Also pause video if playing
+    if (isVideo && videoRef.current && !videoRef.current.paused) {
+      videoRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -498,7 +519,10 @@ export const StatusView: React.FC<StatusViewProps> = ({
                 {status._count?.viewers || status.viewers?.length || 0} views
               </span>
             </button>
-            <div className="flex flex-col items-center gap-1 group">
+            <div
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+              onClick={handleShareClick}
+            >
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-white/20 transition-all">
                 <Share2 size={24} className="text-white" />
               </div>
@@ -538,6 +562,20 @@ export const StatusView: React.FC<StatusViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Share Status Modal */}
+      {showShareModal && (
+        <ShareStatusModal
+          status={status}
+          chats={chats}
+          onClose={() => setShowShareModal(false)}
+          onShare={async (statusId, targetChatIds) => {
+            if (onShare) {
+              await onShare(statusId, targetChatIds);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

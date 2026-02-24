@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../config/db.js";
-import { statusCreateSchema, statusReplySchema } from "../validators/status.validator.js";
+import { statusCreateSchema, statusReplySchema, statusShareSchema } from "../validators/status.validator.js";
 import { UserRole } from "@/generated/prisma/index.js";
 
 export class StatusService {
@@ -404,6 +404,101 @@ export class StatusService {
     } catch (error) {
       console.log(`[Status Reply] Error: ${error}`);
       throw new Error("Status reply failed: " + (error as Error).message);
+    }
+  }
+
+  // Share a status to one or more chats
+  static async shareStatus(
+    statusId: string,
+    sharerId: string,
+    data: { targetChatIds: string[] },
+  ) {
+    try {
+      const validated = statusShareSchema.parse(data);
+      const { targetChatIds } = validated;
+
+      return await prisma.$transaction(async (tx) => {
+        // 1. Get the status with media info
+        const status = await tx.status.findUnique({
+          where: { id: statusId },
+          include: {
+            media: true,
+            user: { select: { id: true, name: true, avatarUrl: true } },
+          },
+        });
+
+        if (!status) throw new Error("Status not found");
+
+        // 2. Build preview text
+        const statusPreview =
+          status.type === "TEXT"
+            ? (status.content?.substring(0, 100) || "Text status").replace(/\n/g, " ")
+            : status.type === "IMAGE"
+              ? "\ud83d\udcf7 Photo status"
+              : "\ud83c\udfa5 Video status";
+
+        const messageContent = `[Status Share|${statusId}: ${statusPreview}]`;
+
+        // 3. Determine media fields for IMAGE/VIDEO statuses
+        let mediaFields: any = {};
+        if (status.media && (status.type === "IMAGE" || status.type === "VIDEO")) {
+          const bucket = process.env.S3_BUCKET || "lineup-v0-s3-bucket";
+          const region = process.env.AWS_REGION || "us-east-1";
+          const fileUrl = `https://${bucket}.s3.${region}.amazonaws.com/${status.media.fileKey}`;
+
+          mediaFields = {
+            fileUrl,
+            fileName: status.media.originalName,
+            fileSize: status.media.fileSize?.toString(),
+            mimeType: status.media.mimeType,
+          };
+        }
+
+        // 4. Send to each target chat
+        const sharedMessages = [];
+        for (const chatId of targetChatIds) {
+          // Verify the sharer is a member of this chat
+          const membership = await tx.chatMember.findUnique({
+            where: { userId_chatId: { userId: sharerId, chatId } },
+          });
+          if (!membership) {
+            console.log(`[Status Share] User ${sharerId} is not a member of chat ${chatId}, skipping.`);
+            continue;
+          }
+
+          const messageType = status.type === "TEXT" ? "TEXT" : status.type === "IMAGE" ? "IMAGE" : "VIDEO";
+
+          const message = await tx.message.create({
+            data: {
+              type: messageType,
+              content: messageContent,
+              senderId: sharerId,
+              chatId,
+              ...mediaFields,
+            },
+            include: {
+              sender: { select: { id: true, name: true, avatarUrl: true } },
+            },
+          });
+
+          await tx.chat.update({
+            where: { id: chatId },
+            data: { lastMessageId: message.id, updatedAt: new Date() },
+          });
+
+          await tx.chatMember.updateMany({
+            where: { chatId, userId: { not: sharerId } },
+            data: { unreadCount: { increment: 1 } },
+          });
+
+          sharedMessages.push(message);
+        }
+
+        return { sharedMessages, statusOwner: status.user };
+      });
+    } catch (error) {
+      console.log(`[Status Share] Error: ${error}`);
+      throw new Error("Status share failed: " + (error as Error).message);
     }
   }
 }

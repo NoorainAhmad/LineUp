@@ -18,3 +18,10 @@ export const statusReplySchema = z.object({
 });
 
 export type StatusReplyInput = z.infer<typeof statusReplySchema>;
+
+// STATUS SHARE VALIDATOR
+export const statusShareSchema = z.object({
+  targetChatIds: z.array(z.string()).min(1, "At least one chat must be selected"),
+});
+
+export type StatusShareInput = z.infer<typeof statusShareSchema>;

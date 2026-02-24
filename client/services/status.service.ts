@@ -100,4 +100,12 @@ export class StatusService {
     const response = await api.post(`/statuses/${statusId}/reply`, { message });
     return response.data;
   }
+
+  // Share a status to one or more chats
+  static async shareStatus(statusId: string, targetChatIds: string[]) {
+    const response = await api.post(`/statuses/${statusId}/share`, {
+      targetChatIds,
+    });
+    return response.data;
+  }
 }

@@ -137,7 +137,7 @@ export const Home: React.FC = () => {
     useState("system-dashboard");
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
- 
+
   const {
     data: chatsData = [],
     isLoading: isLoadingChats,
@@ -1034,6 +1034,21 @@ export const Home: React.FC = () => {
     [queryClient],
   );
 
+  // Share a status to selected chats
+  const handleStatusShare = useCallback(
+    async (statusId: string, targetChatIds: string[]) => {
+      try {
+        await StatusService.shareStatus(statusId, targetChatIds);
+        // Refresh chats so the shared message appears
+        await queryClient.invalidateQueries({ queryKey: ["chats"] });
+      } catch (error: any) {
+        console.error("Status share failed:", error);
+        alert(error.message || "Failed to share status. Please try again.");
+      }
+    },
+    [queryClient],
+  );
+
   // Derived Active View
   const renderMainContent = () => {
     if (isCreatingStatus || isCreatingGroup || isAddingUser || isCreatingUser) {
@@ -1071,6 +1086,8 @@ export const Home: React.FC = () => {
             onPrev={handlePrevStatus}
             onDelete={handleDeleteStatus}
             onReply={handleStatusReply}
+            onShare={handleStatusShare}
+            chats={chatsData}
           />
         );
       }
@@ -1193,7 +1210,7 @@ export const Home: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center">
-                   <p className="max-w-md mx-auto text-secondary">
+                  <p className="max-w-md mx-auto text-secondary">
                     Select a status to view details.
                   </p>
                 </div>
@@ -1299,13 +1316,13 @@ export const Home: React.FC = () => {
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">
-            <h2 className="text-3xl font-light mb-2 text-text-main flex flex-col justify-center items-center gap-6"> 
+            <h2 className="text-3xl font-light mb-2 text-text-main flex flex-col justify-center items-center gap-6">
               <LucideMessageCircleWarning size={64} className="text-primary" />
               <span>Something went wrong</span>
             </h2>
-            <p className="max-w-md mx-auto text-secondary"> 
+            <p className="max-w-md mx-auto text-secondary">
               Please try refreshing the page. <br />Session may have expired.
-            </p>  
+            </p>
             <div className="mt-6">
               <button
                 className="bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-hover transition-colors duration-300"

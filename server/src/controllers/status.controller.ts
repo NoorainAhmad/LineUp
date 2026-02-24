@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { StatusService } from "../services/status.service.js";
-import { statusCreateSchema, statusReplySchema } from "../validators/status.validator.js";
+import { statusCreateSchema, statusReplySchema, statusShareSchema } from "../validators/status.validator.js";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class StatusController {
@@ -106,6 +106,23 @@ export class StatusController {
       return res.status(200).json({ success: true });
     } catch (error: any) {
       return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Share a status to one or more chats
+  static async shareStatus(req: AuthRequest, res: Response) {
+    try {
+      const { id: statusId } = req.params as { id: string };
+      const sharerId = req.userId as string;
+      const validatedData = statusShareSchema.parse(req.body);
+      const result = await StatusService.shareStatus(
+        statusId,
+        sharerId,
+        validatedData,
+      );
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 }
