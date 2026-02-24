@@ -54,7 +54,10 @@ import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
-import { formatLastMessageTime, formatMessageTime } from "@/utils/time_formatter.utils";
+import {
+  formatLastMessageTime,
+  formatMessageTime,
+} from "@/utils/time_formatter.utils";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -525,6 +528,9 @@ const formatBytes = (bytes: number, decimals = 1) => {
 
 // Helper to format time
 const formatTime = (seconds: number) => {
+  if (!seconds || !isFinite(seconds) || isNaN(seconds)) {
+    return "0:00";
+  }
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -585,9 +591,12 @@ const [mediaCaption, setMediaCaption] = useState("");
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
   const cannedListRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const isScrolledToBottomRef = useRef(true);
   const prevMessagesLengthRef = useRef(0);
+  const recordingDurationRef = useRef(0);
 
   // Polling query for messages
   const {
@@ -915,18 +924,26 @@ const [mediaCaption, setMediaCaption] = useState("");
 
   // Recording timer
   useEffect(() => {
-    if (isRecording) {
+    if (isRecording && !isPaused) {
       timerRef.current = window.setInterval(() => {
-        setRecordingDuration((prev) => prev + 1);
+        setRecordingDuration((prev) => {
+          recordingDurationRef.current = prev + 1;
+          return prev + 1;
+        });
       }, 1000);
     } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setRecordingDuration(0);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [isRecording]);
+  }, [isRecording, isPaused]);
 
   // Click outside handlers
   useEffect(() => {
@@ -1210,6 +1227,9 @@ const [mediaCaption, setMediaCaption] = useState("");
 
   const startRecording = async () => {
     try {
+      setRecordingDuration(0);
+      setIsPaused(false);
+      recordingDurationRef.current = 0;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm;codecs=opus",
@@ -1222,13 +1242,16 @@ const [mediaCaption, setMediaCaption] = useState("");
           audioChunksRef.current.push(event.data);
         }
       };
-
-      mediaRecorder.onstop = async () => {
+mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/webm",
         });
-        const durationStr = formatTime(recordingDuration);
-
+        let finalDuration = recordingDurationRef.current;
+        // Ensure duration is a valid number
+        if (!isFinite(finalDuration) || finalDuration <= 0) {
+          finalDuration = 0;
+        }
+        const durationStr = formatTime(finalDuration);
         try {
           const audioFile = new File(
             [audioBlob],
@@ -1243,19 +1266,21 @@ const [mediaCaption, setMediaCaption] = useState("");
               file: audioFile,
               fileName: `Voice note - ${durationStr}.webm`,
               fileSize: formatBytes(audioBlob.size),
+              duration: recordingDurationRef.current,
               mimeType: "audio/webm",
             },
             replyToId: replyingTo?.id,
           });
+          setReplyingTo(null);
         } catch (error) {
           console.error("Error sending audio message:", error);
           alert("Failed to send voice message. Please try again.");
         }
 
+        // Stop mic stream
         stream.getTracks().forEach((track) => track.stop());
       };
-
-      mediaRecorder.start();
+      mediaRecorder.start(200);
       setIsRecording(true);
     } catch (err) {
       console.error("Error accessing microphone:", err);
@@ -1263,7 +1288,60 @@ const [mediaCaption, setMediaCaption] = useState("");
     }
   };
 
+  const playPreviewAudio = async () => {
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder) {
+      console.log("No recorder");
+      return;
+    }
+
+    if (audioChunksRef.current.length === 0) {
+      console.log("No audio chunks yet");
+      return;
+    }
+
+    try {
+      // Force latest chunk flush
+      if (recorder.state === "paused" || recorder.state === "recording") {
+        recorder.requestData();
+      }
+
+      // Wait for chunk to be pushed into array
+      await new Promise((res) => setTimeout(res, 100));
+
+      if (audioChunksRef.current.length === 0) {
+        console.log("Still no chunks after requestData");
+        return;
+      }
+
+      const previewBlob = new Blob(audioChunksRef.current, {
+        type: "audio/webm;codecs=opus",
+      });
+
+      const previewUrl = URL.createObjectURL(previewBlob);
+
+      // Stop previous preview if playing
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current = null;
+      }
+
+      const audio = new Audio(previewUrl);
+      previewAudioRef.current = audio;
+
+      audio.onended = () => {
+        URL.revokeObjectURL(previewUrl);
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error("Preview playback failed:", err);
+    }
+  };
   const stopRecording = (cancel = false) => {
+    if (!mediaRecorderRef.current || !isRecording) return;
+    console.log("stopRecording called, current state:", mediaRecorderRef.current.state); // ← add
     if (mediaRecorderRef.current && isRecording) {
       if (cancel) {
         mediaRecorderRef.current.onstop = null;
@@ -1275,6 +1353,23 @@ const [mediaCaption, setMediaCaption] = useState("");
         mediaRecorderRef.current.stop();
       }
       setIsRecording(false);
+      setIsPaused(false);
+    }
+  };
+  
+  const togglePauseRecording = () => {
+    if (!mediaRecorderRef.current) return;
+
+    if (mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+    } else if (mediaRecorderRef.current.state === "paused") {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current.currentTime = 0;
+      }
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
     }
   };
 
@@ -2163,33 +2258,63 @@ const [mediaCaption, setMediaCaption] = useState("");
                 {" "}
                 {/* Changed from min-h-12.5 flex items-center */}
                 {isRecording ? (
-                  <div className="absolute inset-0 flex items-center px-0 z-20 animate-pulse text-red-500 gap-2">
-                    <div className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full bg-red-500 animate-ping"></div>
-                    <span className="font-mono font-bold text-sm md:text-lg">
-                      {formatTime(recordingDuration)}
-                    </span>
-                    <span className="text-xs md:text-sm font-medium">rec...</span>
-                    <div className="flex-1"></div>
-                    <button
-                      onClick={() => stopRecording(true)}
-                      className="p-2 hover:bg-red-500/50 bg-red-500/80 text-text-main rounded-full flex items-center gap-1 text-xs uppercase font-bold tracking-wider transition-colors"
-                    >
-                      <X size={16} />
-                    </button>
+                  <div className="absolute inset-0 z-20 flex items-center justify-between px-3">
+
+  {/* LEFT: Cancel */}
+  <button
+    onClick={() => stopRecording(true)}
+    className="flex-shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white"
+  >
+    <X size={16} />
+  </button>
+
+  {/* CENTER: Timer (Compact for Mobile) */}
+  <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
+    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+    {formatTime(recordingDuration)}
+    <span className="hidden sm:inline text-secondary">
+      {isPaused ? "Paused" : "Recording"}
+    </span>
+  </div>
+
+  {/* RIGHT: Controls */}
+  <div className="flex items-center gap-1 flex-shrink-0">
+    
+    {/* Preview ONLY when paused */}
+    {isPaused && (
+      <button
+        onClick={playPreviewAudio}
+        className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
+        title="Preview"
+      >
+        ▶
+      </button>
+    )}
+
+    {/* Pause / Resume */}
+    <button
+      onClick={togglePauseRecording}
+      className="p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10"
+      title={isPaused ? "Resume" : "Pause"}
+    >
+      {isPaused ? <Mic size={18} /> : "⏸"}
+    </button>
+
+  </div>
+</div>
+              ) : (
+                <div className="w-full relative">
+                  {/* Hidden measuring div - exact same styling as textarea */}
+                  <div
+                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
+                    style={{
+                      minHeight: "44px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    {inputValue || "placeholder"}
                   </div>
-                ) : (
-                  <div className="w-full relative">
-                    {/* Hidden measuring div - exact same styling as textarea */}
-                    <div
-                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
-                      style={{
-                        minHeight: "44px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                    >
-                      {inputValue || "placeholder"}
-                    </div>
 
                     {/* Actual textarea */}
                     <textarea
@@ -2237,44 +2362,42 @@ const [mediaCaption, setMediaCaption] = useState("");
                 )}
               </div>
 
-              {/* Send Button */}
-              <div className="pb-1 pr-1">
-                {inputValue.trim() || isRecording? (
-                  <button
-                    onClick={
-                      isRecording
-                        ? () => stopRecording(false)
-                        : editingMessage
-                          ? handleEndEdit
-                          : handleTextSend
-                    }
-                    disabled={sendMessageMutation.isPending}
-                    className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {sendMessageMutation.isPending ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : editingMessage ? (
-                      <Check size={24} />
-                    ) : isRecording ? (
-                      <Send size={24} />
-                    ) : (
-                      <Send size={24} />
-                    )}
-                  </button>
-                ) : (
-                  !editingMessage && (
-                    <button
-                      onClick={startRecording}
-                      disabled={sendMessageMutation.isPending}
-                      className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Mic size={24} />
-                    </button>
-                  )
-                )}
-              </div>
+            {/* Send Button */}
+            <div className="pb-1 pr-1">
+              {inputValue.trim() || isRecording ? (
+                <button
+                  onClick={
+                    isRecording
+                      ? () => stopRecording(false)
+                      : editingMessage
+                        ? handleEndEdit
+                        : handleTextSend
+                  }
+                  disabled={sendMessageMutation.isPending}
+                  className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {sendMessageMutation.isPending ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : editingMessage ? (
+                    <Check size={24} />
+                  ) : isRecording ? (
+                    <Send size={24} />
+                  ) : (
+                    <Send size={24} />
+                  )}
+                </button>
+              ) : !editingMessage ? (
+                <button
+                  onClick={startRecording}
+                  disabled={sendMessageMutation.isPending}
+                  className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Mic size={24} />
+                </button>
+              ) : null}
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export const sendMessageSchema = z.object({
   fileUrl: z.string().optional(),
   fileName: z.string().optional(),
   fileSize: z.string().optional(),
+  duration: z.number().int().optional(),
   mimeType: z.string().optional(),
   replyToId: z.string().optional().nullable(),
 });
