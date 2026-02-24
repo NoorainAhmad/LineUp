@@ -28,3 +28,10 @@ dist-ssr
 *.sln
 *.sw?
 server/generated
+server/prisma/migrations/20260224010702_final_test/migration.sql
+server/src/generated/prisma/edge.js
+server/src/generated/prisma/index-browser.js
+server/src/generated/prisma/index.d.ts
+server/src/generated/prisma/index.js
+server/src/generated/prisma/package.json
+server/src/generated/prisma/schema.prisma
