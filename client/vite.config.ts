@@ -7,11 +7,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
   return {
     plugins: [react(), tailwindcss()],
-    define: { 
+    define: {
       "process.env.S3_BUCKET_NAME": JSON.stringify(env.VITE_S3_BUCKET),
       "process.env.AWS_REGION": JSON.stringify(env.VITE_AWS_REGION),
     },
-    server: { 
+    server: {
       proxy: {
         "/api/v1": {
           target: `http://localhost:${env.API_PORT}`,
