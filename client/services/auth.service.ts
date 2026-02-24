@@ -33,27 +33,6 @@ export class AuthService {
     return response.data;
   }
  
-<<<<<<< HEAD
-  static async refresh() {
-    // Cookie automatically sent via withCredentials
-    const response = await api.post("/auth/refresh");
-
-    // Expected shape: { accessToken }
-    return response.data;
-  }
- 
-  static async logout() {
-    const response = await api.post("/auth/logout");
-    return response.data;
-  }
- 
-  static async logoutAllDevices() {
-    const response = await api.post("/auth/logout-all");
-    return response.data;
-  }
- 
-=======
->>>>>>> f2b5bfb159d1573241e92c53a8519b7903ae14f3
   static async register(data: RegisterInput) {
     const response = await api.post("/auth/register", data);
     return response.data;

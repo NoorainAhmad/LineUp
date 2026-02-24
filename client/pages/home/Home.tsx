@@ -307,6 +307,18 @@ export const Home: React.FC = () => {
     [closeModals],
   );
 
+  const handleLogoutDevice = useCallback(async () => {
+    if (isLoggingOut) return; // prevent double clicks
+    try {
+      setIsLoggingOut(true);  
+      await logout();
+    } catch (error) {
+      console.error("Logout device error:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [logout, isLoggingOut]);
+
   const handleChatSelect = useCallback((chat: Chat) => {
     setSelectedChat(chat);
   }, []);
@@ -1282,7 +1294,7 @@ export const Home: React.FC = () => {
           onTabChange={handleTabChange}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onLogout={logout}
+          onLogout={() => -(true)}
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-8">

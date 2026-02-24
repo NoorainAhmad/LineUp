@@ -1,10 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
-<<<<<<< HEAD
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-=======
->>>>>>> f2b5bfb159d1573241e92c53a8519b7903ae14f3
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import dotenv from "dotenv";
@@ -67,12 +64,11 @@ const authLimiter = rateLimit({
 // 4. Body parsing with size limits (prevent payload too large attacks)
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
-<<<<<<< HEAD
 
 // 5. CORS configuration
 const corsOptions = {
   origin: [
-    "http://localhost",
+    "http://localhost:5173",
     "http://lineup24x7.com",
     "https://lineup24x7.com",
     "https://www.lineup24x7.com",
@@ -84,12 +80,7 @@ const corsOptions = {
   maxAge: 86400, // 24 hours
 };
 app.use(cors(corsOptions));
-app.use(cookieParser(corsOptions));
-=======
-app.use(cors({origin: process.env.CORS_ORIGIN || "http://localhost:5173", credentials: true}));
 app.use(cookieParser());
->>>>>>> f2b5bfb159d1573241e92c53a8519b7903ae14f3
-
 // Routes
 import authRoutes from "./routes/auth.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
@@ -117,11 +108,7 @@ app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
 app.use(`${API_PREFIX}/system`, systemRoutes);
 
 
-<<<<<<< HEAD
 // Health Check (excluded from rate limiting)
-=======
-// Health Check
->>>>>>> f2b5bfb159d1573241e92c53a8519b7903ae14f3
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",

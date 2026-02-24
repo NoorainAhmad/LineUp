@@ -6,14 +6,6 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 }); 
 
-//LOGOUT SCHEMA
-export const logoutSchema = z.object({
-  refreshToken: z
-    .string()
-    .min(7, "Invalid refresh token")
-    .nonempty("Refresh token is required"),
-});
-
 //REFRESH TOKEN VALIDATOR
 export const refreshTokenSchema = z.object({
   refreshToken: z
