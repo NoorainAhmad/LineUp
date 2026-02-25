@@ -4,6 +4,8 @@
 server.txt
 server\src\generated
 
+deploy.sh
+
 # Logs
 logs
 *.log
