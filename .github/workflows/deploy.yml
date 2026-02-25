@@ -20,8 +20,5 @@ jobs:
           command_timeout: 30m
           script: |
             cd /home/ubuntu/lineup_v1  
-            echo "💎 Preparing high-end SaaS environment..." 
-            # Ensure script is executable and run it
-            chmod +x deploy.sh
             ./deploy.sh  
             echo "✅ Deployment complete for lineup_v1!"
