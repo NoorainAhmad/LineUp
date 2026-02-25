@@ -27,6 +27,4 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-
-server/src/generated
+*.sw? 
