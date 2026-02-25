@@ -8000,8 +8000,18 @@ export namespace Prisma {
 
   export type AggregateMessage = {
     _count: MessageCountAggregateOutputType | null
+    _avg: MessageAvgAggregateOutputType | null
+    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
+  }
+
+  export type MessageAvgAggregateOutputType = {
+    duration: number | null
+  }
+
+  export type MessageSumAggregateOutputType = {
+    duration: number | null
   }
 
   export type MessageMinAggregateOutputType = {
@@ -8013,6 +8023,7 @@ export namespace Prisma {
     fileUrl: string | null
     fileName: string | null
     fileSize: string | null
+    duration: number | null
     mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
@@ -8032,6 +8043,7 @@ export namespace Prisma {
     fileUrl: string | null
     fileName: string | null
     fileSize: string | null
+    duration: number | null
     mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
@@ -8051,6 +8063,7 @@ export namespace Prisma {
     fileUrl: number
     fileName: number
     fileSize: number
+    duration: number
     mimeType: number
     replyToId: number
     forwardedFromId: number
@@ -8064,6 +8077,14 @@ export namespace Prisma {
   }
 
 
+  export type MessageAvgAggregateInputType = {
+    duration?: true
+  }
+
+  export type MessageSumAggregateInputType = {
+    duration?: true
+  }
+
   export type MessageMinAggregateInputType = {
     id?: true
     type?: true
@@ -8073,6 +8094,7 @@ export namespace Prisma {
     fileUrl?: true
     fileName?: true
     fileSize?: true
+    duration?: true
     mimeType?: true
     replyToId?: true
     forwardedFromId?: true
@@ -8092,6 +8114,7 @@ export namespace Prisma {
     fileUrl?: true
     fileName?: true
     fileSize?: true
+    duration?: true
     mimeType?: true
     replyToId?: true
     forwardedFromId?: true
@@ -8111,6 +8134,7 @@ export namespace Prisma {
     fileUrl?: true
     fileName?: true
     fileSize?: true
+    duration?: true
     mimeType?: true
     replyToId?: true
     forwardedFromId?: true
@@ -8161,6 +8185,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: MessageAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MessageSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: MessageMinAggregateInputType
@@ -8191,6 +8227,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: MessageCountAggregateInputType | true
+    _avg?: MessageAvgAggregateInputType
+    _sum?: MessageSumAggregateInputType
     _min?: MessageMinAggregateInputType
     _max?: MessageMaxAggregateInputType
   }
@@ -8204,6 +8242,7 @@ export namespace Prisma {
     fileUrl: string | null
     fileName: string | null
     fileSize: string | null
+    duration: number | null
     mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
@@ -8214,6 +8253,8 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     _count: MessageCountAggregateOutputType | null
+    _avg: MessageAvgAggregateOutputType | null
+    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
   }
@@ -8241,6 +8282,7 @@ export namespace Prisma {
     fileUrl?: boolean
     fileName?: boolean
     fileSize?: boolean
+    duration?: boolean
     mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
@@ -8264,6 +8306,7 @@ export namespace Prisma {
     fileUrl?: boolean
     fileName?: boolean
     fileSize?: boolean
+    duration?: boolean
     mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
@@ -8286,6 +8329,7 @@ export namespace Prisma {
     fileUrl?: boolean
     fileName?: boolean
     fileSize?: boolean
+    duration?: boolean
     mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
@@ -8308,6 +8352,7 @@ export namespace Prisma {
     fileUrl?: boolean
     fileName?: boolean
     fileSize?: boolean
+    duration?: boolean
     mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
@@ -8319,7 +8364,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "fileUrl" | "fileName" | "fileSize" | "mimeType" | "replyToId" | "forwardedFromId" | "originalSenderId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "fileUrl" | "fileName" | "fileSize" | "duration" | "mimeType" | "replyToId" | "forwardedFromId" | "originalSenderId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
@@ -8350,6 +8395,7 @@ export namespace Prisma {
       fileUrl: string | null
       fileName: string | null
       fileSize: string | null
+      duration: number | null
       mimeType: string | null
       replyToId: string | null
       forwardedFromId: string | null
@@ -8793,6 +8839,7 @@ export namespace Prisma {
     readonly fileUrl: FieldRef<"Message", 'String'>
     readonly fileName: FieldRef<"Message", 'String'>
     readonly fileSize: FieldRef<"Message", 'String'>
+    readonly duration: FieldRef<"Message", 'Int'>
     readonly mimeType: FieldRef<"Message", 'String'>
     readonly replyToId: FieldRef<"Message", 'String'>
     readonly forwardedFromId: FieldRef<"Message", 'String'>
@@ -14937,6 +14984,7 @@ export namespace Prisma {
     fileUrl: 'fileUrl',
     fileName: 'fileName',
     fileSize: 'fileSize',
+    duration: 'duration',
     mimeType: 'mimeType',
     replyToId: 'replyToId',
     forwardedFromId: 'forwardedFromId',
@@ -15674,6 +15722,7 @@ export namespace Prisma {
     fileUrl?: StringNullableFilter<"Message"> | string | null
     fileName?: StringNullableFilter<"Message"> | string | null
     fileSize?: StringNullableFilter<"Message"> | string | null
+    duration?: IntNullableFilter<"Message"> | number | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
@@ -15697,6 +15746,7 @@ export namespace Prisma {
     fileUrl?: SortOrderInput | SortOrder
     fileName?: SortOrderInput | SortOrder
     fileSize?: SortOrderInput | SortOrder
+    duration?: SortOrderInput | SortOrder
     mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
     forwardedFromId?: SortOrderInput | SortOrder
@@ -15723,6 +15773,7 @@ export namespace Prisma {
     fileUrl?: StringNullableFilter<"Message"> | string | null
     fileName?: StringNullableFilter<"Message"> | string | null
     fileSize?: StringNullableFilter<"Message"> | string | null
+    duration?: IntNullableFilter<"Message"> | number | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
@@ -15746,6 +15797,7 @@ export namespace Prisma {
     fileUrl?: SortOrderInput | SortOrder
     fileName?: SortOrderInput | SortOrder
     fileSize?: SortOrderInput | SortOrder
+    duration?: SortOrderInput | SortOrder
     mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
     forwardedFromId?: SortOrderInput | SortOrder
@@ -15756,8 +15808,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MessageCountOrderByAggregateInput
+    _avg?: MessageAvgOrderByAggregateInput
     _max?: MessageMaxOrderByAggregateInput
     _min?: MessageMinOrderByAggregateInput
+    _sum?: MessageSumOrderByAggregateInput
   }
 
   export type MessageScalarWhereWithAggregatesInput = {
@@ -15772,6 +15826,7 @@ export namespace Prisma {
     fileUrl?: StringNullableWithAggregatesFilter<"Message"> | string | null
     fileName?: StringNullableWithAggregatesFilter<"Message"> | string | null
     fileSize?: StringNullableWithAggregatesFilter<"Message"> | string | null
+    duration?: IntNullableWithAggregatesFilter<"Message"> | number | null
     mimeType?: StringNullableWithAggregatesFilter<"Message"> | string | null
     replyToId?: StringNullableWithAggregatesFilter<"Message"> | string | null
     forwardedFromId?: StringNullableWithAggregatesFilter<"Message"> | string | null
@@ -16632,6 +16687,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -16655,6 +16711,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -16674,6 +16731,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16697,6 +16755,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16718,6 +16777,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -16736,6 +16796,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16756,6 +16817,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17669,6 +17731,17 @@ export namespace Prisma {
     notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumMessageTypeFilter<$PrismaModel> | $Enums.MessageType
   }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -17707,6 +17780,7 @@ export namespace Prisma {
     fileUrl?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
+    duration?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
@@ -17718,6 +17792,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type MessageAvgOrderByAggregateInput = {
+    duration?: SortOrder
+  }
+
   export type MessageMaxOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
@@ -17727,6 +17805,7 @@ export namespace Prisma {
     fileUrl?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
+    duration?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
@@ -17746,6 +17825,7 @@ export namespace Prisma {
     fileUrl?: SortOrder
     fileName?: SortOrder
     fileSize?: SortOrder
+    duration?: SortOrder
     mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
@@ -17756,6 +17836,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type MessageSumOrderByAggregateInput = {
+    duration?: SortOrder
+  }
+
   export type EnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
     in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
@@ -17764,6 +17848,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
     _max?: NestedEnumMessageTypeFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -17885,17 +17985,6 @@ export namespace Prisma {
     not?: NestedEnumMediaStatusFilter<$PrismaModel> | $Enums.MediaStatus
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type StatusNullableScalarRelationFilter = {
     is?: StatusWhereInput | null
     isNot?: StatusWhereInput | null
@@ -17953,22 +18042,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaStatusFilter<$PrismaModel>
     _max?: NestedEnumMediaStatusFilter<$PrismaModel>
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type CannedResponseCountOrderByAggregateInput = {
@@ -18662,6 +18735,14 @@ export namespace Prisma {
     set?: $Enums.MessageType
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type UserUpdateOneRequiredWithoutMessagesNestedInput = {
     create?: XOR<UserCreateWithoutMessagesInput, UserUncheckedCreateWithoutMessagesInput>
     connectOrCreate?: UserCreateOrConnectWithoutMessagesInput
@@ -18822,14 +18903,6 @@ export namespace Prisma {
 
   export type EnumMediaStatusFieldUpdateOperationsInput = {
     set?: $Enums.MediaStatus
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type UserUpdateOneRequiredWithoutMediasNestedInput = {
@@ -19118,6 +19191,33 @@ export namespace Prisma {
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
     _max?: NestedEnumMessageTypeFilter<$PrismaModel>
   }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -19174,33 +19274,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaStatusFilter<$PrismaModel>
     _max?: NestedEnumMediaStatusFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedBoolNullableFilter<$PrismaModel = never> = {
@@ -19418,6 +19491,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -19439,6 +19513,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -19809,6 +19884,7 @@ export namespace Prisma {
     fileUrl?: StringNullableFilter<"Message"> | string | null
     fileName?: StringNullableFilter<"Message"> | string | null
     fileSize?: StringNullableFilter<"Message"> | string | null
+    duration?: IntNullableFilter<"Message"> | number | null
     mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
@@ -20133,6 +20209,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -20154,6 +20231,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -20183,6 +20261,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -20205,6 +20284,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -20271,6 +20351,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20293,6 +20374,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21653,6 +21735,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -21866,6 +21949,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21887,6 +21971,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21907,6 +21992,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22084,6 +22170,7 @@ export namespace Prisma {
     fileUrl?: string | null
     fileName?: string | null
     fileSize?: string | null
+    duration?: number | null
     mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
@@ -22132,6 +22219,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22153,6 +22241,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22173,6 +22262,7 @@ export namespace Prisma {
     fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
     fileName?: NullableStringFieldUpdateOperationsInput | string | null
     fileSize?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null

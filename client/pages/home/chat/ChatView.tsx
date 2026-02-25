@@ -33,6 +33,13 @@ import {
   Code,
   HelpCircle,
   Copy,
+  Play,
+  Pause,
+  Ear,
+  Speaker,
+  LucideSpeaker,
+  MonitorSpeakerIcon,
+  Volume2,
 } from "lucide-react";
 import {
   Chat,
@@ -572,15 +579,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
-  const [showMuteDialog, setShowMuteDialog] = useState(false);
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(
     null,
   );
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [showMediaModal, setShowMediaModal] = useState(false);
-const [mediaCaption, setMediaCaption] = useState("");
-  // Refs
+  const [showMediaModal, setShowMediaModal] = useState(false); 
+  const [mediaProcessing, setMediaProcessing] = useState(false);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
@@ -1029,14 +1035,15 @@ const [mediaCaption, setMediaCaption] = useState("");
         isImage ? MessageType.IMAGE : MessageType.FILE,
         inputValue || (isImage ? "Photo" : pendingFile.name),
         {
-         file: pendingFile,
+          file: pendingFile,
           fileName: pendingFile.name,
           fileSize: formatBytes(pendingFile.size),
           mimeType: pendingFile.type,
-        }
+        },
       );
       // Clear after send
-      setPendingFile(null); return;
+      setPendingFile(null);
+      return;
     }
     if (!inputValue.trim()) return;
     handleSendMessage(MessageType.TEXT, inputValue);
@@ -1162,29 +1169,9 @@ const [mediaCaption, setMediaCaption] = useState("");
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0] && chat) {
         let file = e.target.files[0];
-        const isImage = file.type.startsWith("image/");
-        const isVideo = file.type.startsWith("video/");
-        const isAudio = file.type.startsWith("audio/");
-
-        // Check if video/audio has audio track
-        if (isVideo || isAudio) {
-          const hasAudioTrack = await MediaUtils.hasAudio(file);
-          if (hasAudioTrack) {
-            const result = window.confirm(
-              "Do you want to mute the audio? It has an audio track.",
-            );
-            if (result) {
-              if (isVideo) {
-                file = await MediaUtils.muteVideo(file);
-              } else if (isAudio) {
-                file = await MediaUtils.muteAudio(file);
-              }
-            }
-          }
-        }
-          setPendingFile(file);
-          setShowMediaModal(true);
-          setShowAttachMenu(false);
+        setPendingFile(file);
+        setShowMediaModal(true);
+        setShowAttachMenu(false);
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
@@ -1193,26 +1180,13 @@ const [mediaCaption, setMediaCaption] = useState("");
 
   const handleCameraCapture = useCallback(
     (imageSrc: string) => {
-      if (!chat) return;
-
+      if (!chat) return; 
       fetch(imageSrc)
         .then((res) => res.blob())
         .then((blob) => {
           const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
             type: "image/jpeg",
           });
-
-          // sendMessageMutation.mutate({
-          //   content: "Photo",
-          //   type: MessageType.IMAGE,
-          //   fileData: {
-          //     file,
-          //     fileName: file.name,
-          //     fileSize: formatBytes(blob.size),
-          //     mimeType: file.type,
-          //     replyToId: replyingTo?.id,
-          //   },
-          // });
           setPendingFile(file);
           setShowMediaModal(true);
           setShowAttachMenu(false);
@@ -1242,7 +1216,7 @@ const [mediaCaption, setMediaCaption] = useState("");
           audioChunksRef.current.push(event.data);
         }
       };
-mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/webm",
         });
@@ -1339,9 +1313,13 @@ mediaRecorder.onstop = async () => {
       console.error("Preview playback failed:", err);
     }
   };
+
   const stopRecording = (cancel = false) => {
     if (!mediaRecorderRef.current || !isRecording) return;
-    console.log("stopRecording called, current state:", mediaRecorderRef.current.state); // ← add
+    console.log(
+      "stopRecording called, current state:",
+      mediaRecorderRef.current.state,
+    ); // ← add
     if (mediaRecorderRef.current && isRecording) {
       if (cancel) {
         mediaRecorderRef.current.onstop = null;
@@ -1356,7 +1334,7 @@ mediaRecorder.onstop = async () => {
       setIsPaused(false);
     }
   };
-  
+
   const togglePauseRecording = () => {
     if (!mediaRecorderRef.current) return;
 
@@ -1430,7 +1408,7 @@ mediaRecorder.onstop = async () => {
 
   const handleStartEdit = useCallback((msg: Message) => {
     const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-    const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
+    const isEditableUnder5Minutes = Date.now() - createdAt <= 15 * 60 * 1000;
     if (!isEditableUnder5Minutes) {
       alert("You can only edit messages sent within the last 5 minutes.");
       return;
@@ -1550,39 +1528,92 @@ mediaRecorder.onstop = async () => {
           onCapture={handleCameraCapture}
         />
       )}
+ 
       {/* Media Composer Modal */}
-<MediaComposerModal
-  file={pendingFile}
-  caption={mediaCaption}
-  onCaptionChange={setMediaCaption}
-  onClose={() => {
-    setShowMediaModal(false);
-    setPendingFile(null);
-    setMediaCaption("");
-  }}
-  onAddMore={() => fileInputRef.current?.click()}
-  onSend={() => {
-    if (!pendingFile) return;
+      <MediaComposerModal
+        file={pendingFile} 
+        processing={mediaProcessing}
+        onClose={() => {
+          setShowMediaModal(false);
+          setPendingFile(null); 
+        }}
+        onAddMore={() => fileInputRef.current?.click()}
+        onSend={async (options?: { isMuted?: boolean, caption?: string }) => {
+          if (!pendingFile) return;
 
-    const isImage = pendingFile.type.startsWith("image/");
+          const isImage = pendingFile.type.startsWith("image/");
+          const isVideo = pendingFile.type.startsWith("video/");
+          const isAudio = pendingFile.type.startsWith("audio/");
 
-    handleSendMessage(
-      isImage ? MessageType.IMAGE : MessageType.FILE,
-      mediaCaption || (isImage ? "Photo" : pendingFile.name),
-      {
-        file: pendingFile,
-        fileName: pendingFile.name,
-        fileSize: formatBytes(pendingFile.size),
-        mimeType: pendingFile.type,
-      }
-    );
+          setMediaProcessing(true);
+          try {
+            let fileToSend = pendingFile;
 
-    setShowMediaModal(false);
-    setPendingFile(null);
-    setMediaCaption("");
-  }}
-/>
+            // Process video/audio with mute if needed
+            if (isVideo && options?.isMuted) {
+              fileToSend = await MediaUtils.muteVideo(pendingFile);
+            } else if (isAudio && options?.isMuted) {
+              fileToSend = await MediaUtils.muteAudio(pendingFile);
+            }
 
+            // Send based on type
+            if (isVideo) {
+              handleSendMessage(
+                MessageType.FILE,
+                options?.caption || "Video",
+                {
+                  file: fileToSend,
+                  fileName: fileToSend.name,
+                  fileSize: formatBytes(fileToSend.size),
+                  mimeType: fileToSend.type,
+                },
+              );
+            } else if (isAudio) {
+              handleSendMessage(
+                MessageType.FILE,
+                options?.caption || "Audio",
+                {
+                  file: fileToSend,
+                  fileName: fileToSend.name,
+                  fileSize: formatBytes(fileToSend.size),
+                  mimeType: fileToSend.type,
+                },
+              );
+            } else if (isImage) {
+              handleSendMessage(
+                MessageType.IMAGE,
+                options?.caption || "Photo",
+                {
+                  file: pendingFile,
+                  fileName: pendingFile.name,
+                  fileSize: formatBytes(pendingFile.size),
+                  mimeType: pendingFile.type,
+                },
+              );
+            } else {
+              handleSendMessage(
+                MessageType.FILE,
+                options?.caption || pendingFile.name,
+                {
+                  file: pendingFile,
+                  fileName: pendingFile.name,
+                  fileSize: formatBytes(pendingFile.size),
+                  mimeType: pendingFile.type,
+                },
+              );
+            }
+
+            // Close modal after successful send
+            setShowMediaModal(false);
+            setPendingFile(null); 
+          } catch (error) {
+            console.error("Error sending media:", error);
+            // Handle error (show toast, etc.)
+          } finally {
+            setMediaProcessing(false);
+          }
+        }}
+      />
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
@@ -1686,7 +1717,8 @@ mediaRecorder.onstop = async () => {
                       </span>
                     ) : (
                       <span className="opacity-80">
-                        {formatLastMessageTime(otherUser?.lastSeen || "") || "Unknown"}
+                        {formatLastMessageTime(otherUser?.lastSeen || "") ||
+                          "Unknown"}
                       </span>
                     )}
                   </span>
@@ -1768,9 +1800,12 @@ mediaRecorder.onstop = async () => {
               const isSelected = selectedMessageId === msg.id;
               const isDeleted = msg.isDeleted;
               const isSearchResult = searchResults.includes(msg.id);
-              const createdAt = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
-              const isEditableUnder5Minutes = (Date.now() - createdAt) <= 15 * 60 * 1000;
-  
+              const createdAt = msg.createdAt
+                ? new Date(msg.createdAt).getTime()
+                : 0;
+              const isEditableUnder5Minutes =
+                Date.now() - createdAt <= 15 * 60 * 1000;
+
               return (
                 <div
                   key={msg.id}
@@ -1781,8 +1816,13 @@ mediaRecorder.onstop = async () => {
                 >
                   {/* Pending indicator */}
                   {isPending && (
-                    <div className="absolute -left-6 top-1/2 -translate-y-1/2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <div className="rounded-2xl relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
+                      <div
+                        className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}
+                      >
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        <p className="text-text-main">Sending...</p>
+                      </div>
                     </div>
                   )}
 
@@ -1801,65 +1841,66 @@ mediaRecorder.onstop = async () => {
                           user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplyingTo(msg);
-                                  setSelectedMessageId(null);
-                                  setEditingMessage(null);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                              >
-                                <Reply size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingTo(msg);
+                                setSelectedMessageId(null);
+                                setEditingMessage(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Reply size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Forward */}
                         {(user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setForwardingMessage(msg);
-                                  setSelectedMessageId(null);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                                title="Forward"
-                              >
-                                <Share2 size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setForwardingMessage(msg);
+                                setSelectedMessageId(null);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                              title="Forward"
+                            >
+                              <Share2 size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Reactions */}
                         {(user?.role === UserRole.USER ||
                           user?.role === UserRole.BRANCH ||
                           (user?.role === UserRole.ADMIN && chat.isGroup) ||
                           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openReactionPicker(msg.id);
-                                }}
-                                className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
-                              >
-                                <Smile size={16} />
-                              </button>
-                              <div className="w-px h-3 bg-border"></div>
-                            </>
-                          )}
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReactionPicker(msg.id);
+                              }}
+                              className="p-1.5 rounded-full hover:bg-surface-hover text-icon hover:text-text-main transition-colors"
+                            >
+                              <Smile size={16} />
+                            </button>
+                            <div className="w-px h-3 bg-border"></div>
+                          </>
+                        )}
                         {/* Edit */}
                         {isMe &&
                           (user?.role === UserRole.USER ||
                             user?.role === UserRole.BRANCH ||
                             (user?.role === UserRole.ADMIN && chat.isGroup) ||
                             (user?.role === UserRole.MASTER && chat.isGroup)) &&
-                          msg.type === MessageType.TEXT && isEditableUnder5Minutes && (
+                          msg.type === MessageType.TEXT &&
+                          isEditableUnder5Minutes && (
                             <>
                               <button
                                 onClick={(e) => {
@@ -1917,94 +1958,95 @@ mediaRecorder.onstop = async () => {
                     )}
 
                     {/* Message Bubble */}
-                    <div
-                      className={`
+                    {!isPending && (
+                      <div
+                        className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
-                        ${isDeleted
-                          ? "bg-surface text-secondary border border-border"
-                          : isMe
-                            ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
-                            : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
+                        ${
+                          isDeleted
+                            ? "bg-surface text-secondary border border-border"
+                            : isMe
+                              ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
+                              : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
                         }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                       `}
-                      onClick={(e) =>
-                        handleMessageClick(e, msg.id, !!isDeleted)
-                      }
-                    >
-                      {/* Forwarded Label */}
-                      {!isDeleted && msg.forwardedFromId && (
-                        <div
-                          className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
-                        >
-                          <Share2 size={12} />
-                          <span>
-                            Forwarded
-                            {msg.originalSenderName
-                              ? ` from ${msg.originalSenderName}`
-                              : ""}
-                          </span>
-                        </div>
-                      )}
-                      {/* Reply Quote */}
-                      {!isDeleted && repliedMsg && (
-                        <div
-                          className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            scrollToMessage(repliedMsg.id);
-                          }}
-                        >
-                          <p
-                            className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
-                          >
-                            {repliedMsg.sender?.id === user?.id
-                              ? "You"
-                              : chat.members.find(
-                                (m) => m.user.id === repliedMsg.sender?.id,
-                              )?.user.name || "Unknown"}
-                          </p>
-                          <p className="opacity-80 truncate">
-                            {repliedMsg.content || "Attachment"}
-                          </p>
-                        </div>
-                      )}
-                      {isDeleted ? (
-                        <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
-                          <Ban size={14} className="text-secondary" />
-                          <span>This message was deleted</span>
-                        </div>
-                      ) : (
-                        renderMessageContent(
-                          msg,
-                          isMe,
-                          chat,
-                          playingAudioId,
-                          toggleAudio,
-                          searchQuery,
-                          audioRefs,
-                          onStatusClick
-                        )
-                      )}
-                      {/* Message Meta */}
-                      <div
-                        className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
+                        onClick={(e) =>
+                          handleMessageClick(e, msg.id, !!isDeleted)
+                        }
                       >
-                        {!isDeleted && msg.isEdited && (
-                          <span className="italic opacity-80 mr-1">
-                            (edited)
-                          </span>
+                        {/* Forwarded Label */}
+                        {!isDeleted && msg.forwardedFromId && (
+                          <div
+                            className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
+                          >
+                            <Share2 size={12} />
+                            <span>
+                              Forwarded
+                              {msg.originalSenderName
+                                ? ` from ${msg.originalSenderName}`
+                                : ""}
+                            </span>
+                          </div>
                         )}
-                        <span>
-                          {formatMessageTime(msg.createdAt)}
-                        </span>
-                        {isMe && !isDeleted && !isPending && (
-                          <span>
-                            <CheckCheck size={14} />
-                          </span>
+                        {/* Reply Quote */}
+                        {!isDeleted && repliedMsg && (
+                          <div
+                            className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollToMessage(repliedMsg.id);
+                            }}
+                          >
+                            <p
+                              className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
+                            >
+                              {repliedMsg.sender?.id === user?.id
+                                ? "You"
+                                : chat.members.find(
+                                    (m) => m.user.id === repliedMsg.sender?.id,
+                                  )?.user.name || "Unknown"}
+                            </p>
+                            <p className="opacity-80 truncate">
+                              {repliedMsg.content || "Attachment"}
+                            </p>
+                          </div>
                         )}
+                        {isDeleted ? (
+                          <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
+                            <Ban size={14} className="text-secondary" />
+                            <span>This message was deleted</span>
+                          </div>
+                        ) : (
+                          renderMessageContent(
+                            msg,
+                            isMe,
+                            chat,
+                            playingAudioId,
+                            toggleAudio,
+                            searchQuery,
+                            audioRefs,
+                            onStatusClick,
+                          )
+                        )}
+                        {/* Message Meta */}
+                        <div
+                          className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
+                        >
+                          {!isDeleted && msg.isEdited && (
+                            <span className="italic opacity-80 mr-1">
+                              (edited)
+                            </span>
+                          )}
+                          <span>{formatMessageTime(msg.createdAt)}</span>
+                          {isMe && !isDeleted && !isPending && (
+                            <span>
+                              <CheckCheck size={14} />
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Reactions */}
                     {!isDeleted &&
@@ -2022,10 +2064,11 @@ mediaRecorder.onstop = async () => {
                                   e.stopPropagation();
                                   toggleReaction(msg.id, emoji);
                                 }}
-                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${(users as string[]).includes(user?.id || "")
-                                  ? "bg-primary/20 border-primary/50 text-text-main"
-                                  : "bg-surface border-border text-secondary hover:bg-surface-hover"
-                                  }`}
+                                className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 transition-colors scale-100 hover:scale-110 ${
+                                  (users as string[]).includes(user?.id || "")
+                                    ? "bg-primary/20 border-primary/50 text-text-main"
+                                    : "bg-surface border-border text-secondary hover:bg-surface-hover"
+                                }`}
                               >
                                 <span>{emoji}</span>
                                 <span className="font-mono">
@@ -2066,8 +2109,8 @@ mediaRecorder.onstop = async () => {
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                    (m) => m.user.id === replyingTo.sender?.id,
-                  )?.user.name || "Unknown"}
+                      (m) => m.user.id === replyingTo.sender?.id,
+                    )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -2121,10 +2164,11 @@ mediaRecorder.onstop = async () => {
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-surface-hover border border-transparent"
-                      }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
+                      index === selectedCannedIndex
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-surface-hover border border-transparent"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
@@ -2155,153 +2199,150 @@ mediaRecorder.onstop = async () => {
           user?.role == UserRole.BRANCH ||
           (user?.role == UserRole.ADMIN && chat.isGroup) ||
           (user?.role == UserRole.MASTER && chat.isGroup)) && (
-            <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
-              {showEmojiPicker && (
+          <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
+            {showEmojiPicker && (
+              <div
+                className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
+              >
                 <div
-                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
-                >
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  ></div>
-                  <EmojiPicker
-                    onSelect={handleEmojiSelect}
-                    onClose={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Attachments & Emoji */}
-              <div className="flex items-center pl-1 pb-1">
-                <button
+                  className="fixed inset-0 z-40"
                   onClick={() => {
-                    setShowEmojiPicker(!showEmojiPicker);
+                    setShowEmojiPicker(false);
                     setActiveReactionMessageId(null);
-                    setShowAttachMenu(false);
                   }}
-                  className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                >
-                  <Smile size={24} />
-                </button>
-
-                {!editingMessage && (
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setShowAttachMenu(!showAttachMenu);
-                        setShowEmojiPicker(false);
-                      }}
-                      className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                    >
-                      <Plus
-                        size={24}
-                        className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
-                      />
-                    </button>
-
-                    {showAttachMenu && (
-                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                        <button
-                          onClick={() => setShowCamera(true)}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                            <Camera size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Camera
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                            <Image size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Photos & Videos
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                            <FileText size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Document
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                ></div>
+                <EmojiPicker
+                  onSelect={handleEmojiSelect}
+                  onClose={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
                 />
               </div>
+            )}
 
-              {/* Text Input */}
-              <div className="flex-1 min-w-0 relative min-h-12.5">
-                {" "}
-                {/* Changed from min-h-12.5 flex items-center */}
-                {isRecording ? (
-                  <div className="absolute inset-0 z-20 flex items-center justify-between px-3">
+            {/* Attachments & Emoji */}
+            <div className="flex items-center pl-1 pb-1">
+              <button
+                onClick={() => {
+                  setShowEmojiPicker(!showEmojiPicker);
+                  setActiveReactionMessageId(null);
+                  setShowAttachMenu(false);
+                }}
+                className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+              >
+                <Smile size={24} />
+              </button>
 
-  {/* LEFT: Cancel */}
-  <button
-    onClick={() => stopRecording(true)}
-    className="flex-shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white"
-  >
-    <X size={16} />
-  </button>
+              {!editingMessage && (
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowAttachMenu(!showAttachMenu);
+                      setShowEmojiPicker(false);
+                    }}
+                    className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  >
+                    <Plus
+                      size={24}
+                      className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
+                    />
+                  </button>
 
-  {/* CENTER: Timer (Compact for Mobile) */}
-  <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
-    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-    {formatTime(recordingDuration)}
-    <span className="hidden sm:inline text-secondary">
-      {isPaused ? "Paused" : "Recording"}
-    </span>
-  </div>
+                  {showAttachMenu && (
+                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                      <button
+                        onClick={() => setShowCamera(true)}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                          <Camera size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Camera
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                          <Image size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Photos & Videos
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                          <FileText size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Document
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+              />
+            </div>
 
-  {/* RIGHT: Controls */}
-  <div className="flex items-center gap-1 flex-shrink-0">
-    
-    {/* Preview ONLY when paused */}
-    {isPaused && (
-      <button
-        onClick={playPreviewAudio}
-        className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
-        title="Preview"
-      >
-        ▶
-      </button>
-    )}
+            {/* Text Input */}
+            <div className="flex-1 min-w-0 relative min-h-12.5">
+              {" "}
+              {/* Changed from min-h-12.5 flex items-center */}
+              {isRecording ? (
+                <div className="absolute inset-0 z-20 flex items-center justify-between px-3">
+                  {/* LEFT: Cancel */}
+                  <button
+                    onClick={() => stopRecording(true)}
+                    className="shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white"
+                  >
+                    <X size={16} />
+                  </button>
 
-    {/* Pause / Resume */}
-    <button
-      onClick={togglePauseRecording}
-      className="p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10"
-      title={isPaused ? "Resume" : "Pause"}
-    >
-      {isPaused ? <Mic size={18} /> : "⏸"}
-    </button>
+                  {/* CENTER: Timer (Compact for Mobile) */}
+                  <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    {formatTime(recordingDuration)}
+                    <span className="hidden sm:inline text-secondary">
+                      {isPaused ? "Paused" : "Recording"}
+                    </span>
+                  </div>
 
-  </div>
-</div>
+                  {/* RIGHT: Controls */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {/* Preview ONLY when paused */}
+                    {isPaused && (
+                      <button
+                        onClick={playPreviewAudio}
+                        className="shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
+                        title="Preview"
+                      >
+                        <Volume2 size={16} />
+                      </button>
+                    )}
+
+                    {/* Pause / Resume */}
+                    <button
+                      onClick={togglePauseRecording}
+                      className="shrink-0 p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10"
+                      title={isPaused ? "Resume" : "Pause"}
+                    >
+                      {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="w-full relative">
                   {/* Hidden measuring div - exact same styling as textarea */}
@@ -2316,51 +2357,51 @@ mediaRecorder.onstop = async () => {
                     {inputValue || "placeholder"}
                   </div>
 
-                    {/* Actual textarea */}
-                    <textarea
-                      ref={inputRef}
-                      placeholder={
-                        replyingTo
-                          ? "Reply..."
-                          : editingMessage
-                            ? "Edit message..."
-                            : "Message"
-                      }
-                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                      style={{
-                        minHeight: "44px",
-                        maxHeight: "120px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      disabled={sendMessageMutation.isPending}
-                      rows={1}
-                      wrap="soft"
-                      inputMode="text"
-                      // enterKeyHint="send"
-                      enterKeyHint="enter"
-                      autoCapitalize="sentences"
-                      autoCorrect="on"
-                      spellCheck="true"
-                    />
+                  {/* Actual textarea */}
+                  <textarea
+                    ref={inputRef}
+                    placeholder={
+                      replyingTo
+                        ? "Reply..."
+                        : editingMessage
+                          ? "Edit message..."
+                          : "Message"
+                    }
+                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "120px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    disabled={sendMessageMutation.isPending}
+                    rows={1}
+                    wrap="soft"
+                    inputMode="text"
+                    // enterKeyHint="send"
+                    enterKeyHint="enter"
+                    autoCapitalize="sentences"
+                    autoCorrect="on"
+                    spellCheck="true"
+                  />
 
-                    {/* Command hint - absolutely positioned */}
-                    {!inputValue &&
-                      !isRecording &&
-                      !sendMessageMutation.isPending && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                          <Command size={14} className="hidden sm:block" />
-                          <span className="text-xs hidden sm:inline">/</span>
-                          <span className="text-xs sm:hidden">/</span>{" "}
-                          {/* Mobile fallback */}
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
+                  {/* Command hint - absolutely positioned */}
+                  {!inputValue &&
+                    !isRecording &&
+                    !sendMessageMutation.isPending && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                        <Command size={14} className="hidden sm:block" />
+                        <span className="text-xs hidden sm:inline">/</span>
+                        <span className="text-xs sm:hidden">/</span>{" "}
+                        {/* Mobile fallback */}
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
 
             {/* Send Button */}
             <div className="pb-1 pr-1">

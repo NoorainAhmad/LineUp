@@ -176,6 +176,7 @@ model Message {
   fileUrl  String?
   fileName String?
   fileSize String?
+  duration Int?
   mimeType String?
 
   replyToId        String?

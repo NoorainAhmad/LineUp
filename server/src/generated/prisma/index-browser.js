@@ -193,6 +193,7 @@ exports.Prisma.MessageScalarFieldEnum = {
   fileUrl: 'fileUrl',
   fileName: 'fileName',
   fileSize: 'fileSize',
+  duration: 'duration',
   mimeType: 'mimeType',
   replyToId: 'replyToId',
   forwardedFromId: 'forwardedFromId',
