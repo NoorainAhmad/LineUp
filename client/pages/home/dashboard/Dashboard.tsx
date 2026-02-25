@@ -419,7 +419,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <h2 className="text-sm font-bold text-secondary uppercase tracking-wider mb-4">
                 Quick Actions
               </h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <QuickActionItem
                   icon={UserPlus}
                   label="Add User"
@@ -429,12 +429,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   icon={Users}
                   label="New Group"
                   onClick={() => onNavigate("chat")}
-                />
-                <QuickActionItem
-                  icon={Radio}
-                  label="Broadcast"
-                  onClick={() => {}}
-                />
+                /> 
                 <QuickActionItem
                   icon={Image}
                   label="Post Status"
