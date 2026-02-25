@@ -46,9 +46,9 @@ echo "🗑️ Cleaning up..."
 rm -rf node_modules
 
 echo "🔧 Working on nginx..."
-rm -rf /var/www/lineup &&
-mkdir -p /var/www/lineup && 
-cp -r dist/* /var/www/lineup &&
-chown -R www-data:www-data /var/www/lineup
+sudo rm -rf /var/www/lineup &&
+sudo mkdir -p /var/www/lineup && 
+sudo cp -r dist/* /var/www/lineup &&
+sudo chown -R www-data:www-data /var/www/lineup
 
 echo "✅ Deployment complete!"
