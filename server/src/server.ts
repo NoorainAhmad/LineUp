@@ -25,6 +25,12 @@ app.set("trust proxy", 1); // Use 1 if behind a single proxy like Nginx
 // Or for AWS load balancers, you might need:
 // app.set('trust proxy', true); // Trust all proxies
 
+// Log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} from ${req.ip}`);  
+  next();
+});
+
 // ====================================
 // SECURITY MIDDLEWARE (Applied first)
 // ====================================
@@ -55,12 +61,7 @@ const globalLimiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => req.path === "/health", // Skip health checks
-  // Optional: Add a custom key generator if you need more control
-  keyGenerator: (req) => {
-    // This will use the IP from X-Forwarded-For after trust proxy is set
-    return req.ip || req.socket.remoteAddress || "unknown";
-  },
+  skip: (req) => req.path === `${API_PREFIX}/health`, // Skip health checks 
 });
 
 app.use(globalLimiter);
@@ -73,13 +74,7 @@ const authLimiter = rateLimit({
     error: "Too many authentication attempts, please try again later.",
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  // Optional: Custom key generator for auth routes
-  keyGenerator: (req) => {
-    // You could combine IP with username/email for more precise limiting
-    // But for now, just use IP
-    return req.ip || req.socket.remoteAddress || "unknown";
-  },
+  legacyHeaders: false, 
 });
 
 // 4. Body parsing with size limits (prevent payload too large attacks)
@@ -130,7 +125,7 @@ app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
 app.use(`${API_PREFIX}/system`, systemRoutes);
 
 // Health Check (excluded from rate limiting)
-app.get("/health", (_req, res) => {
+app.get(`${API_PREFIX}/health`, (_req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
