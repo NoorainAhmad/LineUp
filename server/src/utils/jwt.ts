@@ -1,7 +1,5 @@
 import jwt from "jsonwebtoken";
-import crypto from "crypto"
-
-
+import crypto from "crypto" 
 
 // JWT PAYLOAD
 export interface JwtPayload {
@@ -17,7 +15,7 @@ export const jwtUtil = {
       jwt.sign(
         payload, 
         secret, 
-        { expiresIn: "30s" }, 
+        { expiresIn: "15m" }, 
         (err, token) => {
         if (err) {
           reject(err);
