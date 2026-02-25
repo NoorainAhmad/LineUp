@@ -1,34 +1,22 @@
-name: Deploy to EC2
-
+name: Deploy to EC2 
 on:
   push:
     branches: [master]
-  workflow_dispatch:
-
+  workflow_dispatch: 
 jobs:
   deploy:
-    name: Deploy via SSH
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
+      - uses: actions/checkout@v3 
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      - name: Add host to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Test SSH Connection
-        run: |
-          ssh -v ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo '✅ SSH connection successful'"
-
-      - name: Run Deployment Script
-        run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "cd /home/ubuntu/lineup_v1 && ./deploy.sh"
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/lineup_v1  
+            echo "🚀 Running deploy script..."
+            chmod +x deploy.sh
+            ./deploy.sh 
+            echo "✅ Deployment complete!"
