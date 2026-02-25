@@ -16,6 +16,16 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // ====================================
+// PROXY CONFIGURATION (CRITICAL FOR RATE LIMITING)
+// ====================================
+
+// Tell Express to trust the proxy - needed for accurate IP detection
+// The number indicates how many proxy hops to trust
+app.set("trust proxy", 1); // Use 1 if behind a single proxy like Nginx
+// Or for AWS load balancers, you might need:
+// app.set('trust proxy', true); // Trust all proxies
+
+// ====================================
 // SECURITY MIDDLEWARE (Applied first)
 // ====================================
 
@@ -40,12 +50,17 @@ app.use(
 
 // 2. Basic rate limiting for all requests
 const globalLimiter = rateLimit({
-  windowMs: 1 * 30 * 1000, //  30 seconds
+  windowMs: 30 * 1000, // 30 seconds (simplified from 1 * 30 * 1000)
   max: 200, // Limit each IP to 200 requests per windowMs
   message: { error: "Too many requests, please try again later." },
-  standardHeaders: true,
-  legacyHeaders: false,
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   skip: (req) => req.path === "/health", // Skip health checks
+  // Optional: Add a custom key generator if you need more control
+  keyGenerator: (req) => {
+    // This will use the IP from X-Forwarded-For after trust proxy is set
+    return req.ip || req.socket.remoteAddress || "unknown";
+  },
 });
 
 app.use(globalLimiter);
@@ -59,6 +74,12 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Optional: Custom key generator for auth routes
+  keyGenerator: (req) => {
+    // You could combine IP with username/email for more precise limiting
+    // But for now, just use IP
+    return req.ip || req.socket.remoteAddress || "unknown";
+  },
 });
 
 // 4. Body parsing with size limits (prevent payload too large attacks)
@@ -74,13 +95,14 @@ const corsOptions = {
     "https://www.lineup24x7.com",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"], 
+  allowedHeaders: ["Content-Type", "Authorization"],
   preflightContinue: false,
   credentials: true,
   maxAge: 86400, // 24 hours
 };
 app.use(cors(corsOptions));
 app.use(cookieParser());
+
 // Routes
 import authRoutes from "./routes/auth.routes.js";
 import mediaRoutes from "./routes/media.routes.js";
@@ -106,7 +128,6 @@ app.use(`${API_PREFIX}/statuses`, statusRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/canned-responses`, cannedRoutes);
 app.use(`${API_PREFIX}/system`, systemRoutes);
-
 
 // Health Check (excluded from rate limiting)
 app.get("/health", (_req, res) => {
@@ -154,6 +175,7 @@ async function bootstrap() {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`📡 Environment: ${process.env.NODE_ENV || "development"}`);
       console.log(`🛡️ Security: Rate limiting & Helmet enabled`);
+      console.log(`🌐 Proxy trust: Enabled`);
       console.log(`-----------------------------------------------`);
     });
   } catch (error) {
