@@ -266,7 +266,6 @@ export class ChatService {
       // Role-based filtering
       switch (currentUser.role) {
         case UserRole.DEVELOPER:
-          // Developer can see ALL chats (no filter)
   // Developer can only see their own hierarchy (not all tenants)
   const developerChildren = await prisma.user.findMany({
     where: {
