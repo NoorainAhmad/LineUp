@@ -445,20 +445,104 @@ export class ChatService {
   static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, cursor?: string) {
     try {
       if (!chatId) return [];
-      const isMember = await prisma.chatMember.findFirst({
-        where: { chatId, userId },
-      });
-      if (!isMember && (userRole == UserRole.USER || userRole == UserRole.BRANCH)) return [];
-      return await prisma.message.findMany({
-        where: { chatId },
-        take: limit,
-        ...(cursor && { skip: 1, cursor: { id: cursor } }),
-        orderBy: { createdAt: "desc" },
+      // Verify user has access to the chat based on role
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
         include: {
-          sender: { select: { id: true, name: true, avatarUrl: true } },
-          asLastMessage: { select: { id: true } },
+          children: true,
         },
       });
+      if (!currentUser) {
+        return [];
+      }
+      let relevantUserIds: string[] = [currentUser.id];
+      switch (currentUser.role) {
+        case UserRole.DEVELOPER:
+          // Developer can access all chats (if your business rule allows)
+          break;
+
+        case UserRole.MASTER: {
+          const children = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Admins
+                { parent: { parentId: currentUser.id } }, // Branches
+                { parent: { parent: { parentId: currentUser.id } } }, // Users
+              ],
+            },
+            select: { id: true },
+          });
+
+          relevantUserIds.push(...children.map((u) => u.id));
+          break;
+        }
+
+        case UserRole.ADMIN: {
+          const children = await prisma.user.findMany({
+            where: {
+              OR: [
+                { parentId: currentUser.id }, // Branches
+                { parent: { parentId: currentUser.id } }, // Users under branches
+              ],
+            },
+            select: { id: true },
+          });
+
+          relevantUserIds.push(...children.map((u) => u.id));
+          break;
+        }
+
+        case UserRole.BRANCH: {
+          const children = await prisma.user.findMany({
+            where: {
+              parentId: currentUser.id, // Users under this branch
+            },
+            select: { id: true },
+          });
+
+          relevantUserIds.push(...children.map((u) => u.id));
+          break;
+        }
+
+        case UserRole.USER:
+          // Only their own chats
+          break;
+
+        default:
+          return [];
+      }
+      // 3️⃣ CRITICAL SECURITY CHECK: Verify chat belongs to hierarchy
+    const isAuthorizedChat = await prisma.chat.findFirst({
+      where: {
+        id: chatId,
+        members: {
+          some: {
+            userId: { in: relevantUserIds },
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!isAuthorizedChat) {
+      console.warn(
+        `[SECURITY] Unauthorized chat access blocked | user=${userId} role=${userRole} chat=${chatId}`
+      );
+      return []; // or throw 403
+    }
+     // 4️⃣ Only fetch messages AFTER authorization passes
+    return await prisma.message.findMany({
+      where: { chatId },
+      take: limit,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy: { createdAt: "desc" },
+      include: {
+        sender: {
+          select: { id: true, name: true, avatarUrl: true },
+        },
+        asLastMessage: { select: { id: true } },
+      },
+    });
     } catch (error) {
       console.log(`[Messages] Error: ${error}`);
       throw new Error("Messages not found: " + (error as Error).message);
