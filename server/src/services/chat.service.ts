@@ -267,8 +267,32 @@ export class ChatService {
       switch (currentUser.role) {
         case UserRole.DEVELOPER:
           // Developer can see ALL chats (no filter)
-          chatWhereCondition = {};
-          break;
+  // Developer can only see their own hierarchy (not all tenants)
+  const developerChildren = await prisma.user.findMany({
+    where: {
+      OR: [
+        { parentId: currentUser.id }, // Masters under dev
+        { parent: { parentId: currentUser.id } }, // Admins
+        { parent: { parent: { parentId: currentUser.id } } }, // Branches
+        { parent: { parent: { parent: { parentId: currentUser.id } } } }, // Users
+      ],
+    },
+    select: { id: true },
+  });
+
+  const developerRelevantUserIds = [
+    currentUser.id,
+    ...developerChildren.map((u) => u.id),
+  ];
+
+  chatWhereCondition = {
+    members: {
+      some: {
+        userId: { in: developerRelevantUserIds },
+      },
+    },
+  };
+  break;
 
         case UserRole.MASTER:
           // Master can see chats of:
@@ -441,7 +465,7 @@ export class ChatService {
     }
   }
 
-  // Get messages for a specific chat
+  // Get messages for a specific chat with role-based access control
   static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, cursor?: string) {
     try {
       if (!chatId) return [];
