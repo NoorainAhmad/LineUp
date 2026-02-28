@@ -107,11 +107,10 @@ const ChatListItem = memo(
     return (
       <div
         onClick={handleClick}
-        className={`group relative p-3 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border border-transparent ${
-          isSelected
+        className={`group relative p-3 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border border-transparent ${isSelected
             ? "bg-primary/5 border-primary/10 shadow-sm"
             : "hover:bg-surface-hover hover:border-border/20"
-        }`}
+          }`}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -428,19 +427,19 @@ export const ChatList: React.FC<ChatListProps> = ({
         };
       })
       .filter((processedChat) => {
-        const matchesSearch =
-          processedChat.displayUser.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          processedChat.displayUser?.guid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          processedChat.displayUser?.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (processedChat.chat.lastMessage?.content || "").toLowerCase().includes(searchQuery.toLowerCase());
-
-        if (searchQuery === "") {
-          return matchesSearch;
-        }
-
         const matchesArchiveStatus = showArchived
           ? processedChat.isArchived
           : !processedChat.isArchived;
+
+        if (searchQuery === "") {
+          return matchesArchiveStatus;
+        }
+
+        const matchesSearch =
+          processedChat.displayUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          processedChat.displayUser?.guid?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          processedChat.displayUser?.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (processedChat.chat.lastMessage?.content || "").toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesSearch && matchesArchiveStatus;
       })
