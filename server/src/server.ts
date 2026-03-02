@@ -15,6 +15,9 @@ const app: Application = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
+// API Prefix
+const API_PREFIX = "/api/v1";
+
 // ====================================
 // PROXY CONFIGURATION (CRITICAL FOR RATE LIMITING)
 // ====================================
@@ -23,17 +26,20 @@ const PORT = process.env.PORT || 5000;
 // The number indicates how many proxy hops to trust
 // app.set("trust proxy", 1); // Use 1 if behind a single proxy like Nginx
 // Or for AWS load balancers, you might need:
-app.set('trust proxy', true); // Trust all proxies
+app.set("trust proxy", true); // Trust all proxies
 
 // Log requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} from ${req.ip}`);  
+  console.log(`${req.method} ${req.url} from ${req.ip}`);
   next();
 });
 
 // ====================================
 // SECURITY MIDDLEWARE (Applied first)
 // ====================================
+
+// Disable the X-Powered-By header
+app.disable("x-powered-by");
 
 // 1. Helmet for security headers (protects from XSS, clickjacking, etc.)
 app.use(
@@ -61,7 +67,7 @@ const globalLimiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => req.path === `${API_PREFIX}/health`, // Skip health checks 
+  skip: (req) => req.path === `${API_PREFIX}/health`, // Skip health checks
 });
 
 app.use(globalLimiter);
@@ -74,12 +80,12 @@ const authLimiter = rateLimit({
     error: "Too many authentication attempts, please try again later.",
   },
   standardHeaders: true,
-  legacyHeaders: false, 
+  legacyHeaders: false,
 });
 
 // 4. Body parsing with size limits (prevent payload too large attacks)
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ limit: "1mb", extended: true }));
 
 // 5. CORS configuration
 const corsOptions = {
@@ -106,9 +112,6 @@ import statusRoutes from "./routes/status.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import cannedRoutes from "./routes/canned.routes.js";
 import systemRoutes from "./routes/system.routes.js";
-
-// API Prefix
-const API_PREFIX = "/api/v1";
 
 // Apply stricter limits to specific routes
 app.use(`${API_PREFIX}/auth/login`, authLimiter);
@@ -179,14 +182,26 @@ async function bootstrap() {
   }
 }
 
+// Graceful shutdown
+function shutdown() {
+  console.log("Shutting down gracefully...");
+  httpServer.close(() => {
+    console.log("Closed out remaining connections.");
+    process.exit(0);
+  });
+}
+
 // Handle unexpected process crashes
 process.on("unhandledRejection", (reason) => {
   console.error("❌ Unhandled Rejection:", reason);
 });
-
 process.on("uncaughtException", (error) => {
   console.error("❌ Uncaught Exception:", error);
   process.exit(1);
 });
+
+// Handle graceful shutdown
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 bootstrap();
