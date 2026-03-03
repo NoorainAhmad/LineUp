@@ -18,6 +18,14 @@ const PORT = process.env.PORT || 5000;
 // API Prefix
 const API_PREFIX = "/api/v1";
 
+import cluster from "cluster";
+
+if (cluster.isPrimary) {
+  console.log("Primary process", process.pid);
+} else {
+  console.log("Worker started", process.pid);
+}
+
 // ====================================
 // PROXY CONFIGURATION (CRITICAL FOR RATE LIMITING)
 // ====================================
@@ -132,6 +140,7 @@ app.get(`${API_PREFIX}/health`, (_req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
+    processId: process.pid,
     timestamp: new Date().toISOString(),
   });
 });
