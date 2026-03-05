@@ -1,5 +1,6 @@
 // src/services/hierarchy.service.ts
 import { prisma } from "../config/db.js";
+import { UserRole } from "@/generated/prisma/index.js";
 
 export class HierarchyService {
   /**
@@ -7,6 +8,22 @@ export class HierarchyService {
    * Optimized: single query + in-memory traversal
    */
   static async getAllSubordinateIds(userId: string): Promise<string[]> {
+    // Get user's role
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+    const role = user?.role;
+
+     // 🔹 Fast path for BRANCH
+  if (role === UserRole.BRANCH) {
+    const users = await prisma.user.findMany({
+      where: { parentId: userId },
+      select: { id: true }
+    });
+
+    return users.map(u => u.id);
+  }
     const allUsers = await prisma.user.findMany({
       select: { id: true, parentId: true },
     });
