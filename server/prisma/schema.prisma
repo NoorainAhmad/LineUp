@@ -48,6 +48,7 @@ enum MessageType {
   AUDIO
   VIDEO
   FILE
+  STICKER
 }
 
 // --- Models ---
