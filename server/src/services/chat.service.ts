@@ -255,17 +255,22 @@ export class ChatService {
   ) {
     try {
       const message = await prisma.message.findUnique({
-        where: { id: messageId },
+        where: { id: messageId, isDeleted: false, chat: { members: { some: { userId } } } },
       });
       if (!message) throw new Error("Message not found");
       let reactions = (message.reactions as Record<string, string[]>) || {};
-      if (reactions[emoji]?.includes(userId)) {
-        reactions[emoji] = reactions[emoji].filter((id) => id !== userId);
-        if (reactions[emoji].length === 0) delete reactions[emoji];
-      } else {
-        if (!reactions[emoji]) reactions[emoji] = [];
-        reactions[emoji].push(userId);
-      }
+      // If user already has this same emoji => remove it (toggle off)
+    const hadSameEmoji = reactions[emoji]?.includes(userId) ?? false;
+    // Remove user's reaction from all emojis first (single reaction rule)
+    for (const key of Object.keys(reactions)) {
+      reactions[key] = reactions[key].filter((id) => id !== userId);
+      if (reactions[key].length === 0) delete reactions[key];
+    }
+    // If it was a different/new emoji, add it
+    if (!hadSameEmoji) {
+      if (!reactions[emoji]) reactions[emoji] = [];
+      reactions[emoji].push(userId);
+    }
       return prisma.message.update({
         where: { id: messageId },
         data: { reactions },
