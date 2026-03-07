@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  Clock3,
   FileText,
   Download,
   X,
@@ -115,6 +116,7 @@ const HighlightedText = ({
 };
 
 const DEFAULT_MEDIA_CAPTIONS = new Set(["photo", "photos", "file", "files"]);
+const MAX_MEDIA_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 const isDefaultMediaCaption = (content?: string) =>
   !content || DEFAULT_MEDIA_CAPTIONS.has(content.trim().toLowerCase());
@@ -240,61 +242,91 @@ const renderMessageContent = (
               Attachment unavailable
             </div>
           ) : (
-            attachmentsToRender.map((attachment) => {
-              if (isImageAttachment(attachment)) {
-                return (
-                  <img
-                    key={attachment.id}
-                    src={attachment.fileUrl}
-                    alt={attachment.fileName}
-                    className="rounded-xl m-1 w-full max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onImagePreview?.(attachment.fileUrl, attachment.fileName);
-                    }}
-                  />
-                );
-              }
+            (() => {
+              const mediaAttachments = attachmentsToRender.filter(isImageAttachment);
+              const documentAttachments = attachmentsToRender.filter(
+                (attachment) => !isImageAttachment(attachment),
+              );
 
               return (
-                <div
-                  key={attachment.id}
-                  className="p-3 flex items-center gap-3 border-b border-border/40 last:border-b-0"
-                >
-                  <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center text-primary shadow-sm">
-                    <FileText size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">
-                        <HighlightedText
-                          text={attachment.fileName || "Document"}
-                          highlight={searchQuery}
-                        />
-                      </p>
-                      {isGroupChat && !isMe && (
-                        <span className="text-[10px] text-secondary whitespace-nowrap">
-                          | {senderName}
-                        </span>
-                      )}
+                <>
+                  {mediaAttachments.length > 0 && (
+                    <div className="px-2 pt-2">
+                      <div
+                        className={`grid gap-2 ${mediaAttachments.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+                      >
+                        {mediaAttachments.map((attachment) => (
+                          <img
+                            key={attachment.id}
+                            src={attachment.fileUrl}
+                            alt={attachment.fileName}
+                            className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${
+                              mediaAttachments.length > 1
+                                ? "h-40"
+                                : "max-w-sm max-h-80"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onImagePreview?.(
+                                attachment.fileUrl,
+                                attachment.fileName,
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-xs opacity-70">
-                      {formatBytes(attachment.fileSize || 0)} |{" "}
-                      {attachment.fileName?.split(".").pop()?.toUpperCase() ||
-                        "FILE"}
-                    </p>
-                  </div>
-                  <a
-                    href={attachment.fileUrl}
-                    download={attachment.fileName}
-                    className="p-2 hover:bg-surface-hover rounded-full transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Download size={18} />
-                  </a>
-                </div>
+                  )}
+
+                  {mediaAttachments.length > 0 &&
+                    documentAttachments.length > 0 && (
+                      <div className="mx-3 my-2 h-px bg-border/40" />
+                    )}
+
+                  {documentAttachments.length > 0 &&
+                    documentAttachments.map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="p-3 flex items-center gap-3 border-b border-border/40 last:border-b-0"
+                      >
+                        <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center text-primary shadow-sm">
+                          <FileText size={20} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">
+                              <HighlightedText
+                                text={attachment.fileName || "Document"}
+                                highlight={searchQuery}
+                              />
+                            </p>
+                            {isGroupChat && !isMe && (
+                              <span className="text-[10px] text-secondary whitespace-nowrap">
+                                | {senderName}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs opacity-70">
+                            {formatBytes(attachment.fileSize || 0)} |{" "}
+                            {attachment.fileName
+                              ?.split(".")
+                              .pop()
+                              ?.toUpperCase() || "FILE"}
+                          </p>
+                        </div>
+                        <a
+                          href={attachment.fileUrl}
+                          download={attachment.fileName}
+                          className="p-2 hover:bg-surface-hover rounded-full transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Download size={18} />
+                        </a>
+                      </div>
+                    ))}
+                </>
               );
-            })
+            })()
           )}
           {!isDefaultMediaCaption(msg.content) && (
             <p className="px-3 pb-2 text-sm">
@@ -656,6 +688,50 @@ const buildMediaSkipAlertMessage = (
     .join("\n")}`;
 };
 
+const normalizePendingStage = (stage?: string) =>
+  (stage || "")
+    .replace(/\(\s*\d+\s*files?\s*\)/gi, "")
+    .replace(/\(\s*\d+\s*\/\s*\d+\s*\)/g, "")
+    .trim();
+
+const getPendingStatusLabel = (msg: Message) => {
+  const rawStage = normalizePendingStage(msg.uploadStage);
+  const stage = rawStage.toLowerCase();
+
+  if (msg.type === MessageType.AUDIO) {
+    if (stage.includes("sending") || stage.includes("validating")) {
+      return "Sending voice note...";
+    }
+    if (
+      stage.includes("sending") ||
+      stage.includes("requesting") ||
+      stage.includes("ticket")
+    ) {
+      return "Sending";
+    }
+    if (stage.includes("upload") || stage.includes("sending")) {
+      return "Sending voice note...";
+    }
+    if (stage.includes("finaliz")) {
+      return "Finalizing voice note...";
+    }
+    return "Sending voice note...";
+  }
+
+  if (stage.includes("validating")) return "Checking files...";
+  if (
+    stage.includes("preparing") ||
+    stage.includes("requesting") ||
+    stage.includes("ticket")
+  ) {
+    return "Preparing upload...";
+  }
+  if (stage.includes("upload")) return "Uploading...";
+  if (stage.includes("finaliz")) return "Finalizing...";
+  if (stage.includes("sending")) return "Sending...";
+  return rawStage || "Sending...";
+};
+
 // Helper to format time
 const formatTime = (seconds: number) => {
   if (!seconds || !isFinite(seconds) || isNaN(seconds)) {
@@ -709,9 +785,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [showMediaModal, setShowMediaModal] = useState(false); 
-  const [mediaProcessing, setMediaProcessing] = useState(false);
-  const [mediaSendStatus, setMediaSendStatus] = useState("Preparing media...");
-  const [mediaSendProgress, setMediaSendProgress] = useState(0);
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     fileName?: string;
@@ -733,6 +806,66 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const isScrolledToBottomRef = useRef(true);
   const prevMessagesLengthRef = useRef(0);
   const recordingDurationRef = useRef(0);
+  const pendingAttachmentUrlsRef = useRef<Record<string, string[]>>({});
+
+  const cleanupPendingAttachmentUrls = useCallback(
+    (pendingId: string, immediate = false) => {
+      const urls = pendingAttachmentUrlsRef.current[pendingId];
+      if (!urls || urls.length === 0) return;
+
+      const revoke = () => {
+        urls.forEach((url) => URL.revokeObjectURL(url));
+        delete pendingAttachmentUrlsRef.current[pendingId];
+      };
+
+      if (immediate) {
+        revoke();
+        return;
+      }
+
+      // Keep blob previews briefly so hydrated messages don't flash "Attachment unavailable".
+      setTimeout(revoke, 15000);
+    },
+    [],
+  );
+
+  const cleanupAllPendingAttachmentUrls = useCallback(() => {
+    Object.values(pendingAttachmentUrlsRef.current)
+      .flat()
+      .forEach((url) => URL.revokeObjectURL(url));
+    pendingAttachmentUrlsRef.current = {};
+  }, []);
+
+  const removePendingMessageById = useCallback(
+    (pendingId?: string) => {
+      if (!pendingId) return false;
+      let removed = false;
+
+      const pendingEntries = queryClient.getQueriesData<Message[]>({
+        queryKey: ["pending-messages"],
+      });
+
+      pendingEntries.forEach(([cacheKey, cacheValue]) => {
+        if (!Array.isArray(cacheValue)) return;
+        if (!cacheValue.some((msg) => msg.id === pendingId)) return;
+
+        removed = true;
+        queryClient.setQueryData(
+          cacheKey,
+          cacheValue.filter((msg) => msg.id !== pendingId),
+        );
+      });
+
+      return removed;
+    },
+    [queryClient],
+  );
+
+  useEffect(() => {
+    return () => {
+      cleanupAllPendingAttachmentUrls();
+    };
+  }, [cleanupAllPendingAttachmentUrls]);
 
   // Polling query for messages
   const {
@@ -776,20 +909,62 @@ export const ChatView: React.FC<ChatViewProps> = ({
       fileData,
       replyToId,
       onProgress,
+      mediaOptions,
     }: {
       content: string;
       type: MessageType;
       fileData?: any;
       replyToId?: string;
       onProgress?: (progress: MediaSendProgress) => void;
+      mediaOptions?: { isMuted?: boolean };
     }) => {
-      const filesToUpload = fileData?.files ?? fileData?.file;
-      const uploadFileCount = Array.isArray(filesToUpload)
-        ? filesToUpload.length
-        : filesToUpload
-          ? 1
-          : 0;
+      const rawFiles = fileData?.files ?? fileData?.file;
+      const normalizedFiles = Array.isArray(rawFiles)
+        ? rawFiles
+        : rawFiles
+          ? [rawFiles]
+          : [];
+      const oversizedFiles = normalizedFiles.filter(
+        (file) => file.size > MAX_MEDIA_UPLOAD_BYTES,
+      );
+      const validSizeFiles =
+        oversizedFiles.length > 0
+          ? normalizedFiles.filter((file) => file.size <= MAX_MEDIA_UPLOAD_BYTES)
+          : normalizedFiles;
+
+      if (normalizedFiles.length > 0 && validSizeFiles.length === 0) {
+        const details = oversizedFiles
+          .map(
+            (file, index) =>
+              `${index + 1}. ${file.name} - ${(file.size / (1024 * 1024)).toFixed(1)} MB (max 10.0 MB)`,
+          )
+          .join("\n");
+
+        throw new Error(`No valid media files to upload.\n${details}`);
+      }
+
+      const uploadFileCount = validSizeFiles.length;
       const pendingMessageId = `pending-${Date.now()}`;
+      const previewUrls: string[] = [];
+      const pendingAttachments: MessageAttachment[] = validSizeFiles.map(
+        (file, index) => {
+          const localUrl = URL.createObjectURL(file);
+          previewUrls.push(localUrl);
+          return {
+            id: `${pendingMessageId}-${index}`,
+            fileKey: "",
+            fileUrl: localUrl,
+            fileName: file.name,
+            mimeType: file.type || "application/octet-stream",
+            fileSize: file.size,
+            order: index,
+          };
+        },
+      );
+
+      if (previewUrls.length > 0) {
+        pendingAttachmentUrlsRef.current[pendingMessageId] = previewUrls;
+      }
 
       const updatePendingProgress = (progress: MediaSendProgress) => {
         queryClient.setQueryData(
@@ -830,6 +1005,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
         uploadCompletedFiles: 0,
         uploadTotalFiles: uploadFileCount,
         uploadFailedFiles: 0,
+        attachments: pendingAttachments,
+        fileUrl: pendingAttachments[0]?.fileUrl,
+        fileName: pendingAttachments[0]?.fileName,
+        mimeType: pendingAttachments[0]?.mimeType,
+        fileSize:
+          pendingAttachments[0]?.fileSize != null
+            ? String(pendingAttachments[0].fileSize)
+            : undefined,
         ...fileData,
         replyToId,
       };
@@ -840,20 +1023,68 @@ export const ChatView: React.FC<ChatViewProps> = ({
         (old: Message[] = []) => [...old, pendingMessage],
       );
 
-      const result = await ChatService.sendMessage(
-        {
-          chatId: chat?.id || "",
-          content,
-          type,
-          ...fileData,
-          replyToId,
-        },
-        filesToUpload,
-        {
-          onProgress: updatePendingProgress,
-        },
-      );
-      return { pendingMessageId, result };
+      let filesToUpload: File[] | File | undefined = validSizeFiles;
+
+      if (mediaOptions?.isMuted && validSizeFiles.length > 0) {
+        updatePendingProgress({
+          stage: "validating",
+          message: "Processing media...",
+          totalFiles: validSizeFiles.length,
+          completedFiles: 0,
+          successfulFiles: 0,
+          failedFiles: 0,
+          progressPercent: 4,
+        });
+
+        const mutedFiles = await Promise.all(
+          validSizeFiles.map(async (file) => {
+            if (file.type.startsWith("video/")) {
+              return MediaUtils.muteVideo(file);
+            }
+            if (file.type.startsWith("audio/")) {
+              return MediaUtils.muteAudio(file);
+            }
+            return file;
+          }),
+        );
+
+        filesToUpload =
+          mutedFiles.length > 1
+            ? mutedFiles
+            : mutedFiles.length === 1
+              ? mutedFiles[0]
+              : undefined;
+      } else {
+        filesToUpload =
+          validSizeFiles.length > 1
+            ? validSizeFiles
+            : validSizeFiles.length === 1
+              ? validSizeFiles[0]
+              : undefined;
+      }
+
+      try {
+        const result = await ChatService.sendMessage(
+          {
+            chatId: chat?.id || "",
+            content,
+            type,
+            ...fileData,
+            replyToId,
+          },
+          filesToUpload,
+          {
+            onProgress: updatePendingProgress,
+          },
+        );
+        return { pendingMessageId, result };
+      } catch (error) {
+        if (error && typeof error === "object") {
+          (error as { pendingMessageId?: string }).pendingMessageId =
+            pendingMessageId;
+        }
+        throw error;
+      }
     },
     onSuccess: (response, variables) => {
       const pendingMessageId = response?.pendingMessageId;
@@ -895,6 +1126,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const hydratedMessage: Message = {
         ...(matchedPendingMessage || {}),
         ...newMessage,
+        attachments:
+          Array.isArray((newMessage as Message)?.attachments) &&
+          ((newMessage as Message).attachments?.length || 0) > 0
+            ? (newMessage as Message).attachments
+            : matchedPendingMessage?.attachments,
+        fileUrl: (newMessage as Message)?.fileUrl ?? matchedPendingMessage?.fileUrl,
+        fileName: (newMessage as Message)?.fileName ?? matchedPendingMessage?.fileName,
+        mimeType: (newMessage as Message)?.mimeType ?? matchedPendingMessage?.mimeType,
+        fileSize: (newMessage as Message)?.fileSize ?? matchedPendingMessage?.fileSize,
         isPending: false,
         uploadStage: undefined,
         uploadProgress: undefined,
@@ -920,6 +1160,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
 
+      if (pendingMessageId) {
+        cleanupPendingAttachmentUrls(pendingMessageId);
+      } else if (matchedPendingMessage?.id) {
+        cleanupPendingAttachmentUrls(matchedPendingMessage.id);
+      }
+
       if (mediaReport && !variables.onProgress) {
         const skipAlert = buildMediaSkipAlertMessage(
           mediaReport,
@@ -938,23 +1184,58 @@ export const ChatView: React.FC<ChatViewProps> = ({
         error instanceof Error
           ? error.message
           : "Failed to send message. Please try again.";
+      const pendingIdFromError =
+        error && typeof error === "object" && "pendingMessageId" in error
+          ? (error as { pendingMessageId?: string }).pendingMessageId
+          : undefined;
       if (!variables.onProgress) {
         alert(errorMessage);
       }
 
       // Remove failed pending message
-      queryClient.setQueryData(
-        ["pending-messages", chat?.id],
-        (old: Message[] = []) =>
-          old.filter(
-            (msg) =>
-              !(
-                msg.isPending &&
-                msg.content === variables.content &&
-                msg.type === variables.type
-              ),
-          ),
-      );
+      let failedPendingId: string | undefined = pendingIdFromError;
+      const removedById = removePendingMessageById(failedPendingId);
+
+      if (!removedById) {
+        queryClient.setQueryData(
+          ["pending-messages", chat?.id],
+          (old: Message[] = []) => {
+            const requestedFiles = Array.isArray(variables.fileData?.files)
+              ? variables.fileData.files
+              : variables.fileData?.file
+                ? [variables.fileData.file]
+                : [];
+
+            const requestedNames = requestedFiles
+              .map((file: File) => file.name)
+              .sort();
+
+            const index = old.findIndex((msg) => {
+              if (!msg.isPending || msg.type !== variables.type) return false;
+
+              const msgNames = (msg.attachments || [])
+                .map((attachment) => attachment.fileName)
+                .sort();
+
+              if (requestedNames.length > 0) {
+                if (requestedNames.length !== msgNames.length) return false;
+                return requestedNames.every((name, idx) => name === msgNames[idx]);
+              }
+
+              return msg.content === variables.content;
+            });
+
+            if (index === -1) return old;
+
+            failedPendingId = old[index]?.id;
+            return old.filter((_, idx) => idx !== index);
+          },
+        );
+      }
+
+      if (failedPendingId) {
+        cleanupPendingAttachmentUrls(failedPendingId, true);
+      }
     },
   });
 
@@ -1095,6 +1376,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
 
       // Clear pending messages
+      cleanupAllPendingAttachmentUrls();
       queryClient.setQueryData(["pending-messages", chat.id], []);
 
       // Mark as read
@@ -1107,7 +1389,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         isScrolledToBottomRef.current = true;
       }, 100);
     }
-  }, [chat, queryClient]);
+  }, [chat, queryClient, cleanupAllPendingAttachmentUrls]);
 
   // Track new messages
   useEffect(() => {
@@ -1824,15 +2106,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {/* Media Composer Modal */}
       <MediaComposerModal
         files={pendingFiles}
-        processing={mediaProcessing}
-        processingLabel={mediaSendStatus}
-        processingProgress={mediaSendProgress}
+        processing={false}
         onClose={() => {
-          if (mediaProcessing) return;
           setShowMediaModal(false);
           setPendingFiles([]);
-          setMediaSendStatus("Preparing media...");
-          setMediaSendProgress(0);
         }}
         onRemoveFile={(index: number) => {
           setPendingFiles((prev) => {
@@ -1844,84 +2121,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
           });
         }}
         onAddMore={() => fileInputRef.current?.click()}
-        onSend={async (options?: { isMuted?: boolean, caption?: string }) => {
+        onSend={(options?: { isMuted?: boolean, caption?: string }) => {
           if (pendingFiles.length === 0) return;
+          const filesSnapshot = [...pendingFiles];
+          const isImage = filesSnapshot.every((f) =>
+            f.type.startsWith("image/"),
+          );
+          const replyToId = replyingTo?.id;
 
-          setMediaProcessing(true);
-          setMediaSendStatus("Preparing media...");
-          setMediaSendProgress(0);
-          try {
-            let processedFiles = [...pendingFiles];
+          // Close immediately so upload continues in chat without blocking the view.
+          setShowMediaModal(false);
+          setPendingFiles([]);
+          setReplyingTo(null);
 
-            // Process video/audio mute if needed
-            if (options?.isMuted) {
-              processedFiles = await Promise.all(
-                processedFiles.map(async (file) => {
-                  if (file.type.startsWith("video/")) {
-                    return await MediaUtils.muteVideo(file);
-                  }
-                  if (file.type.startsWith("audio/")) {
-                    return await MediaUtils.muteAudio(file);
-                  }
-                  return file;
-                }),
-              );
-            }
-
-            setMediaSendStatus("Optimizing images...");
-            setMediaSendProgress(8);
-            processedFiles = await Promise.all(
-              processedFiles.map(async (file) => {
-                if (file.type.startsWith("image/")) {
-                  return MediaUtils.optimizeImageForUpload(file);
-                }
-                return file;
-              }),
-            );
-
-            const isImage = processedFiles.every((f) =>
-              f.type.startsWith("image/"),
-            );
-
-            const sendResult = await sendMessageMutation.mutateAsync({
-              content: options?.caption || (isImage ? "Photos" : "Files"),
-              type: isImage ? MessageType.IMAGE : MessageType.FILE,
-              fileData: {
-                files: processedFiles,
-              },
-              replyToId: replyingTo?.id,
-              onProgress: (progress: MediaSendProgress) => {
-                setMediaSendStatus(progress.message);
-                setMediaSendProgress(progress.progressPercent);
-              },
-            });
-
-            const report = sendResult?.result?.mediaReport;
-            if (report) {
-              const skipAlert = buildMediaSkipAlertMessage(
-                report,
-                "Media sent with some files skipped.",
-              );
-              if (skipAlert) {
-                alert(skipAlert);
-              }
-            }
-
-            setReplyingTo(null);
-            setShowMediaModal(false);
-            setPendingFiles([]);
-          } catch (error) {
-            console.error("Error sending media:", error);
-            const errorMessage =
-              error instanceof Error
-                ? error.message
-                : "Failed to send media. Please try again.";
-            alert(errorMessage);
-          } finally {
-            setMediaProcessing(false);
-            setMediaSendStatus("Preparing media...");
-            setMediaSendProgress(0);
-          }
+          sendMessageMutation.mutate({
+            content: options?.caption || (isImage ? "Photos" : "Files"),
+            type: isImage ? MessageType.IMAGE : MessageType.FILE,
+            fileData: {
+              files: filesSnapshot,
+            },
+            replyToId,
+            mediaOptions: {
+              isMuted: options?.isMuted,
+            },
+          });
         }}
       />
 
@@ -2104,11 +2327,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {messages.map((msg) => {
               const isMe = msg.sender?.id === currentUserMember?.user?.id;
               const isPending = msg.isPending;
-              const pendingLabel = msg.uploadStage || "Sending...";
+              const pendingLabel = getPendingStatusLabel(msg);
               const pendingProgress =
                 typeof msg.uploadProgress === "number"
-                  ? Math.max(2, Math.min(100, msg.uploadProgress))
+                  ? Math.max(0, Math.min(100, msg.uploadProgress))
                   : 0;
+              const pendingCounterLabel =
+                typeof msg.uploadTotalFiles === "number" && msg.uploadTotalFiles > 1
+                  ? `${msg.uploadCompletedFiles || 0}/${msg.uploadTotalFiles}`
+                  : null;
               const repliedMsg = msg.replyToId
                 ? messages.find((m) => m.id === msg.replyToId)
                 : null;
@@ -2127,43 +2354,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   ref={(el) => {
                     messageRefs.current[msg.id] = el;
                   }}
-                  className={`flex shrink ${isMe ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isPending ? "opacity-70" : ""} ${isSearchResult ? "z-10" : ""}`}
+                  className={`flex shrink ${isMe ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
                 >
-                  {/* Pending indicator */}
-                  {isPending && (
-                    <div className="rounded-2xl relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
-                      <div className="px-4 py-3 min-w-56">
-                        <div className="text-sm flex items-center justify-between gap-3 text-bubble-meta opacity-90">
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                            <p className="text-text-main">{pendingLabel}</p>
-                          </div>
-                          {typeof msg.uploadTotalFiles === "number" &&
-                            msg.uploadTotalFiles > 0 && (
-                              <span className="text-[11px] text-secondary font-medium">
-                                {msg.uploadCompletedFiles || 0}/
-                                {msg.uploadTotalFiles}
-                              </span>
-                            )}
-                        </div>
-                        {pendingProgress > 0 && (
-                          <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
-                            <div
-                              className="h-full bg-primary transition-all duration-300"
-                              style={{ width: `${pendingProgress}%` }}
-                            />
-                          </div>
-                        )}
-                        {typeof msg.uploadFailedFiles === "number" &&
-                          msg.uploadFailedFiles > 0 && (
-                            <p className="text-[11px] text-amber-600 mt-1">
-                              {msg.uploadFailedFiles} file(s) skipped
-                            </p>
-                          )}
-                      </div>
-                    </div>
-                  )}
-
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
                     {!isDeleted && !isPending && (
@@ -2296,9 +2488,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     )}
 
                     {/* Message Bubble */}
-                    {!isPending && (
-                      <div
-                        className={`
+                    <div
+                      className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
                         ${isDeleted
                             ? "bg-surface text-secondary border border-border"
@@ -2307,11 +2498,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                               : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
                           }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
+                        ${isPending ? "ring-1 ring-primary/30" : ""}
                       `}
-                        onClick={(e) =>
-                          handleMessageClick(e, msg.id, !!isDeleted)
-                        }
-                      >
+                      onClick={(e) =>
+                        handleMessageClick(e, msg.id, !!isDeleted)
+                      }
+                    >
                         {/* Forwarded Label */}
                         {!isDeleted && msg.forwardedFromId && (
                           <div
@@ -2368,6 +2560,29 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             onStatusClick,
                           )
                         )}
+                        {isPending && (
+                          <div className="px-3 pb-2">
+                            <div className="text-[11px] flex items-center justify-between gap-3 text-bubble-meta opacity-90">
+                              <div className="flex items-center gap-2">
+                                <div className="animate-pulse rounded-full h-2.5 w-2.5 bg-primary"></div>
+                                <p className="text-text-main">{pendingLabel}</p>
+                              </div>
+                              {pendingCounterLabel && (
+                                <span className="text-[11px] text-secondary font-medium">
+                                  {pendingCounterLabel}
+                                </span>
+                              )}
+                            </div>
+                            {pendingProgress > 0 && (
+                              <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                                <div
+                                  className="h-full bg-primary transition-all duration-200"
+                                  style={{ width: `${pendingProgress}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {/* Message Meta */}
                         <div
                           className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
@@ -2378,6 +2593,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             </span>
                           )}
                           <span>{formatMessageTime(msg.createdAt)}</span>
+                          {isMe && !isDeleted && isPending && (
+                            <span className="inline-flex items-center">
+                              <Clock3 size={12} />
+                            </span>
+                          )}
                           {isMe && !isDeleted && !isPending && (
                             <span>
                               <CheckCheck size={14} />
@@ -2385,7 +2605,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           )}
                         </div>
                       </div>
-                    )}
 
                     {/* Reactions */}
                     {!isDeleted &&
@@ -2726,88 +2945,83 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       {inputValue || "placeholder"}
                     </div>
 
-                    {/* Actual textarea */}
-                    <textarea
-                      ref={inputRef}
-                      placeholder={
-                        replyingTo
-                          ? "Reply..."
-                          : editingMessage
-                            ? "Edit message..."
-                            : "Message"
-                      }
-                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                      style={{
-                        minHeight: "44px",
-                        maxHeight: "120px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      disabled={sendMessageMutation.isPending}
-                      rows={1}
-                      wrap="soft"
-                      inputMode="text"
-                      // enterKeyHint="send"
-                      enterKeyHint="enter"
-                      autoCapitalize="sentences"
-                      autoCorrect="on"
-                      spellCheck="true"
-                    />
-
-                    {/* Command hint - absolutely positioned */}
-                    {!inputValue &&
-                      !isRecording &&
-                      !sendMessageMutation.isPending && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                          <Command size={14} className="hidden sm:block" />
-                          <span className="text-xs hidden sm:inline">/</span>
-                          <span className="text-xs sm:hidden">/</span>{" "}
-                          {/* Mobile fallback */}
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-
-              {/* Send Button */}
-              <div className="pb-1 pr-1">
-                {inputValue.trim() || isRecording ? (
-                  <button
-                    onClick={
-                      isRecording
-                        ? () => stopRecording(false)
+                  {/* Actual textarea */}
+                  <textarea
+                    ref={inputRef}
+                    placeholder={
+                      replyingTo
+                        ? "Reply..."
                         : editingMessage
-                          ? handleEndEdit
-                          : handleTextSend
+                          ? "Edit message..."
+                          : "Message"
                     }
-                    disabled={sendMessageMutation.isPending}
-                    className={`w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center ${editingMessage || sendMessageMutation.isPending ? "bg-primary hover:bg-primary/90" : "bg-primary hover:bg-primary/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {sendMessageMutation.isPending ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : editingMessage ? (
-                      <Check size={24} />
-                    ) : isRecording ? (
-                      <Send size={24} />
-                    ) : (
-                      <Send size={24} />
+                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "120px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    rows={1}
+                    wrap="soft"
+                    inputMode="text"
+                    // enterKeyHint="send"
+                    enterKeyHint="enter"
+                    autoCapitalize="sentences"
+                    autoCorrect="on"
+                    spellCheck="true"
+                  />
+
+                  {/* Command hint - absolutely positioned */}
+                  {!inputValue &&
+                    !isRecording &&
+                    (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                        <Command size={14} className="hidden sm:block" />
+                        <span className="text-xs hidden sm:inline">/</span>
+                        <span className="text-xs sm:hidden">/</span>{" "}
+                        {/* Mobile fallback */}
+                      </div>
                     )}
-                  </button>
-                ) : !editingMessage ? (
-                  <button
-                    onClick={startRecording}
-                    disabled={sendMessageMutation.isPending}
-                    className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Mic size={24} />
-                  </button>
-                ) : null}
-              </div>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Send Button */}
+            <div className="pb-1 pr-1">
+              {inputValue.trim() || isRecording ? (
+                <button
+                  onClick={
+                    isRecording
+                      ? () => stopRecording(false)
+                      : editingMessage
+                        ? handleEndEdit
+                        : handleTextSend
+                  }
+                  className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
+                >
+                  {editingMessage ? (
+                    <Check size={24} />
+                  ) : isRecording ? (
+                    <Send size={24} />
+                  ) : (
+                    <Send size={24} />
+                  )}
+                </button>
+              ) : !editingMessage ? (
+                <button
+                  onClick={startRecording}
+                  className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
+                >
+                  <Mic size={24} />
+                </button>
+              ) : null}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

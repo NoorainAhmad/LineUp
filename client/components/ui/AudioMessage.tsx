@@ -14,6 +14,31 @@ const SimpleAvatar = ({ user, size }: { user?: any; size?: string }) => {
 // Use either your actual Avatar or the SimpleAvatar
 const Avatar = SimpleAvatar; // Remove this line if using your actual Avatar
 
+const toFiniteDuration = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const formatDuration = (value: unknown) => {
+  const duration = toFiniteDuration(value);
+  if (duration === null) return '0:00';
+
+  const totalSeconds = Math.floor(duration);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 interface AudioMessageProps {
   msg: {
     id: string;
@@ -54,14 +79,14 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
   toggleAudio,
   chat
 }) => {
-  const [duration, setDuration] = useState<string>(
-  msg.duration ? `${Math.floor(msg.duration / 60)}:${String(msg.duration % 60).padStart(2, '0')}` : '0:00');
+  const [duration, setDuration] = useState<string>(formatDuration(msg.duration));
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     // Reset state when message changes
-    if(msg.duration){
+    if (toFiniteDuration(msg.duration) !== null) {
+      setDuration(formatDuration(msg.duration));
       setIsLoading(false);
       setLoadError(false);
       return;
@@ -76,15 +101,62 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
 
     // Create a new audio element to get metadata
     const audio = new Audio();
+    let durationResolveTimeout: ReturnType<typeof setTimeout> | undefined;
+    audio.preload = 'metadata';
     
     // Set up event handlers before setting src
+    const applyDuration = (value: unknown) => {
+      setDuration(formatDuration(value));
+      setIsLoading(false);
+      setLoadError(false);
+    };
+
+    const clearDurationResolveTimeout = () => {
+      if (durationResolveTimeout) {
+        clearTimeout(durationResolveTimeout);
+        durationResolveTimeout = undefined;
+      }
+    };
+
+    const resolveDuration = () => {
+      const safeDuration = toFiniteDuration(audio.duration);
+      if (safeDuration !== null) {
+        applyDuration(safeDuration);
+        return true;
+      }
+      return false;
+    };
+
+    const attemptResolveInfinityDuration = () => {
+      if (resolveDuration()) return;
+
+      durationResolveTimeout = setTimeout(() => {
+        if (resolveDuration()) return;
+        setDuration('0:00');
+        setIsLoading(false);
+        setLoadError(false);
+      }, 1200);
+
+      try {
+        // Recorder-produced WebM can report Infinity until a forced seek.
+        audio.currentTime = 1e101;
+      } catch {
+        // Ignore seek failures while metadata is still warming up.
+      }
+    };
+
     const handleLoadedMetadata = () => {
       try {
-        //console.log('Audio metadata loaded for message:', msg.id, 'Duration:', msg.fileName);
-        const minutes = Math.floor(audio.duration / 60);
-        const seconds = Math.floor(audio.duration % 60);
-        const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        setDuration(formattedDuration);
+        if (resolveDuration()) return;
+
+        if (audio.duration === Infinity) {
+          setIsLoading(true);
+          setLoadError(false);
+          attemptResolveInfinityDuration();
+          return;
+        }
+
+        setDuration('0:00');
         setIsLoading(false);
         setLoadError(false);
       } catch (error) {
@@ -103,19 +175,28 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
     };
 
     const handleCanPlay = () => {
-      // If duration is still 0 and we have a valid audio, try to get duration
-      if (audio.duration && audio.duration !== Infinity) {
-        const minutes = Math.floor(audio.duration / 60);
-        const seconds = Math.floor(audio.duration % 60);
-        setDuration(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        setIsLoading(false);
+      if (resolveDuration()) return;
+      if (audio.duration === Infinity) {
+        attemptResolveInfinityDuration();
       }
+    };
+
+    const handleDurationChange = () => {
+      resolveDuration();
+    };
+
+    const handleTimeUpdate = () => {
+      if (!resolveDuration()) return;
+      clearDurationResolveTimeout();
+      audio.currentTime = 0;
     };
 
     // Add event listeners
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('error', handleError as EventListener);
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
 
     // Set the source and load
     audio.src = msg.fileUrl;
@@ -126,11 +207,14 @@ const AudioMessage: React.FC<AudioMessageProps> = ({
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('error', handleError as EventListener);
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      clearDurationResolveTimeout();
       audio.src = ''; // Clear the source
       // Pause if playing and remove from memory
       audio.pause();
     };
-  }, [msg.id, msg.fileUrl]); // Re-run if message id or fileUrl changes
+  }, [msg.id, msg.fileUrl, msg.duration]); // Re-run if message id, fileUrl, or duration changes
 
   // Format file size to KB or MB
   const formatFileSize = (bytes?: string) => {

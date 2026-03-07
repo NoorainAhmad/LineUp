@@ -137,9 +137,9 @@ export const MediaComposerModal: React.FC<MediaComposerModalProps> = ({
   const { isImage, isVideo, isAudio, fileName, fileSize } = fileInfo;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center p-3 sm:p-4 pointer-events-none">
       <div
-        className="w-[640px] max-w-[96vw] max-h-[90vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 overflow-hidden"
+        className="pointer-events-auto w-[680px] max-w-[96vw] max-h-[82vh] bg-surface rounded-2xl shadow-2xl border border-border p-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
