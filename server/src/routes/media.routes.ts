@@ -10,7 +10,10 @@ router.use(authMiddleware);
  
 router.post("/upload-url", checkRole(["USER", "BRANCH", "ADMIN", "MASTER", "DEVELOPER"]), validateMediaTypes, MediaController.getUploadUrl);
  
+router.post("/upload-urls", checkRole(["USER", "BRANCH", "ADMIN", "MASTER", "DEVELOPER"]), validateMediaTypes, MediaController.getUploadUrls);
+ 
 router.post("/finalize", checkRole(["USER", "BRANCH", "ADMIN", "MASTER", "DEVELOPER"]), MediaController.finalizeUpload);
+router.post("/finalize-bulk", checkRole(["USER", "BRANCH", "ADMIN", "MASTER", "DEVELOPER"]), MediaController.finalizeUploads);
  
 router.get("/my-gallery", checkRole(["USER", "BRANCH", "ADMIN", "MASTER", "DEVELOPER"]), MediaController.getMyGallery);
  

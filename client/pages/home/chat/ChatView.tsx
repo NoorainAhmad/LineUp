@@ -45,6 +45,7 @@ import {
 import {
   Chat,
   Message,
+  MessageAttachment,
   UserStatus,
   CannedResponse,
   MessageType,
@@ -58,7 +59,11 @@ import { CameraModal } from "../../../components/modals/CameraModal";
 import { ForwardMessageModal } from "../../../components/modals/ForwardMessageModal";
 import { MediaComposerModal } from "../../../components/modals/MediaComposerModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChatService } from "@/services/chat.service";
+import {
+  ChatService,
+  type MediaSendProgress,
+  type MediaSendReport,
+} from "@/services/chat.service";
 import AudioMessage from "@/components/ui/AudioMessage";
 import { CurrentUser } from "@/constants";
 import TextMessage from "@/components/ui/TextMessage";
@@ -109,6 +114,43 @@ const HighlightedText = ({
   );
 };
 
+const DEFAULT_MEDIA_CAPTIONS = new Set(["photo", "photos", "file", "files"]);
+
+const isDefaultMediaCaption = (content?: string) =>
+  !content || DEFAULT_MEDIA_CAPTIONS.has(content.trim().toLowerCase());
+
+const toNumericSize = (size?: string | number) => {
+  if (typeof size === "number") return size;
+  if (typeof size === "string") {
+    const parsed = Number(size);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const getMessageAttachments = (msg: Message): MessageAttachment[] => {
+  if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+    return msg.attachments;
+  }
+
+  if (!msg.fileUrl) return [];
+
+  return [
+    {
+      id: `${msg.id}-legacy`,
+      fileKey: "",
+      fileUrl: msg.fileUrl,
+      fileName: msg.fileName || "Attachment",
+      mimeType: msg.mimeType || "application/octet-stream",
+      fileSize: toNumericSize(msg.fileSize),
+      order: 0,
+    },
+  ];
+};
+
+const isImageAttachment = (attachment: MessageAttachment) =>
+  attachment.mimeType?.startsWith("image/");
+
 // Helper to render message content
 const renderMessageContent = (
   msg: Message,
@@ -118,6 +160,7 @@ const renderMessageContent = (
   toggleAudio: (messageId: string, url: string) => void,
   searchQuery: string,
   audioRefs: React.MutableRefObject<{ [key: string]: HTMLAudioElement }>,
+  onImagePreview?: (url: string, fileName?: string) => void,
   onStatusClick?: (statusId: string) => void,
 ) => {
   // Determine if this is a group chat
@@ -125,6 +168,11 @@ const renderMessageContent = (
 
   // Get sender name
   const senderName = msg.sender?.name || "Unknown";
+  const attachments = getMessageAttachments(msg);
+  const hasAttachments = attachments.length > 0;
+  const attachmentsToRender = hasAttachments
+    ? attachments
+    : getMessageAttachments(msg);
 
   return (
     <div>
@@ -146,16 +194,31 @@ const renderMessageContent = (
 
       {msg.type === MessageType.IMAGE && (
         <div className="p-1">
-          <img
-            src={msg.fileUrl}
-            alt={msg.fileName}
-            className="rounded-xl w-full max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(msg.fileUrl, "_blank");
-            }}
-          />
-          {msg.content && msg.content !== "Photo" && (
+          {hasAttachments ? (
+            <div
+              className={`grid gap-1 ${attachments.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+            >
+              {attachments.map((attachment) => (
+                <img
+                  key={attachment.id}
+                  src={attachment.fileUrl}
+                  alt={attachment.fileName}
+                  className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${
+                    attachments.length > 1 ? "h-40" : "max-w-sm max-h-80"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImagePreview?.(attachment.fileUrl, attachment.fileName);
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="px-3 py-2 text-xs text-secondary">
+              Image unavailable
+            </div>
+          )}
+          {!isDefaultMediaCaption(msg.content) && (
             <p className="px-3 pt-2 pb-1 text-sm">
               <HighlightedText text={msg.content} highlight={searchQuery} />
             </p>
@@ -171,42 +234,75 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.FILE && (
-        <div className="p-3 flex items-center gap-3 bg-black/5 dark:bg-black/20 rounded-xl m-1 border border-border/50">
-          <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center text-primary shadow-sm">
-            <FileText size={20} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium truncate">
-                <HighlightedText
-                  text={msg.fileName || "Document"}
-                  highlight={searchQuery}
-                />
-              </p>
-              {/* Sender name inline for files in group chats */}
-              {isGroupChat && !isMe && (
-                <span className="text-[10px] text-secondary whitespace-nowrap">
-                  • {senderName}
-                </span>
-              )}
+        <div className="p-1 m-1 rounded-xl border border-border/50 bg-black/5 dark:bg-black/20">
+          {attachmentsToRender.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-secondary">
+              Attachment unavailable
             </div>
-            <p className="text-xs opacity-70">
-              {msg.fileSize} • {msg.fileName?.split(".").pop()?.toUpperCase()}
+          ) : (
+            attachmentsToRender.map((attachment) => {
+              if (isImageAttachment(attachment)) {
+                return (
+                  <img
+                    key={attachment.id}
+                    src={attachment.fileUrl}
+                    alt={attachment.fileName}
+                    className="rounded-xl m-1 w-full max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onImagePreview?.(attachment.fileUrl, attachment.fileName);
+                    }}
+                  />
+                );
+              }
+
+              return (
+                <div
+                  key={attachment.id}
+                  className="p-3 flex items-center gap-3 border-b border-border/40 last:border-b-0"
+                >
+                  <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center text-primary shadow-sm">
+                    <FileText size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">
+                        <HighlightedText
+                          text={attachment.fileName || "Document"}
+                          highlight={searchQuery}
+                        />
+                      </p>
+                      {isGroupChat && !isMe && (
+                        <span className="text-[10px] text-secondary whitespace-nowrap">
+                          | {senderName}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs opacity-70">
+                      {formatBytes(attachment.fileSize || 0)} |{" "}
+                      {attachment.fileName?.split(".").pop()?.toUpperCase() ||
+                        "FILE"}
+                    </p>
+                  </div>
+                  <a
+                    href={attachment.fileUrl}
+                    download={attachment.fileName}
+                    className="p-2 hover:bg-surface-hover rounded-full transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Download size={18} />
+                  </a>
+                </div>
+              );
+            })
+          )}
+          {!isDefaultMediaCaption(msg.content) && (
+            <p className="px-3 pb-2 text-sm">
+              <HighlightedText text={msg.content} highlight={searchQuery} />
             </p>
-          </div>
-          <a
-            href={msg.fileUrl}
-            download={msg.fileName}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 hover:bg-surface-hover rounded-full transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Download size={18} />
-          </a>
+          )}
         </div>
       )}
-
       {msg.type === MessageType.AUDIO && (
         <AudioMessage
           msg={msg}
@@ -282,7 +378,7 @@ const FormattingHint = () => {
             }, 0);
           }}
           className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
-          title="Bold (⌘B)"
+          title="Bold (Cmd+B)"
         >
           <Bold size={14} />
         </button>
@@ -317,7 +413,7 @@ const FormattingHint = () => {
             }, 0);
           }}
           className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
-          title="Italic (⌘I)"
+          title="Italic (Cmd+I)"
         >
           <Italic size={14} />
         </button>
@@ -352,7 +448,7 @@ const FormattingHint = () => {
             }, 0);
           }}
           className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
-          title="Strikethrough (⌘Shift+X)"
+          title="Strikethrough (Cmd+Shift+X)"
         >
           <Strikethrough size={14} />
         </button>
@@ -387,7 +483,7 @@ const FormattingHint = () => {
             }, 0);
           }}
           className="p-1 hover:bg-surface-hover rounded-md transition-colors hover:text-primary"
-          title="Code (⌘E)"
+          title="Code (Cmd+E)"
         >
           <Code size={14} />
         </button>
@@ -485,7 +581,7 @@ const FormattingHint = () => {
                     Select text + click icon
                   </span>
                   <span className="font-mono bg-surface-hover px-1.5 py-0.5 rounded">
-                    ⌘B
+                    Cmd+B
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
@@ -530,7 +626,7 @@ const FormattingRow = ({
       <span className="font-mono text-xs bg-surface-hover px-2 py-1 rounded">
         {syntax}
       </span>
-      <span className="text-secondary">→</span>
+      <span className="text-secondary">{"->"}</span>
     </div>
     <div className="text-text-main">{preview}</div>
   </div>
@@ -544,6 +640,20 @@ const formatBytes = (bytes: number, decimals = 1) => {
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+};
+
+const buildMediaSkipAlertMessage = (
+  report: MediaSendReport | undefined,
+  prefix = "Message sent.",
+) => {
+  if (!report) return "";
+
+  const entries = [...report.skippedFiles, ...report.failedFiles];
+  if (entries.length === 0) return "";
+
+  return `${prefix}\nUploaded: ${report.uploaded}/${report.totalSelected}\nSkipped: ${entries.length}\n\n${entries
+    .map((entry, index) => `${index + 1}. ${entry}`)
+    .join("\n")}`;
 };
 
 // Helper to format time
@@ -597,9 +707,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
     null,
   );
 
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [showMediaModal, setShowMediaModal] = useState(false); 
   const [mediaProcessing, setMediaProcessing] = useState(false);
+  const [mediaSendStatus, setMediaSendStatus] = useState("Preparing media...");
+  const [mediaSendProgress, setMediaSendProgress] = useState(0);
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    fileName?: string;
+  } | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -654,20 +770,50 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   // Mutations
   const sendMessageMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       content,
       type,
       fileData,
       replyToId,
+      onProgress,
     }: {
       content: string;
       type: MessageType;
       fileData?: any;
       replyToId?: string;
+      onProgress?: (progress: MediaSendProgress) => void;
     }) => {
+      const filesToUpload = fileData?.files ?? fileData?.file;
+      const uploadFileCount = Array.isArray(filesToUpload)
+        ? filesToUpload.length
+        : filesToUpload
+          ? 1
+          : 0;
+      const pendingMessageId = `pending-${Date.now()}`;
+
+      const updatePendingProgress = (progress: MediaSendProgress) => {
+        queryClient.setQueryData(
+          ["pending-messages", chat?.id],
+          (old: Message[] = []) =>
+            old.map((msg) =>
+              msg.id === pendingMessageId
+                ? {
+                    ...msg,
+                    uploadStage: progress.message,
+                    uploadProgress: progress.progressPercent,
+                    uploadCompletedFiles: progress.completedFiles,
+                    uploadTotalFiles: progress.totalFiles,
+                    uploadFailedFiles: progress.failedFiles,
+                  }
+                : msg,
+            ),
+        );
+        onProgress?.(progress);
+      };
+
       // Create pending message
       const pendingMessage: Message = {
-        id: `pending-${Date.now()}`,
+        id: pendingMessageId,
         senderId: user?.id || "",
         content,
         type,
@@ -678,6 +824,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isPending: true,
+        uploadStage:
+          uploadFileCount > 0 ? "Preparing media..." : "Sending message...",
+        uploadProgress: uploadFileCount > 0 ? 0 : 90,
+        uploadCompletedFiles: 0,
+        uploadTotalFiles: uploadFileCount,
+        uploadFailedFiles: 0,
         ...fileData,
         replyToId,
       };
@@ -688,8 +840,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         (old: Message[] = []) => [...old, pendingMessage],
       );
 
-      // Send to server
-      return ChatService.sendMessage(
+      const result = await ChatService.sendMessage(
         {
           chatId: chat?.id || "",
           content,
@@ -697,33 +848,112 @@ export const ChatView: React.FC<ChatViewProps> = ({
           ...fileData,
           replyToId,
         },
-        fileData?.file,
+        filesToUpload,
+        {
+          onProgress: updatePendingProgress,
+        },
       );
+      return { pendingMessageId, result };
     },
-    onSuccess: (newMessage) => {
-      // Remove pending message
+    onSuccess: (response, variables) => {
+      const pendingMessageId = response?.pendingMessageId;
+      const sendResult = response?.result;
+      const newMessage = sendResult?.message?.data ?? sendResult?.message;
+      const mediaReport = sendResult?.mediaReport;
+      let matchedPendingMessage: Message | undefined;
+
+      if (!newMessage) {
+        console.warn("Message response missing");
+        return;
+      }
+
+      // Remove pending message safely
       queryClient.setQueryData(
         ["pending-messages", chat?.id],
-        (old: Message[] = []) =>
-          old.filter((msg) => msg.content !== newMessage.content),
+        (old: Message[] = []) => {
+          if (pendingMessageId) {
+            matchedPendingMessage = old.find((msg) => msg.id === pendingMessageId);
+            return old.filter((msg) => msg.id !== pendingMessageId);
+          }
+
+          const pendingIndex = old.findIndex(
+            (msg) =>
+              msg.id.startsWith("pending-") &&
+              msg.content === variables.content &&
+              msg.type === variables.type,
+          );
+
+          if (pendingIndex === -1) {
+            return old.filter((msg) => msg.id !== newMessage.id);
+          }
+
+          matchedPendingMessage = old[pendingIndex];
+          return old.filter((_, index) => index !== pendingIndex);
+        },
       );
 
-      // Invalidate queries
+      const hydratedMessage: Message = {
+        ...(matchedPendingMessage || {}),
+        ...newMessage,
+        isPending: false,
+        uploadStage: undefined,
+        uploadProgress: undefined,
+        uploadCompletedFiles: undefined,
+        uploadTotalFiles: undefined,
+        uploadFailedFiles: undefined,
+      };
+
+      queryClient.setQueryData(
+        ["chat-messages", chat?.id],
+        (old: Message[] = []) => {
+          const exists = old.some((msg) => msg.id === hydratedMessage.id);
+          if (exists) return old;
+
+          return [...old, hydratedMessage].sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          );
+        },
+      );
+
+      // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
 
-      // Scroll to bottom
+      if (mediaReport && !variables.onProgress) {
+        const skipAlert = buildMediaSkipAlertMessage(
+          mediaReport,
+          "Message sent with partial media upload.",
+        );
+        if (skipAlert) {
+          alert(skipAlert);
+        }
+      }
+
       setTimeout(() => scrollToBottom("smooth"), 100);
     },
     onError: (error, variables) => {
       console.error("Failed to send message:", error);
-      alert("Failed to send message. Please try again.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to send message. Please try again.";
+      if (!variables.onProgress) {
+        alert(errorMessage);
+      }
 
       // Remove failed pending message
       queryClient.setQueryData(
         ["pending-messages", chat?.id],
         (old: Message[] = []) =>
-          old.filter((msg) => msg.content !== variables.content),
+          old.filter(
+            (msg) =>
+              !(
+                msg.isPending &&
+                msg.content === variables.content &&
+                msg.type === variables.type
+              ),
+          ),
       );
     },
   });
@@ -1004,9 +1234,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
   // Event handlers
   const handleSendMessage = useCallback(
     (type: MessageType, content: string = "", fileData: any = {}) => {
+      const hasFiles =
+        !!fileData?.file ||
+        (Array.isArray(fileData?.files) && fileData.files.length > 0);
+
       if (
         !chat ||
-        (!content.trim() && type === MessageType.TEXT && !fileData.file)
+        (!content.trim() && type === MessageType.TEXT && !hasFiles)
       )
         return;
 
@@ -1043,26 +1277,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleTextSend = useCallback(() => {
     if (!chat) return;
 
-    // ⭐ CASE 1: Media is selected (image/file)
-    if (pendingFile) {
-      const isImage = pendingFile.type.startsWith("image/");
+    // CASE 1: Media is selected (image/file)
+    if (pendingFiles.length > 0) {
+      const isImage = pendingFiles.every((f)=>f.type.startsWith("image"));
       handleSendMessage(
         isImage ? MessageType.IMAGE : MessageType.FILE,
-        inputValue || (isImage ? "Photo" : pendingFile.name),
+        inputValue || (isImage ? "Photos" : "Files"),
         {
-          file: pendingFile,
-          fileName: pendingFile.name,
-          fileSize: formatBytes(pendingFile.size),
-          mimeType: pendingFile.type,
+          files: pendingFiles,
         },
       );
       // Clear after send
-      setPendingFile(null);
+      setPendingFiles([]);
       return;
     }
     if (!inputValue.trim()) return;
     handleSendMessage(MessageType.TEXT, inputValue);
-  }, [chat, pendingFile, inputValue, handleSendMessage]);
+  }, [chat, pendingFiles, inputValue, handleSendMessage]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1183,36 +1414,58 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0] && chat) {
-        let file = e.target.files[0];
-        setPendingFile(file);
+        const files = Array.from(e.target.files);
+        setPendingFiles((prev) => {
+          const nextFiles = showMediaModal ? [...prev, ...files] : files;
+          if (nextFiles.length > 10) {
+            alert("Maximum 10 files allowed");
+            return prev;
+          }
+          return nextFiles;
+        });
         setShowMediaModal(true);
         setShowAttachMenu(false);
       }
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [chat, sendMessageMutation],
+    [chat, showMediaModal],
   );
 
   const handleCameraCapture = useCallback(
-    (imageSrc: string) => {
-      if (!chat) return;
-      fetch(imageSrc)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
-            type: "image/jpeg",
-          });
-          setPendingFile(file);
-          setShowMediaModal(true);
-          setShowAttachMenu(false);
-        })
-        .catch((error) => {
-          console.error("Error processing camera capture:", error);
-          alert("Failed to process image. Please try again.");
-        });
-    },
-    [chat, sendMessageMutation],
-  );
+  async (imageSrc: string) => {
+    if (!chat) return;
+
+    try {
+      const res = await fetch(imageSrc);
+      const blob = await res.blob();
+
+      const file = new File(
+        [blob],
+        `camera_capture_${Date.now()}.jpg`,
+        { type: "image/jpeg" }
+      );
+
+      setPendingFiles((prev) => {
+        const updated = [...prev, file];
+
+        if (updated.length > 10) {
+          alert("Maximum 10 media files allowed");
+          return prev;
+        }
+
+        return updated;
+      });
+
+      setShowMediaModal(true);
+      setShowAttachMenu(false);
+
+    } catch (error) {
+      console.error("Error processing camera capture:", error);
+      alert("Failed to process image. Please try again.");
+    }
+  },
+  [chat]
+);
 
   const startRecording = async () => {
     try {
@@ -1334,7 +1587,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     console.log(
       "stopRecording called, current state:",
       mediaRecorderRef.current.state,
-    ); // ← add
+    ); // debug
     if (mediaRecorderRef.current && isRecording) {
       if (cancel) {
         mediaRecorderRef.current.onstop = null;
@@ -1544,88 +1797,130 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewImage(null);
+            }}
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white hover:bg-black/60"
+            aria-label="Close image preview"
+          >
+            <X size={20} />
+          </button>
+          <img
+            src={previewImage.url}
+            alt={previewImage.fileName || "Image preview"}
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+ 
       {/* Media Composer Modal */}
       <MediaComposerModal
-        file={pendingFile}
+        files={pendingFiles}
         processing={mediaProcessing}
+        processingLabel={mediaSendStatus}
+        processingProgress={mediaSendProgress}
         onClose={() => {
+          if (mediaProcessing) return;
           setShowMediaModal(false);
-          setPendingFile(null);
+          setPendingFiles([]);
+          setMediaSendStatus("Preparing media...");
+          setMediaSendProgress(0);
+        }}
+        onRemoveFile={(index: number) => {
+          setPendingFiles((prev) => {
+            const next = prev.filter((_, i) => i !== index);
+            if (next.length === 0) {
+              setShowMediaModal(false);
+            }
+            return next;
+          });
         }}
         onAddMore={() => fileInputRef.current?.click()}
         onSend={async (options?: { isMuted?: boolean, caption?: string }) => {
-          if (!pendingFile) return;
-
-          const isImage = pendingFile.type.startsWith("image/");
-          const isVideo = pendingFile.type.startsWith("video/");
-          const isAudio = pendingFile.type.startsWith("audio/");
+          if (pendingFiles.length === 0) return;
 
           setMediaProcessing(true);
+          setMediaSendStatus("Preparing media...");
+          setMediaSendProgress(0);
           try {
-            let fileToSend = pendingFile;
+            let processedFiles = [...pendingFiles];
 
-            // Process video/audio with mute if needed
-            if (isVideo && options?.isMuted) {
-              fileToSend = await MediaUtils.muteVideo(pendingFile);
-            } else if (isAudio && options?.isMuted) {
-              fileToSend = await MediaUtils.muteAudio(pendingFile);
-            }
-
-            // Send based on type
-            if (isVideo) {
-              handleSendMessage(
-                MessageType.FILE,
-                options?.caption || "Video",
-                {
-                  file: fileToSend,
-                  fileName: fileToSend.name,
-                  fileSize: formatBytes(fileToSend.size),
-                  mimeType: fileToSend.type,
-                },
-              );
-            } else if (isAudio) {
-              handleSendMessage(
-                MessageType.FILE,
-                options?.caption || "Audio",
-                {
-                  file: fileToSend,
-                  fileName: fileToSend.name,
-                  fileSize: formatBytes(fileToSend.size),
-                  mimeType: fileToSend.type,
-                },
-              );
-            } else if (isImage) {
-              handleSendMessage(
-                MessageType.IMAGE,
-                options?.caption || "Photo",
-                {
-                  file: pendingFile,
-                  fileName: pendingFile.name,
-                  fileSize: formatBytes(pendingFile.size),
-                  mimeType: pendingFile.type,
-                },
-              );
-            } else {
-              handleSendMessage(
-                MessageType.FILE,
-                options?.caption || pendingFile.name,
-                {
-                  file: pendingFile,
-                  fileName: pendingFile.name,
-                  fileSize: formatBytes(pendingFile.size),
-                  mimeType: pendingFile.type,
-                },
+            // Process video/audio mute if needed
+            if (options?.isMuted) {
+              processedFiles = await Promise.all(
+                processedFiles.map(async (file) => {
+                  if (file.type.startsWith("video/")) {
+                    return await MediaUtils.muteVideo(file);
+                  }
+                  if (file.type.startsWith("audio/")) {
+                    return await MediaUtils.muteAudio(file);
+                  }
+                  return file;
+                }),
               );
             }
 
-            // Close modal after successful send
+            setMediaSendStatus("Optimizing images...");
+            setMediaSendProgress(8);
+            processedFiles = await Promise.all(
+              processedFiles.map(async (file) => {
+                if (file.type.startsWith("image/")) {
+                  return MediaUtils.optimizeImageForUpload(file);
+                }
+                return file;
+              }),
+            );
+
+            const isImage = processedFiles.every((f) =>
+              f.type.startsWith("image/"),
+            );
+
+            const sendResult = await sendMessageMutation.mutateAsync({
+              content: options?.caption || (isImage ? "Photos" : "Files"),
+              type: isImage ? MessageType.IMAGE : MessageType.FILE,
+              fileData: {
+                files: processedFiles,
+              },
+              replyToId: replyingTo?.id,
+              onProgress: (progress: MediaSendProgress) => {
+                setMediaSendStatus(progress.message);
+                setMediaSendProgress(progress.progressPercent);
+              },
+            });
+
+            const report = sendResult?.result?.mediaReport;
+            if (report) {
+              const skipAlert = buildMediaSkipAlertMessage(
+                report,
+                "Media sent with some files skipped.",
+              );
+              if (skipAlert) {
+                alert(skipAlert);
+              }
+            }
+
+            setReplyingTo(null);
             setShowMediaModal(false);
-            setPendingFile(null);
+            setPendingFiles([]);
           } catch (error) {
             console.error("Error sending media:", error);
-            // Handle error (show toast, etc.)
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : "Failed to send media. Please try again.";
+            alert(errorMessage);
           } finally {
             setMediaProcessing(false);
+            setMediaSendStatus("Preparing media...");
+            setMediaSendProgress(0);
           }
         }}
       />
@@ -1809,6 +2104,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {messages.map((msg) => {
               const isMe = msg.sender?.id === currentUserMember?.user?.id;
               const isPending = msg.isPending;
+              const pendingLabel = msg.uploadStage || "Sending...";
+              const pendingProgress =
+                typeof msg.uploadProgress === "number"
+                  ? Math.max(2, Math.min(100, msg.uploadProgress))
+                  : 0;
               const repliedMsg = msg.replyToId
                 ? messages.find((m) => m.id === msg.replyToId)
                 : null;
@@ -1832,11 +2132,34 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   {/* Pending indicator */}
                   {isPending && (
                     <div className="rounded-2xl relative shadow-sm overflow-hidden transition-colors bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm">
-                      <div
-                        className={`p-2 text-sm flex items-center justify-end gap-2 text-bubble-meta opacity-80 px-4`}
-                      >
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <p className="text-text-main">Sending...</p>
+                      <div className="px-4 py-3 min-w-56">
+                        <div className="text-sm flex items-center justify-between gap-3 text-bubble-meta opacity-90">
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                            <p className="text-text-main">{pendingLabel}</p>
+                          </div>
+                          {typeof msg.uploadTotalFiles === "number" &&
+                            msg.uploadTotalFiles > 0 && (
+                              <span className="text-[11px] text-secondary font-medium">
+                                {msg.uploadCompletedFiles || 0}/
+                                {msg.uploadTotalFiles}
+                              </span>
+                            )}
+                        </div>
+                        {pendingProgress > 0 && (
+                          <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
+                            <div
+                              className="h-full bg-primary transition-all duration-300"
+                              style={{ width: `${pendingProgress}%` }}
+                            />
+                          </div>
+                        )}
+                        {typeof msg.uploadFailedFiles === "number" &&
+                          msg.uploadFailedFiles > 0 && (
+                            <p className="text-[11px] text-amber-600 mt-1">
+                              {msg.uploadFailedFiles} file(s) skipped
+                            </p>
+                          )}
                       </div>
                     </div>
                   )}
@@ -2040,6 +2363,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                             toggleAudio,
                             searchQuery,
                             audioRefs,
+                            (url: string, fileName?: string) =>
+                              setPreviewImage({ url, fileName }),
                             onStatusClick,
                           )
                         )}
@@ -2292,53 +2617,54 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       />
                     </button>
 
-                    {showAttachMenu && (
-                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                        <button
-                          onClick={() => setShowCamera(true)}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                            <Camera size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Camera
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                            <Image size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Photos & Videos
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                            <FileText size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Document
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                />
-              </div>
+                  {showAttachMenu && (
+                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                      <button
+                        onClick={() => setShowCamera(true)}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                          <Camera size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Camera
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                          <Image size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Photos & Videos
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                          <FileText size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Document
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                multiple
+              />
+            </div>
 
               {/* Text Input */}
               <div className="flex-1 min-w-0 relative min-h-12.5">
@@ -2486,3 +2812,4 @@ export const ChatView: React.FC<ChatViewProps> = ({
     </div>
   );
 };
+

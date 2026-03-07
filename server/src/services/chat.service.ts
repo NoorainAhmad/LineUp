@@ -6,6 +6,7 @@ import {
   forwardMessageSchema,
 } from "../validators/chat.validator.js";
 import { UserRole } from "@/generated/prisma/index.js";
+import { HierarchyService } from "@/utils/hierarchy.service.js";
 
 export class ChatService {
   private static chatSelection = {
@@ -18,17 +19,26 @@ export class ChatService {
         id: true,
         type: true,
         content: true,
-        fileUrl: true,
-        fileName: true,
-        fileSize: true,
-        duration: true,
-        mimeType: true,
         replyToId: true,
         forwardedFromId: true,
         originalSenderId: true,
         isEdited: true,
         isDeleted: true,
         reactions: true,
+        medias: {
+  select: {
+    order: true,
+    media: {
+      select: {
+        id: true,
+        fileKey: true,
+        originalName: true,
+        mimeType: true,
+        fileSize: true,
+      },
+    },
+  },
+},
         sender: {
           select: {
             id: true,
@@ -77,36 +87,6 @@ export class ChatService {
     updatedAt: true,
   };
 
-  // Helper: recursively collect all descendants in hierarchy
-  private static async getAllSubordinateIds(userId: string): Promise<string[]> {
-    const directSubs = await prisma.user.findMany({
-      where: { parentId: userId },
-      select: { id: true },
-    });
-
-    const subordinateIds: string[] = [];
-    for (const sub of directSubs) {
-      subordinateIds.push(sub.id);
-      const deeperIds = await this.getAllSubordinateIds(sub.id);
-      subordinateIds.push(...deeperIds);
-    }
-
-    return subordinateIds;
-  }
-
-  // Helper: centralized role visibility for hierarchy access
-  private static async getVisibleUserIds(
-    userId: string,
-    role: UserRole,
-  ): Promise<string[]> {
-    if (role === UserRole.USER) {
-      return [userId];
-    }
-
-    const subordinateIds = await this.getAllSubordinateIds(userId);
-    return [...new Set([userId, ...subordinateIds])];
-  }
-
   // Create a new chat
   static async createChat(
     userId: string,
@@ -151,7 +131,7 @@ export class ChatService {
     data: z.infer<typeof sendMessageSchema>,
   ) {
     try {
-      const { chatId, content, type, replyToId, ...media } = data;
+      const { chatId, content, type, replyToId, mediaIds } = data;
       // 🔒 CRITICAL: Check membership
   const membership = await prisma.chatMember.findUnique({
     where: {
@@ -165,7 +145,8 @@ export class ChatService {
   if (!membership) {
     throw new Error("You are not a member of this chat. Read-only access only.");
   }
-
+console.log("Send message data", data)
+console.log(" Media IDs", mediaIds)
       return prisma.$transaction(async (tx) => {
         const message = await tx.message.create({
           data: {
@@ -174,12 +155,20 @@ export class ChatService {
             senderId,
             chatId,
             replyToId,
-            ...media,
           },
           include: {
             sender: { select: { id: true, name: true, avatarUrl: true } },
           },
         });
+        if (mediaIds?.length) {
+    await tx.messageMedia.createMany({
+      data: mediaIds.map((id: string, index: number) => ({
+        messageId: message.id,
+        mediaId: id,
+        order: index,
+      })),
+    });
+  }
         await tx.chat.update({
           where: { id: chatId },
           data: {
@@ -307,9 +296,8 @@ export class ChatService {
         throw new Error("User not found");
       }
 
-      const visibleUserIds = await this.getVisibleUserIds(
+      const visibleUserIds = await HierarchyService.getVisibleUserIds(
         currentUser.id,
-        currentUser.role,
       );
 
       // Fetch chats with the constructed condition
@@ -395,9 +383,8 @@ export class ChatService {
       if (!currentUser) {
         return [];
       }
-      const relevantUserIds = await this.getVisibleUserIds(
+      const relevantUserIds = await HierarchyService.getVisibleUserIds(
         currentUser.id,
-        currentUser.role,
       );
       // 3️⃣ CRITICAL SECURITY CHECK: Verify chat belongs to hierarchy
     const isAuthorizedChat = await prisma.chat.findFirst({
@@ -427,6 +414,12 @@ export class ChatService {
       include: {
         sender: {
           select: { id: true, name: true, avatarUrl: true },
+        },
+        medias: {
+          include: {
+            media: true,
+          },
+          orderBy: { order: "asc" },
         },
         asLastMessage: { select: { id: true } },
       },
@@ -475,10 +468,6 @@ export class ChatService {
               content: original.content,
               senderId,
               chatId: targetChatId,
-              fileUrl: original.fileUrl,
-              fileName: original.fileName,
-              fileSize: original.fileSize,
-              mimeType: original.mimeType,
               forwardedFromId: original.id,
               originalSenderId: original.senderId,
             },
@@ -558,8 +547,6 @@ export class ChatService {
         data: {
           isDeleted: true,
           content: "This message has been deleted",
-          fileUrl: null,
-          fileName: null,
         },
       });
     } catch (error) {

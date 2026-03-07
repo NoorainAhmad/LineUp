@@ -170,11 +170,7 @@ model Message {
   chatId   String
   chat     Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  fileUrl  String?
-  fileName String?
-  fileSize String?
-  duration Int?
-  mimeType String?
+  medias MessageMedia[]
 
   replyToId        String?
   forwardedFromId  String?
@@ -189,7 +185,22 @@ model Message {
   updatedAt DateTime @updatedAt
 
   @@index([chatId, createdAt])
+  @@index([senderId])
   @@map("messages")
+}
+model MessageMedia {
+  id        String @id @default(uuid())
+  messageId String
+  mediaId   String
+  order     Int    @default(0)
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, mediaId])
+  @@index([mediaId])
+  @@index([messageId, order])
+  @@map("message_media")
 }
 
 model Status {
@@ -237,6 +248,7 @@ model Media {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+ messageLinks MessageMedia[]
   status Status?
 
   createdAt DateTime @default(now())
