@@ -126,7 +126,8 @@ export const MessageType: {
   IMAGE: 'IMAGE',
   AUDIO: 'AUDIO',
   VIDEO: 'VIDEO',
-  FILE: 'FILE'
+  FILE: 'FILE',
+  STICKER: 'STICKER'
 };
 
 export type MessageType = (typeof MessageType)[keyof typeof MessageType]

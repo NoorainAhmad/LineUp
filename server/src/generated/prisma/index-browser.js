@@ -309,7 +309,8 @@ exports.MessageType = exports.$Enums.MessageType = {
   IMAGE: 'IMAGE',
   AUDIO: 'AUDIO',
   VIDEO: 'VIDEO',
-  FILE: 'FILE'
+  FILE: 'FILE',
+  STICKER: 'STICKER'
 };
 
 exports.StatusType = exports.$Enums.StatusType = {
