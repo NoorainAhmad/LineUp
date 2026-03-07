@@ -5,9 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-}
-
-// --- Enums ---
+} 
 
 enum UserRole {
   DEVELOPER
@@ -49,9 +47,7 @@ enum MessageType {
   VIDEO
   FILE
   STICKER
-}
-
-// --- Models ---
+} 
 
 model Otp {
   id    String @id @default(uuid())
