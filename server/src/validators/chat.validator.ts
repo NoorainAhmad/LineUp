@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MessageTypeEnum = z.enum(["TEXT", "IMAGE", "AUDIO", "VIDEO", "FILE"]);
+const MessageTypeEnum = z.enum(["TEXT", "IMAGE", "AUDIO", "VIDEO", "FILE", "STICKER"]);
 
 // MESSAGE VALIDATOR
 export const sendMessageSchema = z.object({

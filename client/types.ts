@@ -37,6 +37,7 @@ export enum MessageType {
   AUDIO = "AUDIO",
   VIDEO = "VIDEO",
   FILE = "FILE",
+  STICKER = "STICKER",
 }
 
 export interface DashboardStats {

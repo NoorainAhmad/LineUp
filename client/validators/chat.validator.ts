@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MessageTypeEnum = z.enum(["TEXT", "IMAGE", "AUDIO", "VIDEO", "FILE"]);
+const MessageTypeEnum = z.enum(["TEXT", "IMAGE", "AUDIO", "VIDEO", "FILE", "STICKER"]);
 
 // MESSAGE VALIDATOR
 export const sendMessageSchema = z.object({
@@ -24,7 +24,7 @@ export const chatCreateSchema = z.object({
 });
 
 // CHAT MEMBER UPDATE VALIDATOR
-export const chatMemberUpdateSchema = z.object({ 
+export const chatMemberUpdateSchema = z.object({
   isPinned: z.boolean().optional(),
   isMuted: z.boolean().optional(),
   isArchived: z.boolean().optional(),
