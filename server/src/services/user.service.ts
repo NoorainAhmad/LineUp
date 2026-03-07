@@ -6,7 +6,7 @@ import type {
   userUpdateSchema,
 } from "../validators/user.validator.js";
 import { MessageType, UserRole, UserStatus } from "@/generated/prisma/index.js";
-
+import { HierarchyService } from "@/utils/hierarchy.service.js";
 interface DashboardStats {
   // Greeting & User Info
   user: {
@@ -211,7 +211,7 @@ export class UserService {
   static async teamMembers(userId: string) {
     try {  
       // First, get all subordinate IDs recursively
-      const allTeamIds = await this.getAllSubordinateIds(userId);
+      const allTeamIds = await HierarchyService.getAllSubordinateIds(userId);
 
       // Add the current user to the list
       allTeamIds.push(userId); 
@@ -237,6 +237,7 @@ export class UserService {
           phone: true,
           role: true,
           status: true,
+          lastSeen: true,
           isActive: true,
           avatarUrl: true,
           location: true,
@@ -283,7 +284,7 @@ export class UserService {
       query = query.trim(); 
 
       // First, get all subordinate IDs recursively
-      const allTeamIds = await this.getAllSubordinateIds(userId);
+      const allTeamIds = await HierarchyService.getAllSubordinateIds(userId);
 
       // Add the current user to the list
       allTeamIds.push(userId); 
@@ -316,6 +317,7 @@ export class UserService {
           phone: true,
           role: true,
           status: true,
+          lastSeen: true,
           isActive: true,
           avatarUrl: true,
           location: true,
@@ -356,24 +358,6 @@ export class UserService {
     }
   }
 
-  // Helper: Get all subordinate IDs recursively (existing method)
-  private static async getAllSubordinateIds(userId: string): Promise<string[]> {
-    const directSubs = await prisma.user.findMany({
-      where: { parentId: userId },
-      select: { id: true },
-    });
-
-    const subordinateIds: string[] = [];
-
-    for (const sub of directSubs) {
-      subordinateIds.push(sub.id);
-      // Recursively get children of this subordinate
-      const deeperIds = await this.getAllSubordinateIds(sub.id);
-      subordinateIds.push(...deeperIds);
-    }
-
-    return subordinateIds;
-  }
 
   // Helper: Get hierarchy level based on role
   private static getHierarchyLevel(role: string): number {
