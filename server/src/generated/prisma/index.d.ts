@@ -44,6 +44,11 @@ export type ChatMember = $Result.DefaultSelection<Prisma.$ChatMemberPayload>
  */
 export type Message = $Result.DefaultSelection<Prisma.$MessagePayload>
 /**
+ * Model MessageMedia
+ * 
+ */
+export type MessageMedia = $Result.DefaultSelection<Prisma.$MessageMediaPayload>
+/**
  * Model Status
  * 
  */
@@ -334,6 +339,16 @@ export class PrismaClient<
     * ```
     */
   get message(): Prisma.MessageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.messageMedia`: Exposes CRUD operations for the **MessageMedia** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MessageMedias
+    * const messageMedias = await prisma.messageMedia.findMany()
+    * ```
+    */
+  get messageMedia(): Prisma.MessageMediaDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.status`: Exposes CRUD operations for the **Status** model.
@@ -824,6 +839,7 @@ export namespace Prisma {
     Chat: 'Chat',
     ChatMember: 'ChatMember',
     Message: 'Message',
+    MessageMedia: 'MessageMedia',
     Status: 'Status',
     StatusView: 'StatusView',
     Media: 'Media',
@@ -844,7 +860,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "otp" | "user" | "session" | "chat" | "chatMember" | "message" | "status" | "statusView" | "media" | "cannedResponse" | "system"
+      modelProps: "otp" | "user" | "session" | "chat" | "chatMember" | "message" | "messageMedia" | "status" | "statusView" | "media" | "cannedResponse" | "system"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1289,6 +1305,80 @@ export namespace Prisma {
           count: {
             args: Prisma.MessageCountArgs<ExtArgs>
             result: $Utils.Optional<MessageCountAggregateOutputType> | number
+          }
+        }
+      }
+      MessageMedia: {
+        payload: Prisma.$MessageMediaPayload<ExtArgs>
+        fields: Prisma.MessageMediaFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MessageMediaFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MessageMediaFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          findFirst: {
+            args: Prisma.MessageMediaFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MessageMediaFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          findMany: {
+            args: Prisma.MessageMediaFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>[]
+          }
+          create: {
+            args: Prisma.MessageMediaCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          createMany: {
+            args: Prisma.MessageMediaCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MessageMediaCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>[]
+          }
+          delete: {
+            args: Prisma.MessageMediaDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          update: {
+            args: Prisma.MessageMediaUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          deleteMany: {
+            args: Prisma.MessageMediaDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MessageMediaUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MessageMediaUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>[]
+          }
+          upsert: {
+            args: Prisma.MessageMediaUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MessageMediaPayload>
+          }
+          aggregate: {
+            args: Prisma.MessageMediaAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMessageMedia>
+          }
+          groupBy: {
+            args: Prisma.MessageMediaGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MessageMediaGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MessageMediaCountArgs<ExtArgs>
+            result: $Utils.Optional<MessageMediaCountAggregateOutputType> | number
           }
         }
       }
@@ -1776,6 +1866,7 @@ export namespace Prisma {
     chat?: ChatOmit
     chatMember?: ChatMemberOmit
     message?: MessageOmit
+    messageMedia?: MessageMediaOmit
     status?: StatusOmit
     statusView?: StatusViewOmit
     media?: MediaOmit
@@ -2000,6 +2091,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type MessageCountOutputType
+   */
+
+  export type MessageCountOutputType = {
+    medias: number
+  }
+
+  export type MessageCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    medias?: boolean | MessageCountOutputTypeCountMediasArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageCountOutputType
+     */
+    select?: MessageCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeCountMediasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageMediaWhereInput
+  }
+
+
+  /**
    * Count Type StatusCountOutputType
    */
 
@@ -2027,6 +2149,37 @@ export namespace Prisma {
    */
   export type StatusCountOutputTypeCountViewersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StatusViewWhereInput
+  }
+
+
+  /**
+   * Count Type MediaCountOutputType
+   */
+
+  export type MediaCountOutputType = {
+    messageLinks: number
+  }
+
+  export type MediaCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    messageLinks?: boolean | MediaCountOutputTypeCountMessageLinksArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MediaCountOutputType without action
+   */
+  export type MediaCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MediaCountOutputType
+     */
+    select?: MediaCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MediaCountOutputType without action
+   */
+  export type MediaCountOutputTypeCountMessageLinksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageMediaWhereInput
   }
 
 
@@ -8001,18 +8154,8 @@ export namespace Prisma {
 
   export type AggregateMessage = {
     _count: MessageCountAggregateOutputType | null
-    _avg: MessageAvgAggregateOutputType | null
-    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
-  }
-
-  export type MessageAvgAggregateOutputType = {
-    duration: number | null
-  }
-
-  export type MessageSumAggregateOutputType = {
-    duration: number | null
   }
 
   export type MessageMinAggregateOutputType = {
@@ -8021,11 +8164,6 @@ export namespace Prisma {
     content: string | null
     senderId: string | null
     chatId: string | null
-    fileUrl: string | null
-    fileName: string | null
-    fileSize: string | null
-    duration: number | null
-    mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
     originalSenderId: string | null
@@ -8041,11 +8179,6 @@ export namespace Prisma {
     content: string | null
     senderId: string | null
     chatId: string | null
-    fileUrl: string | null
-    fileName: string | null
-    fileSize: string | null
-    duration: number | null
-    mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
     originalSenderId: string | null
@@ -8061,11 +8194,6 @@ export namespace Prisma {
     content: number
     senderId: number
     chatId: number
-    fileUrl: number
-    fileName: number
-    fileSize: number
-    duration: number
-    mimeType: number
     replyToId: number
     forwardedFromId: number
     originalSenderId: number
@@ -8078,25 +8206,12 @@ export namespace Prisma {
   }
 
 
-  export type MessageAvgAggregateInputType = {
-    duration?: true
-  }
-
-  export type MessageSumAggregateInputType = {
-    duration?: true
-  }
-
   export type MessageMinAggregateInputType = {
     id?: true
     type?: true
     content?: true
     senderId?: true
     chatId?: true
-    fileUrl?: true
-    fileName?: true
-    fileSize?: true
-    duration?: true
-    mimeType?: true
     replyToId?: true
     forwardedFromId?: true
     originalSenderId?: true
@@ -8112,11 +8227,6 @@ export namespace Prisma {
     content?: true
     senderId?: true
     chatId?: true
-    fileUrl?: true
-    fileName?: true
-    fileSize?: true
-    duration?: true
-    mimeType?: true
     replyToId?: true
     forwardedFromId?: true
     originalSenderId?: true
@@ -8132,11 +8242,6 @@ export namespace Prisma {
     content?: true
     senderId?: true
     chatId?: true
-    fileUrl?: true
-    fileName?: true
-    fileSize?: true
-    duration?: true
-    mimeType?: true
     replyToId?: true
     forwardedFromId?: true
     originalSenderId?: true
@@ -8186,18 +8291,6 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Select which fields to average
-    **/
-    _avg?: MessageAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: MessageSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
      * Select which fields to find the minimum value
     **/
     _min?: MessageMinAggregateInputType
@@ -8228,8 +8321,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: MessageCountAggregateInputType | true
-    _avg?: MessageAvgAggregateInputType
-    _sum?: MessageSumAggregateInputType
     _min?: MessageMinAggregateInputType
     _max?: MessageMaxAggregateInputType
   }
@@ -8240,11 +8331,6 @@ export namespace Prisma {
     content: string
     senderId: string
     chatId: string
-    fileUrl: string | null
-    fileName: string | null
-    fileSize: string | null
-    duration: number | null
-    mimeType: string | null
     replyToId: string | null
     forwardedFromId: string | null
     originalSenderId: string | null
@@ -8254,8 +8340,6 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     _count: MessageCountAggregateOutputType | null
-    _avg: MessageAvgAggregateOutputType | null
-    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
   }
@@ -8280,11 +8364,6 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     chatId?: boolean
-    fileUrl?: boolean
-    fileName?: boolean
-    fileSize?: boolean
-    duration?: boolean
-    mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
     originalSenderId?: boolean
@@ -8295,7 +8374,9 @@ export namespace Prisma {
     updatedAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    medias?: boolean | Message$mediasArgs<ExtArgs>
     asLastMessage?: boolean | Message$asLastMessageArgs<ExtArgs>
+    _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
   export type MessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -8304,11 +8385,6 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     chatId?: boolean
-    fileUrl?: boolean
-    fileName?: boolean
-    fileSize?: boolean
-    duration?: boolean
-    mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
     originalSenderId?: boolean
@@ -8327,11 +8403,6 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     chatId?: boolean
-    fileUrl?: boolean
-    fileName?: boolean
-    fileSize?: boolean
-    duration?: boolean
-    mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
     originalSenderId?: boolean
@@ -8350,11 +8421,6 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     chatId?: boolean
-    fileUrl?: boolean
-    fileName?: boolean
-    fileSize?: boolean
-    duration?: boolean
-    mimeType?: boolean
     replyToId?: boolean
     forwardedFromId?: boolean
     originalSenderId?: boolean
@@ -8365,11 +8431,13 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "fileUrl" | "fileName" | "fileSize" | "duration" | "mimeType" | "replyToId" | "forwardedFromId" | "originalSenderId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "senderId" | "chatId" | "replyToId" | "forwardedFromId" | "originalSenderId" | "isEdited" | "isDeleted" | "reactions" | "createdAt" | "updatedAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    medias?: boolean | Message$mediasArgs<ExtArgs>
     asLastMessage?: boolean | Message$asLastMessageArgs<ExtArgs>
+    _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
@@ -8385,6 +8453,7 @@ export namespace Prisma {
     objects: {
       sender: Prisma.$UserPayload<ExtArgs>
       chat: Prisma.$ChatPayload<ExtArgs>
+      medias: Prisma.$MessageMediaPayload<ExtArgs>[]
       asLastMessage: Prisma.$ChatPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -8393,11 +8462,6 @@ export namespace Prisma {
       content: string
       senderId: string
       chatId: string
-      fileUrl: string | null
-      fileName: string | null
-      fileSize: string | null
-      duration: number | null
-      mimeType: string | null
       replyToId: string | null
       forwardedFromId: string | null
       originalSenderId: string | null
@@ -8802,6 +8866,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     sender<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     chat<T extends ChatDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChatDefaultArgs<ExtArgs>>): Prisma__ChatClient<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    medias<T extends Message$mediasArgs<ExtArgs> = {}>(args?: Subset<T, Message$mediasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     asLastMessage<T extends Message$asLastMessageArgs<ExtArgs> = {}>(args?: Subset<T, Message$asLastMessageArgs<ExtArgs>>): Prisma__ChatClient<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -8837,11 +8902,6 @@ export namespace Prisma {
     readonly content: FieldRef<"Message", 'String'>
     readonly senderId: FieldRef<"Message", 'String'>
     readonly chatId: FieldRef<"Message", 'String'>
-    readonly fileUrl: FieldRef<"Message", 'String'>
-    readonly fileName: FieldRef<"Message", 'String'>
-    readonly fileSize: FieldRef<"Message", 'String'>
-    readonly duration: FieldRef<"Message", 'Int'>
-    readonly mimeType: FieldRef<"Message", 'String'>
     readonly replyToId: FieldRef<"Message", 'String'>
     readonly forwardedFromId: FieldRef<"Message", 'String'>
     readonly originalSenderId: FieldRef<"Message", 'String'>
@@ -9246,6 +9306,30 @@ export namespace Prisma {
   }
 
   /**
+   * Message.medias
+   */
+  export type Message$mediasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    where?: MessageMediaWhereInput
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    cursor?: MessageMediaWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MessageMediaScalarFieldEnum | MessageMediaScalarFieldEnum[]
+  }
+
+  /**
    * Message.asLastMessage
    */
   export type Message$asLastMessageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9280,6 +9364,1093 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: MessageInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MessageMedia
+   */
+
+  export type AggregateMessageMedia = {
+    _count: MessageMediaCountAggregateOutputType | null
+    _avg: MessageMediaAvgAggregateOutputType | null
+    _sum: MessageMediaSumAggregateOutputType | null
+    _min: MessageMediaMinAggregateOutputType | null
+    _max: MessageMediaMaxAggregateOutputType | null
+  }
+
+  export type MessageMediaAvgAggregateOutputType = {
+    order: number | null
+  }
+
+  export type MessageMediaSumAggregateOutputType = {
+    order: number | null
+  }
+
+  export type MessageMediaMinAggregateOutputType = {
+    id: string | null
+    messageId: string | null
+    mediaId: string | null
+    order: number | null
+  }
+
+  export type MessageMediaMaxAggregateOutputType = {
+    id: string | null
+    messageId: string | null
+    mediaId: string | null
+    order: number | null
+  }
+
+  export type MessageMediaCountAggregateOutputType = {
+    id: number
+    messageId: number
+    mediaId: number
+    order: number
+    _all: number
+  }
+
+
+  export type MessageMediaAvgAggregateInputType = {
+    order?: true
+  }
+
+  export type MessageMediaSumAggregateInputType = {
+    order?: true
+  }
+
+  export type MessageMediaMinAggregateInputType = {
+    id?: true
+    messageId?: true
+    mediaId?: true
+    order?: true
+  }
+
+  export type MessageMediaMaxAggregateInputType = {
+    id?: true
+    messageId?: true
+    mediaId?: true
+    order?: true
+  }
+
+  export type MessageMediaCountAggregateInputType = {
+    id?: true
+    messageId?: true
+    mediaId?: true
+    order?: true
+    _all?: true
+  }
+
+  export type MessageMediaAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MessageMedia to aggregate.
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MessageMedias to fetch.
+     */
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MessageMediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MessageMedias from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MessageMedias.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MessageMedias
+    **/
+    _count?: true | MessageMediaCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MessageMediaAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MessageMediaSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MessageMediaMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MessageMediaMaxAggregateInputType
+  }
+
+  export type GetMessageMediaAggregateType<T extends MessageMediaAggregateArgs> = {
+        [P in keyof T & keyof AggregateMessageMedia]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMessageMedia[P]>
+      : GetScalarType<T[P], AggregateMessageMedia[P]>
+  }
+
+
+
+
+  export type MessageMediaGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageMediaWhereInput
+    orderBy?: MessageMediaOrderByWithAggregationInput | MessageMediaOrderByWithAggregationInput[]
+    by: MessageMediaScalarFieldEnum[] | MessageMediaScalarFieldEnum
+    having?: MessageMediaScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MessageMediaCountAggregateInputType | true
+    _avg?: MessageMediaAvgAggregateInputType
+    _sum?: MessageMediaSumAggregateInputType
+    _min?: MessageMediaMinAggregateInputType
+    _max?: MessageMediaMaxAggregateInputType
+  }
+
+  export type MessageMediaGroupByOutputType = {
+    id: string
+    messageId: string
+    mediaId: string
+    order: number
+    _count: MessageMediaCountAggregateOutputType | null
+    _avg: MessageMediaAvgAggregateOutputType | null
+    _sum: MessageMediaSumAggregateOutputType | null
+    _min: MessageMediaMinAggregateOutputType | null
+    _max: MessageMediaMaxAggregateOutputType | null
+  }
+
+  type GetMessageMediaGroupByPayload<T extends MessageMediaGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MessageMediaGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MessageMediaGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MessageMediaGroupByOutputType[P]>
+            : GetScalarType<T[P], MessageMediaGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MessageMediaSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    messageId?: boolean
+    mediaId?: boolean
+    order?: boolean
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["messageMedia"]>
+
+  export type MessageMediaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    messageId?: boolean
+    mediaId?: boolean
+    order?: boolean
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["messageMedia"]>
+
+  export type MessageMediaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    messageId?: boolean
+    mediaId?: boolean
+    order?: boolean
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["messageMedia"]>
+
+  export type MessageMediaSelectScalar = {
+    id?: boolean
+    messageId?: boolean
+    mediaId?: boolean
+    order?: boolean
+  }
+
+  export type MessageMediaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "messageId" | "mediaId" | "order", ExtArgs["result"]["messageMedia"]>
+  export type MessageMediaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }
+  export type MessageMediaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }
+  export type MessageMediaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    message?: boolean | MessageDefaultArgs<ExtArgs>
+    media?: boolean | MediaDefaultArgs<ExtArgs>
+  }
+
+  export type $MessageMediaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MessageMedia"
+    objects: {
+      message: Prisma.$MessagePayload<ExtArgs>
+      media: Prisma.$MediaPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      messageId: string
+      mediaId: string
+      order: number
+    }, ExtArgs["result"]["messageMedia"]>
+    composites: {}
+  }
+
+  type MessageMediaGetPayload<S extends boolean | null | undefined | MessageMediaDefaultArgs> = $Result.GetResult<Prisma.$MessageMediaPayload, S>
+
+  type MessageMediaCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MessageMediaFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MessageMediaCountAggregateInputType | true
+    }
+
+  export interface MessageMediaDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MessageMedia'], meta: { name: 'MessageMedia' } }
+    /**
+     * Find zero or one MessageMedia that matches the filter.
+     * @param {MessageMediaFindUniqueArgs} args - Arguments to find a MessageMedia
+     * @example
+     * // Get one MessageMedia
+     * const messageMedia = await prisma.messageMedia.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MessageMediaFindUniqueArgs>(args: SelectSubset<T, MessageMediaFindUniqueArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MessageMedia that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MessageMediaFindUniqueOrThrowArgs} args - Arguments to find a MessageMedia
+     * @example
+     * // Get one MessageMedia
+     * const messageMedia = await prisma.messageMedia.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MessageMediaFindUniqueOrThrowArgs>(args: SelectSubset<T, MessageMediaFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MessageMedia that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaFindFirstArgs} args - Arguments to find a MessageMedia
+     * @example
+     * // Get one MessageMedia
+     * const messageMedia = await prisma.messageMedia.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MessageMediaFindFirstArgs>(args?: SelectSubset<T, MessageMediaFindFirstArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MessageMedia that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaFindFirstOrThrowArgs} args - Arguments to find a MessageMedia
+     * @example
+     * // Get one MessageMedia
+     * const messageMedia = await prisma.messageMedia.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MessageMediaFindFirstOrThrowArgs>(args?: SelectSubset<T, MessageMediaFindFirstOrThrowArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MessageMedias that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MessageMedias
+     * const messageMedias = await prisma.messageMedia.findMany()
+     * 
+     * // Get first 10 MessageMedias
+     * const messageMedias = await prisma.messageMedia.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const messageMediaWithIdOnly = await prisma.messageMedia.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MessageMediaFindManyArgs>(args?: SelectSubset<T, MessageMediaFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MessageMedia.
+     * @param {MessageMediaCreateArgs} args - Arguments to create a MessageMedia.
+     * @example
+     * // Create one MessageMedia
+     * const MessageMedia = await prisma.messageMedia.create({
+     *   data: {
+     *     // ... data to create a MessageMedia
+     *   }
+     * })
+     * 
+     */
+    create<T extends MessageMediaCreateArgs>(args: SelectSubset<T, MessageMediaCreateArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MessageMedias.
+     * @param {MessageMediaCreateManyArgs} args - Arguments to create many MessageMedias.
+     * @example
+     * // Create many MessageMedias
+     * const messageMedia = await prisma.messageMedia.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MessageMediaCreateManyArgs>(args?: SelectSubset<T, MessageMediaCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MessageMedias and returns the data saved in the database.
+     * @param {MessageMediaCreateManyAndReturnArgs} args - Arguments to create many MessageMedias.
+     * @example
+     * // Create many MessageMedias
+     * const messageMedia = await prisma.messageMedia.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MessageMedias and only return the `id`
+     * const messageMediaWithIdOnly = await prisma.messageMedia.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MessageMediaCreateManyAndReturnArgs>(args?: SelectSubset<T, MessageMediaCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MessageMedia.
+     * @param {MessageMediaDeleteArgs} args - Arguments to delete one MessageMedia.
+     * @example
+     * // Delete one MessageMedia
+     * const MessageMedia = await prisma.messageMedia.delete({
+     *   where: {
+     *     // ... filter to delete one MessageMedia
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MessageMediaDeleteArgs>(args: SelectSubset<T, MessageMediaDeleteArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MessageMedia.
+     * @param {MessageMediaUpdateArgs} args - Arguments to update one MessageMedia.
+     * @example
+     * // Update one MessageMedia
+     * const messageMedia = await prisma.messageMedia.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MessageMediaUpdateArgs>(args: SelectSubset<T, MessageMediaUpdateArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MessageMedias.
+     * @param {MessageMediaDeleteManyArgs} args - Arguments to filter MessageMedias to delete.
+     * @example
+     * // Delete a few MessageMedias
+     * const { count } = await prisma.messageMedia.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MessageMediaDeleteManyArgs>(args?: SelectSubset<T, MessageMediaDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MessageMedias.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MessageMedias
+     * const messageMedia = await prisma.messageMedia.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MessageMediaUpdateManyArgs>(args: SelectSubset<T, MessageMediaUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MessageMedias and returns the data updated in the database.
+     * @param {MessageMediaUpdateManyAndReturnArgs} args - Arguments to update many MessageMedias.
+     * @example
+     * // Update many MessageMedias
+     * const messageMedia = await prisma.messageMedia.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MessageMedias and only return the `id`
+     * const messageMediaWithIdOnly = await prisma.messageMedia.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MessageMediaUpdateManyAndReturnArgs>(args: SelectSubset<T, MessageMediaUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MessageMedia.
+     * @param {MessageMediaUpsertArgs} args - Arguments to update or create a MessageMedia.
+     * @example
+     * // Update or create a MessageMedia
+     * const messageMedia = await prisma.messageMedia.upsert({
+     *   create: {
+     *     // ... data to create a MessageMedia
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MessageMedia we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MessageMediaUpsertArgs>(args: SelectSubset<T, MessageMediaUpsertArgs<ExtArgs>>): Prisma__MessageMediaClient<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MessageMedias.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaCountArgs} args - Arguments to filter MessageMedias to count.
+     * @example
+     * // Count the number of MessageMedias
+     * const count = await prisma.messageMedia.count({
+     *   where: {
+     *     // ... the filter for the MessageMedias we want to count
+     *   }
+     * })
+    **/
+    count<T extends MessageMediaCountArgs>(
+      args?: Subset<T, MessageMediaCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MessageMediaCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MessageMedia.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MessageMediaAggregateArgs>(args: Subset<T, MessageMediaAggregateArgs>): Prisma.PrismaPromise<GetMessageMediaAggregateType<T>>
+
+    /**
+     * Group by MessageMedia.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MessageMediaGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MessageMediaGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MessageMediaGroupByArgs['orderBy'] }
+        : { orderBy?: MessageMediaGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MessageMediaGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMessageMediaGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MessageMedia model
+   */
+  readonly fields: MessageMediaFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MessageMedia.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MessageMediaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    message<T extends MessageDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MessageDefaultArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    media<T extends MediaDefaultArgs<ExtArgs> = {}>(args?: Subset<T, MediaDefaultArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MessageMedia model
+   */
+  interface MessageMediaFieldRefs {
+    readonly id: FieldRef<"MessageMedia", 'String'>
+    readonly messageId: FieldRef<"MessageMedia", 'String'>
+    readonly mediaId: FieldRef<"MessageMedia", 'String'>
+    readonly order: FieldRef<"MessageMedia", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MessageMedia findUnique
+   */
+  export type MessageMediaFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter, which MessageMedia to fetch.
+     */
+    where: MessageMediaWhereUniqueInput
+  }
+
+  /**
+   * MessageMedia findUniqueOrThrow
+   */
+  export type MessageMediaFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter, which MessageMedia to fetch.
+     */
+    where: MessageMediaWhereUniqueInput
+  }
+
+  /**
+   * MessageMedia findFirst
+   */
+  export type MessageMediaFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter, which MessageMedia to fetch.
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MessageMedias to fetch.
+     */
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MessageMedias.
+     */
+    cursor?: MessageMediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MessageMedias from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MessageMedias.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MessageMedias.
+     */
+    distinct?: MessageMediaScalarFieldEnum | MessageMediaScalarFieldEnum[]
+  }
+
+  /**
+   * MessageMedia findFirstOrThrow
+   */
+  export type MessageMediaFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter, which MessageMedia to fetch.
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MessageMedias to fetch.
+     */
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MessageMedias.
+     */
+    cursor?: MessageMediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MessageMedias from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MessageMedias.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MessageMedias.
+     */
+    distinct?: MessageMediaScalarFieldEnum | MessageMediaScalarFieldEnum[]
+  }
+
+  /**
+   * MessageMedia findMany
+   */
+  export type MessageMediaFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter, which MessageMedias to fetch.
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MessageMedias to fetch.
+     */
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MessageMedias.
+     */
+    cursor?: MessageMediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MessageMedias from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MessageMedias.
+     */
+    skip?: number
+    distinct?: MessageMediaScalarFieldEnum | MessageMediaScalarFieldEnum[]
+  }
+
+  /**
+   * MessageMedia create
+   */
+  export type MessageMediaCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MessageMedia.
+     */
+    data: XOR<MessageMediaCreateInput, MessageMediaUncheckedCreateInput>
+  }
+
+  /**
+   * MessageMedia createMany
+   */
+  export type MessageMediaCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MessageMedias.
+     */
+    data: MessageMediaCreateManyInput | MessageMediaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MessageMedia createManyAndReturn
+   */
+  export type MessageMediaCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * The data used to create many MessageMedias.
+     */
+    data: MessageMediaCreateManyInput | MessageMediaCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MessageMedia update
+   */
+  export type MessageMediaUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MessageMedia.
+     */
+    data: XOR<MessageMediaUpdateInput, MessageMediaUncheckedUpdateInput>
+    /**
+     * Choose, which MessageMedia to update.
+     */
+    where: MessageMediaWhereUniqueInput
+  }
+
+  /**
+   * MessageMedia updateMany
+   */
+  export type MessageMediaUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MessageMedias.
+     */
+    data: XOR<MessageMediaUpdateManyMutationInput, MessageMediaUncheckedUpdateManyInput>
+    /**
+     * Filter which MessageMedias to update
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * Limit how many MessageMedias to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MessageMedia updateManyAndReturn
+   */
+  export type MessageMediaUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * The data used to update MessageMedias.
+     */
+    data: XOR<MessageMediaUpdateManyMutationInput, MessageMediaUncheckedUpdateManyInput>
+    /**
+     * Filter which MessageMedias to update
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * Limit how many MessageMedias to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MessageMedia upsert
+   */
+  export type MessageMediaUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MessageMedia to update in case it exists.
+     */
+    where: MessageMediaWhereUniqueInput
+    /**
+     * In case the MessageMedia found by the `where` argument doesn't exist, create a new MessageMedia with this data.
+     */
+    create: XOR<MessageMediaCreateInput, MessageMediaUncheckedCreateInput>
+    /**
+     * In case the MessageMedia was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MessageMediaUpdateInput, MessageMediaUncheckedUpdateInput>
+  }
+
+  /**
+   * MessageMedia delete
+   */
+  export type MessageMediaDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    /**
+     * Filter which MessageMedia to delete.
+     */
+    where: MessageMediaWhereUniqueInput
+  }
+
+  /**
+   * MessageMedia deleteMany
+   */
+  export type MessageMediaDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MessageMedias to delete
+     */
+    where?: MessageMediaWhereInput
+    /**
+     * Limit how many MessageMedias to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MessageMedia without action
+   */
+  export type MessageMediaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
   }
 
 
@@ -11721,7 +12892,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    messageLinks?: boolean | Media$messageLinksArgs<ExtArgs>
     status?: boolean | Media$statusArgs<ExtArgs>
+    _count?: boolean | MediaCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["media"]>
 
   export type MediaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11765,7 +12938,9 @@ export namespace Prisma {
   export type MediaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileKey" | "originalName" | "mimeType" | "mediaStatus" | "fileSize" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["media"]>
   export type MediaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    messageLinks?: boolean | Media$messageLinksArgs<ExtArgs>
     status?: boolean | Media$statusArgs<ExtArgs>
+    _count?: boolean | MediaCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MediaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -11778,6 +12953,7 @@ export namespace Prisma {
     name: "Media"
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
+      messageLinks: Prisma.$MessageMediaPayload<ExtArgs>[]
       status: Prisma.$StatusPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -12185,6 +13361,7 @@ export namespace Prisma {
   export interface Prisma__MediaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    messageLinks<T extends Media$messageLinksArgs<ExtArgs> = {}>(args?: Subset<T, Media$messageLinksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     status<T extends Media$statusArgs<ExtArgs> = {}>(args?: Subset<T, Media$statusArgs<ExtArgs>>): Prisma__StatusClient<$Result.GetResult<Prisma.$StatusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -12617,6 +13794,30 @@ export namespace Prisma {
      * Limit how many Media to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Media.messageLinks
+   */
+  export type Media$messageLinksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageMedia
+     */
+    select?: MessageMediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MessageMedia
+     */
+    omit?: MessageMediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageMediaInclude<ExtArgs> | null
+    where?: MessageMediaWhereInput
+    orderBy?: MessageMediaOrderByWithRelationInput | MessageMediaOrderByWithRelationInput[]
+    cursor?: MessageMediaWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MessageMediaScalarFieldEnum | MessageMediaScalarFieldEnum[]
   }
 
   /**
@@ -14982,11 +16183,6 @@ export namespace Prisma {
     content: 'content',
     senderId: 'senderId',
     chatId: 'chatId',
-    fileUrl: 'fileUrl',
-    fileName: 'fileName',
-    fileSize: 'fileSize',
-    duration: 'duration',
-    mimeType: 'mimeType',
     replyToId: 'replyToId',
     forwardedFromId: 'forwardedFromId',
     originalSenderId: 'originalSenderId',
@@ -14998,6 +16194,16 @@ export namespace Prisma {
   };
 
   export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
+
+
+  export const MessageMediaScalarFieldEnum: {
+    id: 'id',
+    messageId: 'messageId',
+    mediaId: 'mediaId',
+    order: 'order'
+  };
+
+  export type MessageMediaScalarFieldEnum = (typeof MessageMediaScalarFieldEnum)[keyof typeof MessageMediaScalarFieldEnum]
 
 
   export const StatusScalarFieldEnum: {
@@ -15720,11 +16926,6 @@ export namespace Prisma {
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    fileUrl?: StringNullableFilter<"Message"> | string | null
-    fileName?: StringNullableFilter<"Message"> | string | null
-    fileSize?: StringNullableFilter<"Message"> | string | null
-    duration?: IntNullableFilter<"Message"> | number | null
-    mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
@@ -15735,6 +16936,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
+    medias?: MessageMediaListRelationFilter
     asLastMessage?: XOR<ChatNullableScalarRelationFilter, ChatWhereInput> | null
   }
 
@@ -15744,11 +16946,6 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     chatId?: SortOrder
-    fileUrl?: SortOrderInput | SortOrder
-    fileName?: SortOrderInput | SortOrder
-    fileSize?: SortOrderInput | SortOrder
-    duration?: SortOrderInput | SortOrder
-    mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
     forwardedFromId?: SortOrderInput | SortOrder
     originalSenderId?: SortOrderInput | SortOrder
@@ -15759,6 +16956,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     sender?: UserOrderByWithRelationInput
     chat?: ChatOrderByWithRelationInput
+    medias?: MessageMediaOrderByRelationAggregateInput
     asLastMessage?: ChatOrderByWithRelationInput
   }
 
@@ -15771,11 +16969,6 @@ export namespace Prisma {
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    fileUrl?: StringNullableFilter<"Message"> | string | null
-    fileName?: StringNullableFilter<"Message"> | string | null
-    fileSize?: StringNullableFilter<"Message"> | string | null
-    duration?: IntNullableFilter<"Message"> | number | null
-    mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
@@ -15786,6 +16979,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
+    medias?: MessageMediaListRelationFilter
     asLastMessage?: XOR<ChatNullableScalarRelationFilter, ChatWhereInput> | null
   }, "id">
 
@@ -15795,11 +16989,6 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     chatId?: SortOrder
-    fileUrl?: SortOrderInput | SortOrder
-    fileName?: SortOrderInput | SortOrder
-    fileSize?: SortOrderInput | SortOrder
-    duration?: SortOrderInput | SortOrder
-    mimeType?: SortOrderInput | SortOrder
     replyToId?: SortOrderInput | SortOrder
     forwardedFromId?: SortOrderInput | SortOrder
     originalSenderId?: SortOrderInput | SortOrder
@@ -15809,10 +16998,8 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MessageCountOrderByAggregateInput
-    _avg?: MessageAvgOrderByAggregateInput
     _max?: MessageMaxOrderByAggregateInput
     _min?: MessageMinOrderByAggregateInput
-    _sum?: MessageSumOrderByAggregateInput
   }
 
   export type MessageScalarWhereWithAggregatesInput = {
@@ -15824,11 +17011,6 @@ export namespace Prisma {
     content?: StringWithAggregatesFilter<"Message"> | string
     senderId?: StringWithAggregatesFilter<"Message"> | string
     chatId?: StringWithAggregatesFilter<"Message"> | string
-    fileUrl?: StringNullableWithAggregatesFilter<"Message"> | string | null
-    fileName?: StringNullableWithAggregatesFilter<"Message"> | string | null
-    fileSize?: StringNullableWithAggregatesFilter<"Message"> | string | null
-    duration?: IntNullableWithAggregatesFilter<"Message"> | number | null
-    mimeType?: StringNullableWithAggregatesFilter<"Message"> | string | null
     replyToId?: StringNullableWithAggregatesFilter<"Message"> | string | null
     forwardedFromId?: StringNullableWithAggregatesFilter<"Message"> | string | null
     originalSenderId?: StringNullableWithAggregatesFilter<"Message"> | string | null
@@ -15837,6 +17019,62 @@ export namespace Prisma {
     reactions?: JsonNullableWithAggregatesFilter<"Message">
     createdAt?: DateTimeWithAggregatesFilter<"Message"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Message"> | Date | string
+  }
+
+  export type MessageMediaWhereInput = {
+    AND?: MessageMediaWhereInput | MessageMediaWhereInput[]
+    OR?: MessageMediaWhereInput[]
+    NOT?: MessageMediaWhereInput | MessageMediaWhereInput[]
+    id?: StringFilter<"MessageMedia"> | string
+    messageId?: StringFilter<"MessageMedia"> | string
+    mediaId?: StringFilter<"MessageMedia"> | string
+    order?: IntFilter<"MessageMedia"> | number
+    message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
+    media?: XOR<MediaScalarRelationFilter, MediaWhereInput>
+  }
+
+  export type MessageMediaOrderByWithRelationInput = {
+    id?: SortOrder
+    messageId?: SortOrder
+    mediaId?: SortOrder
+    order?: SortOrder
+    message?: MessageOrderByWithRelationInput
+    media?: MediaOrderByWithRelationInput
+  }
+
+  export type MessageMediaWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    messageId_mediaId?: MessageMediaMessageIdMediaIdCompoundUniqueInput
+    AND?: MessageMediaWhereInput | MessageMediaWhereInput[]
+    OR?: MessageMediaWhereInput[]
+    NOT?: MessageMediaWhereInput | MessageMediaWhereInput[]
+    messageId?: StringFilter<"MessageMedia"> | string
+    mediaId?: StringFilter<"MessageMedia"> | string
+    order?: IntFilter<"MessageMedia"> | number
+    message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
+    media?: XOR<MediaScalarRelationFilter, MediaWhereInput>
+  }, "id" | "messageId_mediaId">
+
+  export type MessageMediaOrderByWithAggregationInput = {
+    id?: SortOrder
+    messageId?: SortOrder
+    mediaId?: SortOrder
+    order?: SortOrder
+    _count?: MessageMediaCountOrderByAggregateInput
+    _avg?: MessageMediaAvgOrderByAggregateInput
+    _max?: MessageMediaMaxOrderByAggregateInput
+    _min?: MessageMediaMinOrderByAggregateInput
+    _sum?: MessageMediaSumOrderByAggregateInput
+  }
+
+  export type MessageMediaScalarWhereWithAggregatesInput = {
+    AND?: MessageMediaScalarWhereWithAggregatesInput | MessageMediaScalarWhereWithAggregatesInput[]
+    OR?: MessageMediaScalarWhereWithAggregatesInput[]
+    NOT?: MessageMediaScalarWhereWithAggregatesInput | MessageMediaScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MessageMedia"> | string
+    messageId?: StringWithAggregatesFilter<"MessageMedia"> | string
+    mediaId?: StringWithAggregatesFilter<"MessageMedia"> | string
+    order?: IntWithAggregatesFilter<"MessageMedia"> | number
   }
 
   export type StatusWhereInput = {
@@ -15983,6 +17221,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Media"> | Date | string
     updatedAt?: DateTimeFilter<"Media"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    messageLinks?: MessageMediaListRelationFilter
     status?: XOR<StatusNullableScalarRelationFilter, StatusWhereInput> | null
   }
 
@@ -15997,6 +17236,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
+    messageLinks?: MessageMediaOrderByRelationAggregateInput
     status?: StatusOrderByWithRelationInput
   }
 
@@ -16014,6 +17254,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Media"> | Date | string
     updatedAt?: DateTimeFilter<"Media"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    messageLinks?: MessageMediaListRelationFilter
     status?: XOR<StatusNullableScalarRelationFilter, StatusWhereInput> | null
   }, "id" | "fileKey">
 
@@ -16685,11 +17926,6 @@ export namespace Prisma {
     id?: string
     type?: $Enums.MessageType
     content: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -16700,6 +17936,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     sender: UserCreateNestedOneWithoutMessagesInput
     chat: ChatCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
   }
 
@@ -16709,11 +17946,6 @@ export namespace Prisma {
     content: string
     senderId: string
     chatId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -16722,6 +17954,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
   }
 
@@ -16729,11 +17962,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16744,6 +17972,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -16753,11 +17982,6 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16766,6 +17990,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -16775,11 +18000,6 @@ export namespace Prisma {
     content: string
     senderId: string
     chatId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -16794,11 +18014,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16815,11 +18030,6 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16828,6 +18038,53 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageMediaCreateInput = {
+    id?: string
+    order?: number
+    message: MessageCreateNestedOneWithoutMediasInput
+    media: MediaCreateNestedOneWithoutMessageLinksInput
+  }
+
+  export type MessageMediaUncheckedCreateInput = {
+    id?: string
+    messageId: string
+    mediaId: string
+    order?: number
+  }
+
+  export type MessageMediaUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    message?: MessageUpdateOneRequiredWithoutMediasNestedInput
+    media?: MediaUpdateOneRequiredWithoutMessageLinksNestedInput
+  }
+
+  export type MessageMediaUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    messageId?: StringFieldUpdateOperationsInput | string
+    mediaId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type MessageMediaCreateManyInput = {
+    id?: string
+    messageId: string
+    mediaId: string
+    order?: number
+  }
+
+  export type MessageMediaUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type MessageMediaUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    messageId?: StringFieldUpdateOperationsInput | string
+    mediaId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
   }
 
   export type StatusCreateInput = {
@@ -16966,6 +18223,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutMediasInput
+    messageLinks?: MessageMediaCreateNestedManyWithoutMediaInput
     status?: StatusCreateNestedOneWithoutMediaInput
   }
 
@@ -16979,6 +18237,7 @@ export namespace Prisma {
     userId: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    messageLinks?: MessageMediaUncheckedCreateNestedManyWithoutMediaInput
     status?: StatusUncheckedCreateNestedOneWithoutMediaInput
   }
 
@@ -16992,6 +18251,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMediasNestedInput
+    messageLinks?: MessageMediaUpdateManyWithoutMediaNestedInput
     status?: StatusUpdateOneWithoutMediaNestedInput
   }
 
@@ -17005,6 +18265,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messageLinks?: MessageMediaUncheckedUpdateManyWithoutMediaNestedInput
     status?: StatusUncheckedUpdateOneWithoutMediaNestedInput
   }
 
@@ -17732,17 +18993,6 @@ export namespace Prisma {
     notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumMessageTypeFilter<$PrismaModel> | $Enums.MessageType
   }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -17767,9 +19017,19 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type MessageMediaListRelationFilter = {
+    every?: MessageMediaWhereInput
+    some?: MessageMediaWhereInput
+    none?: MessageMediaWhereInput
+  }
+
   export type ChatNullableScalarRelationFilter = {
     is?: ChatWhereInput | null
     isNot?: ChatWhereInput | null
+  }
+
+  export type MessageMediaOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type MessageCountOrderByAggregateInput = {
@@ -17778,11 +19038,6 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     chatId?: SortOrder
-    fileUrl?: SortOrder
-    fileName?: SortOrder
-    fileSize?: SortOrder
-    duration?: SortOrder
-    mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
     originalSenderId?: SortOrder
@@ -17793,21 +19048,12 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type MessageAvgOrderByAggregateInput = {
-    duration?: SortOrder
-  }
-
   export type MessageMaxOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
     content?: SortOrder
     senderId?: SortOrder
     chatId?: SortOrder
-    fileUrl?: SortOrder
-    fileName?: SortOrder
-    fileSize?: SortOrder
-    duration?: SortOrder
-    mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
     originalSenderId?: SortOrder
@@ -17823,11 +19069,6 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     chatId?: SortOrder
-    fileUrl?: SortOrder
-    fileName?: SortOrder
-    fileSize?: SortOrder
-    duration?: SortOrder
-    mimeType?: SortOrder
     replyToId?: SortOrder
     forwardedFromId?: SortOrder
     originalSenderId?: SortOrder
@@ -17835,10 +19076,6 @@ export namespace Prisma {
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type MessageSumOrderByAggregateInput = {
-    duration?: SortOrder
   }
 
   export type EnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -17849,22 +19086,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
     _max?: NestedEnumMessageTypeFilter<$PrismaModel>
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -17891,6 +19112,50 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
     _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type MessageScalarRelationFilter = {
+    is?: MessageWhereInput
+    isNot?: MessageWhereInput
+  }
+
+  export type MediaScalarRelationFilter = {
+    is?: MediaWhereInput
+    isNot?: MediaWhereInput
+  }
+
+  export type MessageMediaMessageIdMediaIdCompoundUniqueInput = {
+    messageId: string
+    mediaId: string
+  }
+
+  export type MessageMediaCountOrderByAggregateInput = {
+    id?: SortOrder
+    messageId?: SortOrder
+    mediaId?: SortOrder
+    order?: SortOrder
+  }
+
+  export type MessageMediaAvgOrderByAggregateInput = {
+    order?: SortOrder
+  }
+
+  export type MessageMediaMaxOrderByAggregateInput = {
+    id?: SortOrder
+    messageId?: SortOrder
+    mediaId?: SortOrder
+    order?: SortOrder
+  }
+
+  export type MessageMediaMinOrderByAggregateInput = {
+    id?: SortOrder
+    messageId?: SortOrder
+    mediaId?: SortOrder
+    order?: SortOrder
+  }
+
+  export type MessageMediaSumOrderByAggregateInput = {
+    order?: SortOrder
   }
 
   export type EnumStatusTypeFilter<$PrismaModel = never> = {
@@ -17986,6 +19251,17 @@ export namespace Prisma {
     not?: NestedEnumMediaStatusFilter<$PrismaModel> | $Enums.MediaStatus
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type StatusNullableScalarRelationFilter = {
     is?: StatusWhereInput | null
     isNot?: StatusWhereInput | null
@@ -18043,6 +19319,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaStatusFilter<$PrismaModel>
     _max?: NestedEnumMediaStatusFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type CannedResponseCountOrderByAggregateInput = {
@@ -18720,10 +20012,24 @@ export namespace Prisma {
     connect?: ChatWhereUniqueInput
   }
 
+  export type MessageMediaCreateNestedManyWithoutMessageInput = {
+    create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
+    createMany?: MessageMediaCreateManyMessageInputEnvelope
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+  }
+
   export type ChatCreateNestedOneWithoutLastMessageInput = {
     create?: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
     connectOrCreate?: ChatCreateOrConnectWithoutLastMessageInput
     connect?: ChatWhereUniqueInput
+  }
+
+  export type MessageMediaUncheckedCreateNestedManyWithoutMessageInput = {
+    create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
+    createMany?: MessageMediaCreateManyMessageInputEnvelope
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
   }
 
   export type ChatUncheckedCreateNestedOneWithoutLastMessageInput = {
@@ -18734,14 +20040,6 @@ export namespace Prisma {
 
   export type EnumMessageTypeFieldUpdateOperationsInput = {
     set?: $Enums.MessageType
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type UserUpdateOneRequiredWithoutMessagesNestedInput = {
@@ -18760,6 +20058,20 @@ export namespace Prisma {
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutMessagesInput, ChatUpdateWithoutMessagesInput>, ChatUncheckedUpdateWithoutMessagesInput>
   }
 
+  export type MessageMediaUpdateManyWithoutMessageNestedInput = {
+    create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
+    upsert?: MessageMediaUpsertWithWhereUniqueWithoutMessageInput | MessageMediaUpsertWithWhereUniqueWithoutMessageInput[]
+    createMany?: MessageMediaCreateManyMessageInputEnvelope
+    set?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    disconnect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    delete?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    update?: MessageMediaUpdateWithWhereUniqueWithoutMessageInput | MessageMediaUpdateWithWhereUniqueWithoutMessageInput[]
+    updateMany?: MessageMediaUpdateManyWithWhereWithoutMessageInput | MessageMediaUpdateManyWithWhereWithoutMessageInput[]
+    deleteMany?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
+  }
+
   export type ChatUpdateOneWithoutLastMessageNestedInput = {
     create?: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
     connectOrCreate?: ChatCreateOrConnectWithoutLastMessageInput
@@ -18770,6 +20082,20 @@ export namespace Prisma {
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutLastMessageInput, ChatUpdateWithoutLastMessageInput>, ChatUncheckedUpdateWithoutLastMessageInput>
   }
 
+  export type MessageMediaUncheckedUpdateManyWithoutMessageNestedInput = {
+    create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
+    upsert?: MessageMediaUpsertWithWhereUniqueWithoutMessageInput | MessageMediaUpsertWithWhereUniqueWithoutMessageInput[]
+    createMany?: MessageMediaCreateManyMessageInputEnvelope
+    set?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    disconnect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    delete?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    update?: MessageMediaUpdateWithWhereUniqueWithoutMessageInput | MessageMediaUpdateWithWhereUniqueWithoutMessageInput[]
+    updateMany?: MessageMediaUpdateManyWithWhereWithoutMessageInput | MessageMediaUpdateManyWithWhereWithoutMessageInput[]
+    deleteMany?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
+  }
+
   export type ChatUncheckedUpdateOneWithoutLastMessageNestedInput = {
     create?: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
     connectOrCreate?: ChatCreateOrConnectWithoutLastMessageInput
@@ -18778,6 +20104,34 @@ export namespace Prisma {
     delete?: ChatWhereInput | boolean
     connect?: ChatWhereUniqueInput
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutLastMessageInput, ChatUpdateWithoutLastMessageInput>, ChatUncheckedUpdateWithoutLastMessageInput>
+  }
+
+  export type MessageCreateNestedOneWithoutMediasInput = {
+    create?: XOR<MessageCreateWithoutMediasInput, MessageUncheckedCreateWithoutMediasInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutMediasInput
+    connect?: MessageWhereUniqueInput
+  }
+
+  export type MediaCreateNestedOneWithoutMessageLinksInput = {
+    create?: XOR<MediaCreateWithoutMessageLinksInput, MediaUncheckedCreateWithoutMessageLinksInput>
+    connectOrCreate?: MediaCreateOrConnectWithoutMessageLinksInput
+    connect?: MediaWhereUniqueInput
+  }
+
+  export type MessageUpdateOneRequiredWithoutMediasNestedInput = {
+    create?: XOR<MessageCreateWithoutMediasInput, MessageUncheckedCreateWithoutMediasInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutMediasInput
+    upsert?: MessageUpsertWithoutMediasInput
+    connect?: MessageWhereUniqueInput
+    update?: XOR<XOR<MessageUpdateToOneWithWhereWithoutMediasInput, MessageUpdateWithoutMediasInput>, MessageUncheckedUpdateWithoutMediasInput>
+  }
+
+  export type MediaUpdateOneRequiredWithoutMessageLinksNestedInput = {
+    create?: XOR<MediaCreateWithoutMessageLinksInput, MediaUncheckedCreateWithoutMessageLinksInput>
+    connectOrCreate?: MediaCreateOrConnectWithoutMessageLinksInput
+    upsert?: MediaUpsertWithoutMessageLinksInput
+    connect?: MediaWhereUniqueInput
+    update?: XOR<XOR<MediaUpdateToOneWithWhereWithoutMessageLinksInput, MediaUpdateWithoutMessageLinksInput>, MediaUncheckedUpdateWithoutMessageLinksInput>
   }
 
   export type MediaCreateNestedOneWithoutStatusInput = {
@@ -18890,10 +20244,24 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type MessageMediaCreateNestedManyWithoutMediaInput = {
+    create?: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput> | MessageMediaCreateWithoutMediaInput[] | MessageMediaUncheckedCreateWithoutMediaInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMediaInput | MessageMediaCreateOrConnectWithoutMediaInput[]
+    createMany?: MessageMediaCreateManyMediaInputEnvelope
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+  }
+
   export type StatusCreateNestedOneWithoutMediaInput = {
     create?: XOR<StatusCreateWithoutMediaInput, StatusUncheckedCreateWithoutMediaInput>
     connectOrCreate?: StatusCreateOrConnectWithoutMediaInput
     connect?: StatusWhereUniqueInput
+  }
+
+  export type MessageMediaUncheckedCreateNestedManyWithoutMediaInput = {
+    create?: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput> | MessageMediaCreateWithoutMediaInput[] | MessageMediaUncheckedCreateWithoutMediaInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMediaInput | MessageMediaCreateOrConnectWithoutMediaInput[]
+    createMany?: MessageMediaCreateManyMediaInputEnvelope
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
   }
 
   export type StatusUncheckedCreateNestedOneWithoutMediaInput = {
@@ -18906,12 +20274,34 @@ export namespace Prisma {
     set?: $Enums.MediaStatus
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type UserUpdateOneRequiredWithoutMediasNestedInput = {
     create?: XOR<UserCreateWithoutMediasInput, UserUncheckedCreateWithoutMediasInput>
     connectOrCreate?: UserCreateOrConnectWithoutMediasInput
     upsert?: UserUpsertWithoutMediasInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMediasInput, UserUpdateWithoutMediasInput>, UserUncheckedUpdateWithoutMediasInput>
+  }
+
+  export type MessageMediaUpdateManyWithoutMediaNestedInput = {
+    create?: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput> | MessageMediaCreateWithoutMediaInput[] | MessageMediaUncheckedCreateWithoutMediaInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMediaInput | MessageMediaCreateOrConnectWithoutMediaInput[]
+    upsert?: MessageMediaUpsertWithWhereUniqueWithoutMediaInput | MessageMediaUpsertWithWhereUniqueWithoutMediaInput[]
+    createMany?: MessageMediaCreateManyMediaInputEnvelope
+    set?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    disconnect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    delete?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    update?: MessageMediaUpdateWithWhereUniqueWithoutMediaInput | MessageMediaUpdateWithWhereUniqueWithoutMediaInput[]
+    updateMany?: MessageMediaUpdateManyWithWhereWithoutMediaInput | MessageMediaUpdateManyWithWhereWithoutMediaInput[]
+    deleteMany?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
   }
 
   export type StatusUpdateOneWithoutMediaNestedInput = {
@@ -18922,6 +20312,20 @@ export namespace Prisma {
     delete?: StatusWhereInput | boolean
     connect?: StatusWhereUniqueInput
     update?: XOR<XOR<StatusUpdateToOneWithWhereWithoutMediaInput, StatusUpdateWithoutMediaInput>, StatusUncheckedUpdateWithoutMediaInput>
+  }
+
+  export type MessageMediaUncheckedUpdateManyWithoutMediaNestedInput = {
+    create?: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput> | MessageMediaCreateWithoutMediaInput[] | MessageMediaUncheckedCreateWithoutMediaInput[]
+    connectOrCreate?: MessageMediaCreateOrConnectWithoutMediaInput | MessageMediaCreateOrConnectWithoutMediaInput[]
+    upsert?: MessageMediaUpsertWithWhereUniqueWithoutMediaInput | MessageMediaUpsertWithWhereUniqueWithoutMediaInput[]
+    createMany?: MessageMediaCreateManyMediaInputEnvelope
+    set?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    disconnect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    delete?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    connect?: MessageMediaWhereUniqueInput | MessageMediaWhereUniqueInput[]
+    update?: MessageMediaUpdateWithWhereUniqueWithoutMediaInput | MessageMediaUpdateWithWhereUniqueWithoutMediaInput[]
+    updateMany?: MessageMediaUpdateManyWithWhereWithoutMediaInput | MessageMediaUpdateManyWithWhereWithoutMediaInput[]
+    deleteMany?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
   }
 
   export type StatusUncheckedUpdateOneWithoutMediaNestedInput = {
@@ -19192,33 +20596,6 @@ export namespace Prisma {
     _min?: NestedEnumMessageTypeFilter<$PrismaModel>
     _max?: NestedEnumMessageTypeFilter<$PrismaModel>
   }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -19275,6 +20652,33 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMediaStatusFilter<$PrismaModel>
     _max?: NestedEnumMediaStatusFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedBoolNullableFilter<$PrismaModel = never> = {
@@ -19489,11 +20893,6 @@ export namespace Prisma {
     id?: string
     type?: $Enums.MessageType
     content: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -19503,6 +20902,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     chat: ChatCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
   }
 
@@ -19511,11 +20911,6 @@ export namespace Prisma {
     type?: $Enums.MessageType
     content: string
     chatId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -19524,6 +20919,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
   }
 
@@ -19546,6 +20942,7 @@ export namespace Prisma {
     fileSize?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    messageLinks?: MessageMediaCreateNestedManyWithoutMediaInput
     status?: StatusCreateNestedOneWithoutMediaInput
   }
 
@@ -19558,6 +20955,7 @@ export namespace Prisma {
     fileSize?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    messageLinks?: MessageMediaUncheckedCreateNestedManyWithoutMediaInput
     status?: StatusUncheckedCreateNestedOneWithoutMediaInput
   }
 
@@ -19882,11 +21280,6 @@ export namespace Prisma {
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    fileUrl?: StringNullableFilter<"Message"> | string | null
-    fileName?: StringNullableFilter<"Message"> | string | null
-    fileSize?: StringNullableFilter<"Message"> | string | null
-    duration?: IntNullableFilter<"Message"> | number | null
-    mimeType?: StringNullableFilter<"Message"> | string | null
     replyToId?: StringNullableFilter<"Message"> | string | null
     forwardedFromId?: StringNullableFilter<"Message"> | string | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
@@ -20207,11 +21600,6 @@ export namespace Prisma {
     id?: string
     type?: $Enums.MessageType
     content: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -20221,6 +21609,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     sender: UserCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
   }
 
@@ -20229,11 +21618,6 @@ export namespace Prisma {
     type?: $Enums.MessageType
     content: string
     senderId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -20242,6 +21626,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
   }
 
@@ -20259,11 +21644,6 @@ export namespace Prisma {
     id?: string
     type?: $Enums.MessageType
     content: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -20274,6 +21654,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     sender: UserCreateNestedOneWithoutMessagesInput
     chat: ChatCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
   }
 
   export type MessageUncheckedCreateWithoutAsLastMessageInput = {
@@ -20282,11 +21663,6 @@ export namespace Prisma {
     content: string
     senderId: string
     chatId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -20295,6 +21671,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
   }
 
   export type MessageCreateOrConnectWithoutAsLastMessageInput = {
@@ -20349,11 +21726,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20364,6 +21736,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutAsLastMessageInput = {
@@ -20372,11 +21745,6 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20385,6 +21753,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
   }
 
   export type UserCreateWithoutMembersInput = {
@@ -20663,6 +22032,28 @@ export namespace Prisma {
     create: XOR<ChatCreateWithoutMessagesInput, ChatUncheckedCreateWithoutMessagesInput>
   }
 
+  export type MessageMediaCreateWithoutMessageInput = {
+    id?: string
+    order?: number
+    media: MediaCreateNestedOneWithoutMessageLinksInput
+  }
+
+  export type MessageMediaUncheckedCreateWithoutMessageInput = {
+    id?: string
+    mediaId: string
+    order?: number
+  }
+
+  export type MessageMediaCreateOrConnectWithoutMessageInput = {
+    where: MessageMediaWhereUniqueInput
+    create: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput>
+  }
+
+  export type MessageMediaCreateManyMessageInputEnvelope = {
+    data: MessageMediaCreateManyMessageInput | MessageMediaCreateManyMessageInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ChatCreateWithoutLastMessageInput = {
     id?: string
     isGroup?: boolean
@@ -20790,6 +22181,32 @@ export namespace Prisma {
     members?: ChatMemberUncheckedUpdateManyWithoutChatNestedInput
   }
 
+  export type MessageMediaUpsertWithWhereUniqueWithoutMessageInput = {
+    where: MessageMediaWhereUniqueInput
+    update: XOR<MessageMediaUpdateWithoutMessageInput, MessageMediaUncheckedUpdateWithoutMessageInput>
+    create: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput>
+  }
+
+  export type MessageMediaUpdateWithWhereUniqueWithoutMessageInput = {
+    where: MessageMediaWhereUniqueInput
+    data: XOR<MessageMediaUpdateWithoutMessageInput, MessageMediaUncheckedUpdateWithoutMessageInput>
+  }
+
+  export type MessageMediaUpdateManyWithWhereWithoutMessageInput = {
+    where: MessageMediaScalarWhereInput
+    data: XOR<MessageMediaUpdateManyMutationInput, MessageMediaUncheckedUpdateManyWithoutMessageInput>
+  }
+
+  export type MessageMediaScalarWhereInput = {
+    AND?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
+    OR?: MessageMediaScalarWhereInput[]
+    NOT?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
+    id?: StringFilter<"MessageMedia"> | string
+    messageId?: StringFilter<"MessageMedia"> | string
+    mediaId?: StringFilter<"MessageMedia"> | string
+    order?: IntFilter<"MessageMedia"> | number
+  }
+
   export type ChatUpsertWithoutLastMessageInput = {
     update: XOR<ChatUpdateWithoutLastMessageInput, ChatUncheckedUpdateWithoutLastMessageInput>
     create: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
@@ -20823,6 +22240,158 @@ export namespace Prisma {
     messages?: MessageUncheckedUpdateManyWithoutChatNestedInput
   }
 
+  export type MessageCreateWithoutMediasInput = {
+    id?: string
+    type?: $Enums.MessageType
+    content: string
+    replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sender: UserCreateNestedOneWithoutMessagesInput
+    chat: ChatCreateNestedOneWithoutMessagesInput
+    asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+  }
+
+  export type MessageUncheckedCreateWithoutMediasInput = {
+    id?: string
+    type?: $Enums.MessageType
+    content: string
+    senderId: string
+    chatId: string
+    replyToId?: string | null
+    forwardedFromId?: string | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+  }
+
+  export type MessageCreateOrConnectWithoutMediasInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutMediasInput, MessageUncheckedCreateWithoutMediasInput>
+  }
+
+  export type MediaCreateWithoutMessageLinksInput = {
+    id?: string
+    fileKey: string
+    originalName: string
+    mimeType: string
+    mediaStatus?: $Enums.MediaStatus
+    fileSize?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutMediasInput
+    status?: StatusCreateNestedOneWithoutMediaInput
+  }
+
+  export type MediaUncheckedCreateWithoutMessageLinksInput = {
+    id?: string
+    fileKey: string
+    originalName: string
+    mimeType: string
+    mediaStatus?: $Enums.MediaStatus
+    fileSize?: number | null
+    userId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    status?: StatusUncheckedCreateNestedOneWithoutMediaInput
+  }
+
+  export type MediaCreateOrConnectWithoutMessageLinksInput = {
+    where: MediaWhereUniqueInput
+    create: XOR<MediaCreateWithoutMessageLinksInput, MediaUncheckedCreateWithoutMessageLinksInput>
+  }
+
+  export type MessageUpsertWithoutMediasInput = {
+    update: XOR<MessageUpdateWithoutMediasInput, MessageUncheckedUpdateWithoutMediasInput>
+    create: XOR<MessageCreateWithoutMediasInput, MessageUncheckedCreateWithoutMediasInput>
+    where?: MessageWhereInput
+  }
+
+  export type MessageUpdateToOneWithWhereWithoutMediasInput = {
+    where?: MessageWhereInput
+    data: XOR<MessageUpdateWithoutMediasInput, MessageUncheckedUpdateWithoutMediasInput>
+  }
+
+  export type MessageUpdateWithoutMediasInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
+    chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+  }
+
+  export type MessageUncheckedUpdateWithoutMediasInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
+    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+  }
+
+  export type MediaUpsertWithoutMessageLinksInput = {
+    update: XOR<MediaUpdateWithoutMessageLinksInput, MediaUncheckedUpdateWithoutMessageLinksInput>
+    create: XOR<MediaCreateWithoutMessageLinksInput, MediaUncheckedCreateWithoutMessageLinksInput>
+    where?: MediaWhereInput
+  }
+
+  export type MediaUpdateToOneWithWhereWithoutMessageLinksInput = {
+    where?: MediaWhereInput
+    data: XOR<MediaUpdateWithoutMessageLinksInput, MediaUncheckedUpdateWithoutMessageLinksInput>
+  }
+
+  export type MediaUpdateWithoutMessageLinksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileKey?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    mediaStatus?: EnumMediaStatusFieldUpdateOperationsInput | $Enums.MediaStatus
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMediasNestedInput
+    status?: StatusUpdateOneWithoutMediaNestedInput
+  }
+
+  export type MediaUncheckedUpdateWithoutMessageLinksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileKey?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    mediaStatus?: EnumMediaStatusFieldUpdateOperationsInput | $Enums.MediaStatus
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    userId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StatusUncheckedUpdateOneWithoutMediaNestedInput
+  }
+
   export type MediaCreateWithoutStatusInput = {
     id?: string
     fileKey: string
@@ -20833,6 +22402,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutMediasInput
+    messageLinks?: MessageMediaCreateNestedManyWithoutMediaInput
   }
 
   export type MediaUncheckedCreateWithoutStatusInput = {
@@ -20845,6 +22415,7 @@ export namespace Prisma {
     userId: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    messageLinks?: MessageMediaUncheckedCreateNestedManyWithoutMediaInput
   }
 
   export type MediaCreateOrConnectWithoutStatusInput = {
@@ -20956,6 +22527,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMediasNestedInput
+    messageLinks?: MessageMediaUpdateManyWithoutMediaNestedInput
   }
 
   export type MediaUncheckedUpdateWithoutStatusInput = {
@@ -20968,6 +22540,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messageLinks?: MessageMediaUncheckedUpdateManyWithoutMediaNestedInput
   }
 
   export type UserUpsertWithoutStatusesInput = {
@@ -21302,6 +22875,28 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutMediasInput, UserUncheckedCreateWithoutMediasInput>
   }
 
+  export type MessageMediaCreateWithoutMediaInput = {
+    id?: string
+    order?: number
+    message: MessageCreateNestedOneWithoutMediasInput
+  }
+
+  export type MessageMediaUncheckedCreateWithoutMediaInput = {
+    id?: string
+    messageId: string
+    order?: number
+  }
+
+  export type MessageMediaCreateOrConnectWithoutMediaInput = {
+    where: MessageMediaWhereUniqueInput
+    create: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput>
+  }
+
+  export type MessageMediaCreateManyMediaInputEnvelope = {
+    data: MessageMediaCreateManyMediaInput | MessageMediaCreateManyMediaInput[]
+    skipDuplicates?: boolean
+  }
+
   export type StatusCreateWithoutMediaInput = {
     id?: string
     type?: $Enums.StatusType
@@ -21394,6 +22989,22 @@ export namespace Prisma {
     statusViews?: StatusViewUncheckedUpdateManyWithoutUserNestedInput
     cannedResponses?: CannedResponseUncheckedUpdateManyWithoutUserNestedInput
     systems?: SystemUncheckedUpdateManyWithoutActiveBranchNestedInput
+  }
+
+  export type MessageMediaUpsertWithWhereUniqueWithoutMediaInput = {
+    where: MessageMediaWhereUniqueInput
+    update: XOR<MessageMediaUpdateWithoutMediaInput, MessageMediaUncheckedUpdateWithoutMediaInput>
+    create: XOR<MessageMediaCreateWithoutMediaInput, MessageMediaUncheckedCreateWithoutMediaInput>
+  }
+
+  export type MessageMediaUpdateWithWhereUniqueWithoutMediaInput = {
+    where: MessageMediaWhereUniqueInput
+    data: XOR<MessageMediaUpdateWithoutMediaInput, MessageMediaUncheckedUpdateWithoutMediaInput>
+  }
+
+  export type MessageMediaUpdateManyWithWhereWithoutMediaInput = {
+    where: MessageMediaScalarWhereInput
+    data: XOR<MessageMediaUpdateManyMutationInput, MessageMediaUncheckedUpdateManyWithoutMediaInput>
   }
 
   export type StatusUpsertWithoutMediaInput = {
@@ -21733,11 +23344,6 @@ export namespace Prisma {
     type?: $Enums.MessageType
     content: string
     chatId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -21947,11 +23553,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21961,6 +23562,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -21969,11 +23571,6 @@ export namespace Prisma {
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21982,6 +23579,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -21990,11 +23588,6 @@ export namespace Prisma {
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22014,6 +23607,7 @@ export namespace Prisma {
     fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messageLinks?: MessageMediaUpdateManyWithoutMediaNestedInput
     status?: StatusUpdateOneWithoutMediaNestedInput
   }
 
@@ -22026,6 +23620,7 @@ export namespace Prisma {
     fileSize?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messageLinks?: MessageMediaUncheckedUpdateManyWithoutMediaNestedInput
     status?: StatusUncheckedUpdateOneWithoutMediaNestedInput
   }
 
@@ -22168,11 +23763,6 @@ export namespace Prisma {
     type?: $Enums.MessageType
     content: string
     senderId: string
-    fileUrl?: string | null
-    fileName?: string | null
-    fileSize?: string | null
-    duration?: number | null
-    mimeType?: string | null
     replyToId?: string | null
     forwardedFromId?: string | null
     originalSenderId?: string | null
@@ -22217,11 +23807,6 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22231,6 +23816,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -22239,11 +23825,6 @@ export namespace Prisma {
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22252,6 +23833,7 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
   }
 
@@ -22260,11 +23842,6 @@ export namespace Prisma {
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    fileUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    fileName?: NullableStringFieldUpdateOperationsInput | string | null
-    fileSize?: NullableStringFieldUpdateOperationsInput | string | null
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
-    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     replyToId?: NullableStringFieldUpdateOperationsInput | string | null
     forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22273,6 +23850,30 @@ export namespace Prisma {
     reactions?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageMediaCreateManyMessageInput = {
+    id?: string
+    mediaId: string
+    order?: number
+  }
+
+  export type MessageMediaUpdateWithoutMessageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    media?: MediaUpdateOneRequiredWithoutMessageLinksNestedInput
+  }
+
+  export type MessageMediaUncheckedUpdateWithoutMessageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    mediaId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type MessageMediaUncheckedUpdateManyWithoutMessageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    mediaId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
   }
 
   export type StatusViewCreateManyStatusInput = {
@@ -22297,6 +23898,30 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     viewedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MessageMediaCreateManyMediaInput = {
+    id?: string
+    messageId: string
+    order?: number
+  }
+
+  export type MessageMediaUpdateWithoutMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    message?: MessageUpdateOneRequiredWithoutMediasNestedInput
+  }
+
+  export type MessageMediaUncheckedUpdateWithoutMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    messageId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type MessageMediaUncheckedUpdateManyWithoutMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    messageId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
   }
 
 

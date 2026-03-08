@@ -190,11 +190,6 @@ exports.Prisma.MessageScalarFieldEnum = {
   content: 'content',
   senderId: 'senderId',
   chatId: 'chatId',
-  fileUrl: 'fileUrl',
-  fileName: 'fileName',
-  fileSize: 'fileSize',
-  duration: 'duration',
-  mimeType: 'mimeType',
   replyToId: 'replyToId',
   forwardedFromId: 'forwardedFromId',
   originalSenderId: 'originalSenderId',
@@ -203,6 +198,13 @@ exports.Prisma.MessageScalarFieldEnum = {
   reactions: 'reactions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MessageMediaScalarFieldEnum = {
+  id: 'id',
+  messageId: 'messageId',
+  mediaId: 'mediaId',
+  order: 'order'
 };
 
 exports.Prisma.StatusScalarFieldEnum = {
@@ -332,6 +334,7 @@ exports.Prisma.ModelName = {
   Chat: 'Chat',
   ChatMember: 'ChatMember',
   Message: 'Message',
+  MessageMedia: 'MessageMedia',
   Status: 'Status',
   StatusView: 'StatusView',
   Media: 'Media',
