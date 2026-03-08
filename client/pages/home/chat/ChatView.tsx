@@ -709,9 +709,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [showMediaModal, setShowMediaModal] = useState(false); 
-  const [mediaProcessing, setMediaProcessing] = useState(false);
-  const [mediaSendStatus, setMediaSendStatus] = useState("Preparing media...");
-  const [mediaSendProgress, setMediaSendProgress] = useState(0);
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     fileName?: string;
@@ -1822,108 +1819,91 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
  
       {/* Media Composer Modal */}
-      <MediaComposerModal
-        files={pendingFiles}
-        processing={mediaProcessing}
-        processingLabel={mediaSendStatus}
-        processingProgress={mediaSendProgress}
-        onClose={() => {
-          if (mediaProcessing) return;
+{showMediaModal && (
+  <MediaComposerModal
+    files={pendingFiles}
+    processing={false}
+    onClose={() => {
+      setShowMediaModal(false);
+      setPendingFiles([]);
+    }}
+    onRemoveFile={(index: number) => {
+      setPendingFiles((prev) => {
+        const next = prev.filter((_, i) => i !== index);
+        if (next.length === 0) {
           setShowMediaModal(false);
-          setPendingFiles([]);
-          setMediaSendStatus("Preparing media...");
-          setMediaSendProgress(0);
-        }}
-        onRemoveFile={(index: number) => {
-          setPendingFiles((prev) => {
-            const next = prev.filter((_, i) => i !== index);
-            if (next.length === 0) {
-              setShowMediaModal(false);
-            }
-            return next;
-          });
-        }}
-        onAddMore={() => fileInputRef.current?.click()}
-        onSend={async (options?: { isMuted?: boolean, caption?: string }) => {
-          if (pendingFiles.length === 0) return;
+        }
+        return next;
+      });
+    }}
+    onAddMore={() => fileInputRef.current?.click()}
+    onSend={async (options?: { isMuted?: boolean; caption?: string }) => {
+      if (pendingFiles.length === 0) return;
 
-          setMediaProcessing(true);
-          setMediaSendStatus("Preparing media...");
-          setMediaSendProgress(0);
-          try {
-            let processedFiles = [...pendingFiles];
+      // 1. Close the modal immediately — WhatsApp-style
+      const filesToSend = [...pendingFiles];
+      const capturedReplyToId = replyingTo?.id;
+      setShowMediaModal(false);
+      setPendingFiles([]);
+      setReplyingTo(null);
 
-            // Process video/audio mute if needed
-            if (options?.isMuted) {
-              processedFiles = await Promise.all(
-                processedFiles.map(async (file) => {
-                  if (file.type.startsWith("video/")) {
-                    return await MediaUtils.muteVideo(file);
-                  }
-                  if (file.type.startsWith("audio/")) {
-                    return await MediaUtils.muteAudio(file);
-                  }
-                  return file;
-                }),
-              );
-            }
+      // 2. Process files asynchronously in the background
+      try {
+        let processedFiles = filesToSend;
 
-            setMediaSendStatus("Optimizing images...");
-            setMediaSendProgress(8);
-            processedFiles = await Promise.all(
-              processedFiles.map(async (file) => {
-                if (file.type.startsWith("image/")) {
-                  return MediaUtils.optimizeImageForUpload(file);
-                }
-                return file;
-              }),
-            );
-
-            const isImage = processedFiles.every((f) =>
-              f.type.startsWith("image/"),
-            );
-
-            const sendResult = await sendMessageMutation.mutateAsync({
-              content: options?.caption || (isImage ? "Photos" : "Files"),
-              type: isImage ? MessageType.IMAGE : MessageType.FILE,
-              fileData: {
-                files: processedFiles,
-              },
-              replyToId: replyingTo?.id,
-              onProgress: (progress: MediaSendProgress) => {
-                setMediaSendStatus(progress.message);
-                setMediaSendProgress(progress.progressPercent);
-              },
-            });
-
-            const report = sendResult?.result?.mediaReport;
-            if (report) {
-              const skipAlert = buildMediaSkipAlertMessage(
-                report,
-                "Media sent with some files skipped.",
-              );
-              if (skipAlert) {
-                alert(skipAlert);
+        if (options?.isMuted) {
+          processedFiles = await Promise.all(
+            processedFiles.map(async (file) => {
+              if (file.type.startsWith("video/")) {
+                return await MediaUtils.muteVideo(file);
               }
-            }
+              if (file.type.startsWith("audio/")) {
+                return await MediaUtils.muteAudio(file);
+              }
+              return file;
+            }),
+          );
+        }
 
-            setReplyingTo(null);
-            setShowMediaModal(false);
-            setPendingFiles([]);
-          } catch (error) {
-            console.error("Error sending media:", error);
-            const errorMessage =
-              error instanceof Error
-                ? error.message
-                : "Failed to send media. Please try again.";
-            alert(errorMessage);
-          } finally {
-            setMediaProcessing(false);
-            setMediaSendStatus("Preparing media...");
-            setMediaSendProgress(0);
-          }
-        }}
-      />
+        processedFiles = await Promise.all(
+          processedFiles.map(async (file) => {
+            if (file.type.startsWith("image/")) {
+              return MediaUtils.optimizeImageForUpload(file);
+            }
+            return file;
+          }),
+        );
+
+        const isImage = processedFiles.every((f) => f.type.startsWith("image/"));
+
+        // 3. Fire upload — pending bubble with progress is handled by sendMessageMutation
+        const sendResult = await sendMessageMutation.mutateAsync({
+          content: options?.caption || (isImage ? "Photos" : "Files"),
+          type: isImage ? MessageType.IMAGE : MessageType.FILE,
+          fileData: { files: processedFiles },
+          replyToId: capturedReplyToId,
+        });
+
+        const report = sendResult?.result?.mediaReport;
+        if (report) {
+          const skipAlert = buildMediaSkipAlertMessage(
+            report,
+            "Media sent with some files skipped.",
+          );
+          if (skipAlert) alert(skipAlert);
+        }
+      } catch (error) {
+        console.error("Error sending media:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to send media. Please try again.";
+        alert(errorMessage);
+      }
+    }}
+  />
+)}
+      
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
