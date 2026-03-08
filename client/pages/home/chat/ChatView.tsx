@@ -2104,49 +2104,91 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
  
       {/* Media Composer Modal */}
-      <MediaComposerModal
-        files={pendingFiles}
-        processing={false}
-        onClose={() => {
+{showMediaModal && (
+  <MediaComposerModal
+    files={pendingFiles}
+    processing={false}
+    onClose={() => {
+      setShowMediaModal(false);
+      setPendingFiles([]);
+    }}
+    onRemoveFile={(index: number) => {
+      setPendingFiles((prev) => {
+        const next = prev.filter((_, i) => i !== index);
+        if (next.length === 0) {
           setShowMediaModal(false);
-          setPendingFiles([]);
-        }}
-        onRemoveFile={(index: number) => {
-          setPendingFiles((prev) => {
-            const next = prev.filter((_, i) => i !== index);
-            if (next.length === 0) {
-              setShowMediaModal(false);
-            }
-            return next;
-          });
-        }}
-        onAddMore={() => fileInputRef.current?.click()}
-        onSend={(options?: { isMuted?: boolean, caption?: string }) => {
-          if (pendingFiles.length === 0) return;
-          const filesSnapshot = [...pendingFiles];
-          const isImage = filesSnapshot.every((f) =>
-            f.type.startsWith("image/"),
+        }
+        return next;
+      });
+    }}
+    onAddMore={() => fileInputRef.current?.click()}
+    onSend={async (options?: { isMuted?: boolean; caption?: string }) => {
+      if (pendingFiles.length === 0) return;
+
+      // 1. Close the modal immediately — WhatsApp-style
+      const filesToSend = [...pendingFiles];
+      const capturedReplyToId = replyingTo?.id;
+      setShowMediaModal(false);
+      setPendingFiles([]);
+      setReplyingTo(null);
+
+      // 2. Process files asynchronously in the background
+      try {
+        let processedFiles = filesToSend;
+
+        if (options?.isMuted) {
+          processedFiles = await Promise.all(
+            processedFiles.map(async (file) => {
+              if (file.type.startsWith("video/")) {
+                return await MediaUtils.muteVideo(file);
+              }
+              if (file.type.startsWith("audio/")) {
+                return await MediaUtils.muteAudio(file);
+              }
+              return file;
+            }),
           );
-          const replyToId = replyingTo?.id;
+        }
 
-          // Close immediately so upload continues in chat without blocking the view.
-          setShowMediaModal(false);
-          setPendingFiles([]);
-          setReplyingTo(null);
+        processedFiles = await Promise.all(
+          processedFiles.map(async (file) => {
+            if (file.type.startsWith("image/")) {
+              return MediaUtils.optimizeImageForUpload(file);
+            }
+            return file;
+          }),
+        );
 
-          sendMessageMutation.mutate({
-            content: options?.caption || (isImage ? "Photos" : "Files"),
-            type: isImage ? MessageType.IMAGE : MessageType.FILE,
-            fileData: {
-              files: filesSnapshot,
-            },
-            replyToId,
-            mediaOptions: {
-              isMuted: options?.isMuted,
-            },
-          });
-        }}
-      />
+        const isImage = processedFiles.every((f) => f.type.startsWith("image/"));
+
+        // 3. Fire upload — pending bubble with progress is handled by sendMessageMutation
+        const sendResult = await sendMessageMutation.mutateAsync({
+          content: options?.caption || (isImage ? "Photos" : "Files"),
+          type: isImage ? MessageType.IMAGE : MessageType.FILE,
+          fileData: { files: processedFiles },
+          replyToId: capturedReplyToId,
+        });
+
+        const report = sendResult?.result?.mediaReport;
+        if (report) {
+          const skipAlert = buildMediaSkipAlertMessage(
+            report,
+            "Media sent with some files skipped.",
+          );
+          if (skipAlert) alert(skipAlert);
+        }
+      } catch (error) {
+        console.error("Error sending media:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to send media. Please try again.";
+        alert(errorMessage);
+      }
+    }}
+  />
+)}
+      
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
