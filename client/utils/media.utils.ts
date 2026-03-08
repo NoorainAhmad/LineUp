@@ -202,4 +202,56 @@ export class MediaUtils {
     }
     return false; // Images don't have audio
   }
+
+  /**
+   * Resize/compress large images before upload for faster send time.
+   */
+  static async optimizeImageForUpload(file: File): Promise<File> {
+    if (!file.type.startsWith("image/")) return file;
+
+    const SIZE_THRESHOLD = 1.2 * 1024 * 1024; // 1.2MB
+    if (file.size <= SIZE_THRESHOLD) return file;
+
+    let bitmap: ImageBitmap | null = null;
+    try {
+      bitmap = await createImageBitmap(file);
+
+      const maxSide = 1920;
+      const longestSide = Math.max(bitmap.width, bitmap.height);
+      const ratio = longestSide > maxSide ? maxSide / longestSide : 1;
+
+      const targetWidth = Math.max(1, Math.round(bitmap.width * ratio));
+      const targetHeight = Math.max(1, Math.round(bitmap.height * ratio));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+
+      ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+
+      const targetType = file.type === "image/png" ? "image/webp" : "image/jpeg";
+      const quality = 0.82;
+
+      const optimizedBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, targetType, quality);
+      });
+
+      if (!optimizedBlob) return file;
+      if (optimizedBlob.size >= file.size * 0.95) return file;
+
+      const extension = targetType === "image/webp" ? "webp" : "jpg";
+      const optimizedName = file.name.replace(/\.[^/.]+$/, `.${extension}`);
+
+      return new File([optimizedBlob], optimizedName, {
+        type: targetType,
+      });
+    } catch {
+      return file;
+    } finally {
+      bitmap?.close?.();
+    }
+  }
 }

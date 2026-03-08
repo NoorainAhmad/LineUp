@@ -7,12 +7,8 @@ export const sendMessageSchema = z.object({
   type: MessageTypeEnum.default("TEXT"),
   content: z.string().min(1).max(5000),
   chatId: z.string(),
-  fileUrl: z.string().optional(),
-  fileName: z.string().optional(),
-  fileSize: z.string().optional(),
-  duration: z.number().int().optional(),
-  mimeType: z.string().optional(),
   replyToId: z.string().optional().nullable(),
+  mediaIds: z.array(z.string()).optional(),
 });
 
 // CHAT CREATE VALIDATOR

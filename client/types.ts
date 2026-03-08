@@ -180,6 +180,7 @@ export interface Message {
   fileName?: string;
   fileSize?: string;
   mimeType?: string;
+  attachments?: MessageAttachment[];
 
   replyToId?: string;
   forwardedFromId?: string;
@@ -190,9 +191,25 @@ export interface Message {
   reactions?: Record<string, string[]>;
 
   asLastMessage?: Chat;
+  isPending?: boolean;
+  uploadStage?: string;
+  uploadProgress?: number;
+  uploadCompletedFiles?: number;
+  uploadTotalFiles?: number;
+  uploadFailedFiles?: number;
 
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MessageAttachment {
+  id: string;
+  fileKey: string;
+  fileUrl: string;
+  fileName: string;
+  mimeType: string;
+  fileSize?: number;
+  order: number;
 }
 
 export interface Status {
