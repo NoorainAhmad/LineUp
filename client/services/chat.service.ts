@@ -247,7 +247,7 @@ export class ChatService {
 
         options?.onProgress?.({
           stage: "requesting",
-          message: `Preparing upload tickets (${validFiles.length} files)`,
+          message: `Preparing upload (${validFiles.length} files)`,
           totalFiles: uploadFiles.length,
           completedFiles: 0,
           successfulFiles: 0,
