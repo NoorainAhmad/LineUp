@@ -164,6 +164,7 @@ const renderMessageContent = (
   audioRefs: React.MutableRefObject<{ [key: string]: HTMLAudioElement }>,
   onImagePreview?: (url: string, fileName?: string) => void,
   onStatusClick?: (statusId: string) => void,
+  isPending?: boolean,
 ) => {
   // Determine if this is a group chat
   const isGroupChat = chat?.isGroup || false;
@@ -195,27 +196,27 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.IMAGE && (
-  <div className="p-1">
-    {attachments.map((attachment) => (
-      <img
-        key={attachment.id}
-        src={attachment.fileUrl}
-        alt={attachment.fileName}
-        className="rounded-xl max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
-        onClick={(e) => {
-          e.stopPropagation();
-          onImagePreview?.(attachment.fileUrl, attachment.fileName);
-        }}
-      />
-    ))}
+        <div className="p-1">
+          {attachments.map((attachment) => (
+            <img
+              key={attachment.id}
+              src={attachment.fileUrl}
+              alt={attachment.fileName}
+              className="rounded-xl max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onImagePreview?.(attachment.fileUrl, attachment.fileName);
+              }}
+            />
+          ))}
 
-    {!isDefaultMediaCaption(msg.content) && (
-      <p className="px-3 pt-2 pb-1 text-sm">
-        <HighlightedText text={msg.content} highlight={searchQuery} />
-      </p>
-    )}
-  </div>
-)}
+          {!isDefaultMediaCaption(msg.content) && (
+            <p className="px-3 pt-2 pb-1 text-sm">
+              <HighlightedText text={msg.content} highlight={searchQuery} />
+            </p>
+          )}
+        </div>
+      )}
 
       {msg.type === MessageType.FILE && (
         <div className="p-1 m-1 rounded-xl border border-border/50 bg-black/5 dark:bg-black/20">
@@ -242,11 +243,10 @@ const renderMessageContent = (
                             key={attachment.id}
                             src={attachment.fileUrl}
                             alt={attachment.fileName}
-                            className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${
-                              mediaAttachments.length > 1
+                            className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${mediaAttachments.length > 1
                                 ? "h-40"
                                 : "max-w-sm max-h-80"
-                            }`}
+                              }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               onImagePreview?.(
@@ -338,13 +338,21 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.STICKER && (
-        <div className="p-2">
+        <div className="p-2 relative">
           <img
             src={getStickerUrl(msg.content)}
             alt="Sticker"
-            className="w-40 h-40 object-contain drop-shadow-md hover:scale-105 transition-transform"
+            className={`w-40 h-40 object-contain drop-shadow-md transition-all duration-300 ${isPending
+                ? "opacity-60 scale-95"
+                : "hover:scale-105"
+              }`}
             loading="lazy"
           />
+          {isPending && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-primary/60 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -766,7 +774,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   );
 
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [showMediaModal, setShowMediaModal] = useState(false); 
+  const [showMediaModal, setShowMediaModal] = useState(false);
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     fileName?: string;
@@ -955,13 +963,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
             old.map((msg) =>
               msg.id === pendingMessageId
                 ? {
-                    ...msg,
-                    uploadStage: progress.message,
-                    uploadProgress: progress.progressPercent,
-                    uploadCompletedFiles: progress.completedFiles,
-                    uploadTotalFiles: progress.totalFiles,
-                    uploadFailedFiles: progress.failedFiles,
-                  }
+                  ...msg,
+                  uploadStage: progress.message,
+                  uploadProgress: progress.progressPercent,
+                  uploadCompletedFiles: progress.completedFiles,
+                  uploadTotalFiles: progress.totalFiles,
+                  uploadFailedFiles: progress.failedFiles,
+                }
                 : msg,
             ),
         );
@@ -1071,7 +1079,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     onSuccess: (response, variables) => {
       const pendingMessageId = response?.pendingMessageId;
       const sendResult = response?.result;
-const newMessages: Message[] = sendResult?.messages ?? [];
+      const newMessages: Message[] = sendResult?.messages ?? [];
       const mediaReport = sendResult?.mediaReport;
       let matchedPendingMessage: Message | undefined;
 
@@ -1106,20 +1114,20 @@ const newMessages: Message[] = sendResult?.messages ?? [];
       );
 
       queryClient.setQueryData(
-  ["chat-messages", chat?.id],
-  (old: Message[] = []) => {
-    const existingIds = new Set(old.map((m) => m.id));
+        ["chat-messages", chat?.id],
+        (old: Message[] = []) => {
+          const existingIds = new Set(old.map((m) => m.id));
 
-    const merged = [
-      ...old,
-      ...newMessages.filter((msg) => !existingIds.has(msg.id)),
-    ];
+          const merged = [
+            ...old,
+            ...newMessages.filter((msg) => !existingIds.has(msg.id)),
+          ];
 
-    return merged.sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
-  }
-);
+          return merged.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+        }
+      );
 
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
@@ -1526,7 +1534,7 @@ const newMessages: Message[] = sendResult?.messages ?? [];
 
     // CASE 1: Media is selected (image/file)
     if (pendingFiles.length > 0) {
-      const isImage = pendingFiles.every((f)=>f.type.startsWith("image"));
+      const isImage = pendingFiles.every((f) => f.type.startsWith("image"));
       handleSendMessage(
         isImage ? MessageType.IMAGE : MessageType.FILE,
         inputValue || (isImage ? "Photos" : "Files"),
@@ -1679,40 +1687,40 @@ const newMessages: Message[] = sendResult?.messages ?? [];
   );
 
   const handleCameraCapture = useCallback(
-  async (imageSrc: string) => {
-    if (!chat) return;
+    async (imageSrc: string) => {
+      if (!chat) return;
 
-    try {
-      const res = await fetch(imageSrc);
-      const blob = await res.blob();
+      try {
+        const res = await fetch(imageSrc);
+        const blob = await res.blob();
 
-      const file = new File(
-        [blob],
-        `camera_capture_${Date.now()}.jpg`,
-        { type: "image/jpeg" }
-      );
+        const file = new File(
+          [blob],
+          `camera_capture_${Date.now()}.jpg`,
+          { type: "image/jpeg" }
+        );
 
-      setPendingFiles((prev) => {
-        const updated = [...prev, file];
+        setPendingFiles((prev) => {
+          const updated = [...prev, file];
 
-        if (updated.length > 10) {
-          alert("Maximum 10 media files allowed");
-          return prev;
-        }
+          if (updated.length > 10) {
+            alert("Maximum 10 media files allowed");
+            return prev;
+          }
 
-        return updated;
-      });
+          return updated;
+        });
 
-      setShowMediaModal(true);
-      setShowAttachMenu(false);
+        setShowMediaModal(true);
+        setShowAttachMenu(false);
 
-    } catch (error) {
-      console.error("Error processing camera capture:", error);
-      alert("Failed to process image. Please try again.");
-    }
-  },
-  [chat]
-);
+      } catch (error) {
+        console.error("Error processing camera capture:", error);
+        alert("Failed to process image. Please try again.");
+      }
+    },
+    [chat]
+  );
 
   const startRecording = async () => {
     try {
@@ -2067,93 +2075,93 @@ const newMessages: Message[] = sendResult?.messages ?? [];
           />
         </div>
       )}
- 
+
       {/* Media Composer Modal */}
-{showMediaModal && (
-  <MediaComposerModal
-    files={pendingFiles}
-    processing={false}
-    onClose={() => {
-      setShowMediaModal(false);
-      setPendingFiles([]);
-    }}
-    onRemoveFile={(index: number) => {
-      setPendingFiles((prev) => {
-        const next = prev.filter((_, i) => i !== index);
-        if (next.length === 0) {
-          setShowMediaModal(false);
-        }
-        return next;
-      });
-    }}
-    onAddMore={() => fileInputRef.current?.click()}
-    onSend={async (options?: { isMuted?: boolean; caption?: string }) => {
-      if (pendingFiles.length === 0) return;
-
-      // 1. Close the modal immediately — WhatsApp-style
-      const filesToSend = [...pendingFiles];
-      const capturedReplyToId = replyingTo?.id;
-      setShowMediaModal(false);
-      setPendingFiles([]);
-      setReplyingTo(null);
-
-      // 2. Process files asynchronously in the background
-      try {
-        let processedFiles = filesToSend;
-
-        if (options?.isMuted) {
-          processedFiles = await Promise.all(
-            processedFiles.map(async (file) => {
-              if (file.type.startsWith("video/")) {
-                return await MediaUtils.muteVideo(file);
+      {showMediaModal && (
+        <MediaComposerModal
+          files={pendingFiles}
+          processing={false}
+          onClose={() => {
+            setShowMediaModal(false);
+            setPendingFiles([]);
+          }}
+          onRemoveFile={(index: number) => {
+            setPendingFiles((prev) => {
+              const next = prev.filter((_, i) => i !== index);
+              if (next.length === 0) {
+                setShowMediaModal(false);
               }
-              if (file.type.startsWith("audio/")) {
-                return await MediaUtils.muteAudio(file);
-              }
-              return file;
-            }),
-          );
-        }
+              return next;
+            });
+          }}
+          onAddMore={() => fileInputRef.current?.click()}
+          onSend={async (options?: { isMuted?: boolean; caption?: string }) => {
+            if (pendingFiles.length === 0) return;
 
-        processedFiles = await Promise.all(
-          processedFiles.map(async (file) => {
-            if (file.type.startsWith("image/")) {
-              return MediaUtils.optimizeImageForUpload(file);
+            // 1. Close the modal immediately — WhatsApp-style
+            const filesToSend = [...pendingFiles];
+            const capturedReplyToId = replyingTo?.id;
+            setShowMediaModal(false);
+            setPendingFiles([]);
+            setReplyingTo(null);
+
+            // 2. Process files asynchronously in the background
+            try {
+              let processedFiles = filesToSend;
+
+              if (options?.isMuted) {
+                processedFiles = await Promise.all(
+                  processedFiles.map(async (file) => {
+                    if (file.type.startsWith("video/")) {
+                      return await MediaUtils.muteVideo(file);
+                    }
+                    if (file.type.startsWith("audio/")) {
+                      return await MediaUtils.muteAudio(file);
+                    }
+                    return file;
+                  }),
+                );
+              }
+
+              processedFiles = await Promise.all(
+                processedFiles.map(async (file) => {
+                  if (file.type.startsWith("image/")) {
+                    return MediaUtils.optimizeImageForUpload(file);
+                  }
+                  return file;
+                }),
+              );
+
+              const isImage = processedFiles.every((f) => f.type.startsWith("image/"));
+
+              // 3. Fire upload — pending bubble with progress is handled by sendMessageMutation
+              const sendResult = await sendMessageMutation.mutateAsync({
+                content: options?.caption || (isImage ? "Photos" : "Files"),
+                type: isImage ? MessageType.IMAGE : MessageType.FILE,
+                fileData: { files: processedFiles },
+                replyToId: capturedReplyToId,
+              });
+
+              const report = sendResult?.result?.mediaReport;
+              if (report) {
+                const skipAlert = buildMediaSkipAlertMessage(
+                  report,
+                  "Media sent with some files skipped.",
+                );
+                if (skipAlert) alert(skipAlert);
+              }
+            } catch (error) {
+              console.error("Error sending media:", error);
+              const errorMessage =
+                error instanceof Error
+                  ? error.message
+                  : "Failed to send media. Please try again.";
+              alert(errorMessage);
             }
-            return file;
-          }),
-        );
+          }}
+        />
+      )}
 
-        const isImage = processedFiles.every((f) => f.type.startsWith("image/"));
-
-        // 3. Fire upload — pending bubble with progress is handled by sendMessageMutation
-        const sendResult = await sendMessageMutation.mutateAsync({
-          content: options?.caption || (isImage ? "Photos" : "Files"),
-          type: isImage ? MessageType.IMAGE : MessageType.FILE,
-          fileData: { files: processedFiles },
-          replyToId: capturedReplyToId,
-        });
-
-        const report = sendResult?.result?.mediaReport;
-        if (report) {
-          const skipAlert = buildMediaSkipAlertMessage(
-            report,
-            "Media sent with some files skipped.",
-          );
-          if (skipAlert) alert(skipAlert);
-        }
-      } catch (error) {
-        console.error("Error sending media:", error);
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to send media. Please try again.";
-        alert(errorMessage);
-      }
-    }}
-  />
-)}
-      
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
@@ -2499,11 +2507,11 @@ const newMessages: Message[] = sendResult?.messages ?? [];
                       className={`
                         rounded-2xl relative shadow-sm overflow-hidden transition-colors
                         ${isDeleted
-                            ? "bg-surface text-secondary border border-border"
-                            : isMe
-                              ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
-                              : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
-                          }
+                          ? "bg-surface text-secondary border border-border"
+                          : isMe
+                            ? "bg-bubble-out text-text-main dark:text-text-main rounded-tr-sm"
+                            : "bg-bubble-in text-text-main rounded-tl-sm border border-border/50"
+                        }
                         ${isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""}
                         ${isPending ? "ring-1 ring-primary/30" : ""}
                       `}
@@ -2511,107 +2519,108 @@ const newMessages: Message[] = sendResult?.messages ?? [];
                         handleMessageClick(e, msg.id, !!isDeleted)
                       }
                     >
-                        {/* Forwarded Label */}
-                        {!isDeleted && msg.forwardedFromId && (
-                          <div
-                            className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
+                      {/* Forwarded Label */}
+                      {!isDeleted && msg.forwardedFromId && (
+                        <div
+                          className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 text-xs italic ${isMe ? "text-bubble-meta opacity-80" : "text-secondary"}`}
+                        >
+                          <Share2 size={12} />
+                          <span>
+                            Forwarded
+                            {msg.originalSenderName
+                              ? ` from ${msg.originalSenderName}`
+                              : ""}
+                          </span>
+                        </div>
+                      )}
+                      {/* Reply Quote */}
+                      {!isDeleted && repliedMsg && (
+                        <div
+                          className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            scrollToMessage(repliedMsg.id);
+                          }}
+                        >
+                          <p
+                            className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
                           >
-                            <Share2 size={12} />
-                            <span>
-                              Forwarded
-                              {msg.originalSenderName
-                                ? ` from ${msg.originalSenderName}`
-                                : ""}
-                            </span>
-                          </div>
-                        )}
-                        {/* Reply Quote */}
-                        {!isDeleted && repliedMsg && (
-                          <div
-                            className={`mx-1 mt-1 mb-1 rounded-lg p-2 border-l-4 text-sm bg-black/5 dark:bg-black/20 cursor-pointer hover:bg-black/10 dark:hover:bg-black/30 transition-colors ${isMe ? "border-primary/50" : "border-primary"}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              scrollToMessage(repliedMsg.id);
-                            }}
-                          >
-                            <p
-                              className={`text-xs font-bold mb-0.5 ${isMe ? "text-primary" : "text-primary"}`}
-                            >
-                              {repliedMsg.sender?.id === user?.id
-                                ? "You"
-                                : chat.members.find(
-                                  (m) => m.user.id === repliedMsg.sender?.id,
-                                )?.user.name || "Unknown"}
-                            </p>
-                            <p className="opacity-80 truncate">
-                              {repliedMsg.content || "Attachment"}
-                            </p>
-                          </div>
-                        )}
-                        {isDeleted ? (
-                          <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
-                            <Ban size={14} className="text-secondary" />
-                            <span>This message was deleted</span>
-                          </div>
-                        ) : (
-                          renderMessageContent(
-                            msg,
-                            isMe,
-                            chat,
-                            playingAudioId,
-                            toggleAudio,
-                            searchQuery,
-                            audioRefs,
-                            (url: string, fileName?: string) =>
-                              setPreviewImage({ url, fileName }),
-                            onStatusClick,
-                          )
-                        )}
-                        {isPending && (
-                          <div className="px-3 pb-2">
-                            <div className="text-[11px] flex items-center justify-between gap-3 text-bubble-meta opacity-90">
-                              <div className="flex items-center gap-2">
-                                <div className="animate-pulse rounded-full h-2.5 w-2.5 bg-primary"></div>
-                                <p className="text-text-main">{pendingLabel}</p>
-                              </div>
-                              {pendingCounterLabel && (
-                                <span className="text-[11px] text-secondary font-medium">
-                                  {pendingCounterLabel}
-                                </span>
-                              )}
+                            {repliedMsg.sender?.id === user?.id
+                              ? "You"
+                              : chat.members.find(
+                                (m) => m.user.id === repliedMsg.sender?.id,
+                              )?.user.name || "Unknown"}
+                          </p>
+                          <p className="opacity-80 truncate">
+                            {repliedMsg.content || "Attachment"}
+                          </p>
+                        </div>
+                      )}
+                      {isDeleted ? (
+                        <div className="px-4 py-2 flex items-center gap-2 text-sm italic opacity-80 select-none">
+                          <Ban size={14} className="text-secondary" />
+                          <span>This message was deleted</span>
+                        </div>
+                      ) : (
+                        renderMessageContent(
+                          msg,
+                          isMe,
+                          chat,
+                          playingAudioId,
+                          toggleAudio,
+                          searchQuery,
+                          audioRefs,
+                          (url: string, fileName?: string) =>
+                            setPreviewImage({ url, fileName }),
+                          onStatusClick,
+                          isPending,
+                        )
+                      )}
+                      {isPending && msg.type !== MessageType.STICKER && (
+                        <div className="px-3 pb-2">
+                          <div className="text-[11px] flex items-center justify-between gap-3 text-bubble-meta opacity-90">
+                            <div className="flex items-center gap-2">
+                              <div className="animate-pulse rounded-full h-2.5 w-2.5 bg-primary"></div>
+                              <p className="text-text-main">{pendingLabel}</p>
                             </div>
-                            {pendingProgress > 0 && (
-                              <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
-                                <div
-                                  className="h-full bg-primary transition-all duration-200"
-                                  style={{ width: `${pendingProgress}%` }}
-                                />
-                              </div>
+                            {pendingCounterLabel && (
+                              <span className="text-[11px] text-secondary font-medium">
+                                {pendingCounterLabel}
+                              </span>
                             )}
                           </div>
-                        )}
-                        {/* Message Meta */}
-                        <div
-                          className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
-                        >
-                          {!isDeleted && msg.isEdited && (
-                            <span className="italic opacity-80 mr-1">
-                              (edited)
-                            </span>
-                          )}
-                          <span>{formatMessageTime(msg.createdAt)}</span>
-                          {isMe && !isDeleted && isPending && (
-                            <span className="inline-flex items-center">
-                              <Clock3 size={12} />
-                            </span>
-                          )}
-                          {isMe && !isDeleted && !isPending && (
-                            <span>
-                              <CheckCheck size={14} />
-                            </span>
+                          {pendingProgress > 0 && (
+                            <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all duration-200"
+                                style={{ width: `${pendingProgress}%` }}
+                              />
+                            </div>
                           )}
                         </div>
+                      )}
+                      {/* Message Meta */}
+                      <div
+                        className={`px-2 pb-1 text-[10px] flex items-center justify-end gap-1 ${isMe && !isDeleted ? "text-bubble-meta opacity-80" : "text-bubble-meta"}`}
+                      >
+                        {!isDeleted && msg.isEdited && (
+                          <span className="italic opacity-80 mr-1">
+                            (edited)
+                          </span>
+                        )}
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {isMe && !isDeleted && isPending && (
+                          <span className="inline-flex items-center">
+                            <Clock3 size={12} />
+                          </span>
+                        )}
+                        {isMe && !isDeleted && !isPending && (
+                          <span>
+                            <CheckCheck size={14} />
+                          </span>
+                        )}
                       </div>
+                    </div>
 
                     {/* Reactions */}
                     {!isDeleted &&
@@ -2843,54 +2852,54 @@ const newMessages: Message[] = sendResult?.messages ?? [];
                       />
                     </button>
 
-                  {showAttachMenu && (
-                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                      <button
-                        onClick={() => setShowCamera(true)}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                          <Camera size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">
-                          Camera
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                          <Image size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">
-                          Photos & Videos
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                          <FileText size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">
-                          Document
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileSelect}
-                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                multiple
-              />
-            </div>
+                    {showAttachMenu && (
+                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                        <button
+                          onClick={() => setShowCamera(true)}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                            <Camera size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">
+                            Camera
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                            <Image size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">
+                            Photos & Videos
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                            <FileText size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">
+                            Document
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                  multiple
+                />
+              </div>
 
               {/* Text Input */}
               <div className="flex-1 min-w-0 relative min-h-12.5">
@@ -2952,83 +2961,83 @@ const newMessages: Message[] = sendResult?.messages ?? [];
                       {inputValue || "placeholder"}
                     </div>
 
-                  {/* Actual textarea */}
-                  <textarea
-                    ref={inputRef}
-                    placeholder={
-                      replyingTo
-                        ? "Reply..."
+                    {/* Actual textarea */}
+                    <textarea
+                      ref={inputRef}
+                      placeholder={
+                        replyingTo
+                          ? "Reply..."
+                          : editingMessage
+                            ? "Edit message..."
+                            : "Message"
+                      }
+                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                      style={{
+                        minHeight: "44px",
+                        maxHeight: "120px",
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                      }}
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      rows={1}
+                      wrap="soft"
+                      inputMode="text"
+                      // enterKeyHint="send"
+                      enterKeyHint="enter"
+                      autoCapitalize="sentences"
+                      autoCorrect="on"
+                      spellCheck="true"
+                    />
+
+                    {/* Command hint - absolutely positioned */}
+                    {!inputValue &&
+                      !isRecording &&
+                      (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                          <Command size={14} className="hidden sm:block" />
+                          <span className="text-xs hidden sm:inline">/</span>
+                          <span className="text-xs sm:hidden">/</span>{" "}
+                          {/* Mobile fallback */}
+                        </div>
+                      )}
+                  </div>
+                )}
+              </div>
+
+              {/* Send Button */}
+              <div className="pb-1 pr-1">
+                {inputValue.trim() || isRecording ? (
+                  <button
+                    onClick={
+                      isRecording
+                        ? () => stopRecording(false)
                         : editingMessage
-                          ? "Edit message..."
-                          : "Message"
+                          ? handleEndEdit
+                          : handleTextSend
                     }
-                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                    style={{
-                      minHeight: "44px",
-                      maxHeight: "120px",
-                      wordBreak: "break-word",
-                      overflowWrap: "break-word",
-                    }}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    rows={1}
-                    wrap="soft"
-                    inputMode="text"
-                    // enterKeyHint="send"
-                    enterKeyHint="enter"
-                    autoCapitalize="sentences"
-                    autoCorrect="on"
-                    spellCheck="true"
-                  />
-
-                  {/* Command hint - absolutely positioned */}
-                  {!inputValue &&
-                    !isRecording &&
-                    (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                        <Command size={14} className="hidden sm:block" />
-                        <span className="text-xs hidden sm:inline">/</span>
-                        <span className="text-xs sm:hidden">/</span>{" "}
-                        {/* Mobile fallback */}
-                      </div>
+                    className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
+                  >
+                    {editingMessage ? (
+                      <Check size={24} />
+                    ) : isRecording ? (
+                      <Send size={24} />
+                    ) : (
+                      <Send size={24} />
                     )}
-                </div>
-              )}
+                  </button>
+                ) : !editingMessage ? (
+                  <button
+                    onClick={startRecording}
+                    className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
+                  >
+                    <Mic size={24} />
+                  </button>
+                ) : null}
+              </div>
             </div>
-
-            {/* Send Button */}
-            <div className="pb-1 pr-1">
-              {inputValue.trim() || isRecording ? (
-                <button
-                  onClick={
-                    isRecording
-                      ? () => stopRecording(false)
-                      : editingMessage
-                        ? handleEndEdit
-                        : handleTextSend
-                  }
-                  className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
-                >
-                  {editingMessage ? (
-                    <Check size={24} />
-                  ) : isRecording ? (
-                    <Send size={24} />
-                  ) : (
-                    <Send size={24} />
-                  )}
-                </button>
-              ) : !editingMessage ? (
-                <button
-                  onClick={startRecording}
-                  className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
-                >
-                  <Mic size={24} />
-                </button>
-              ) : null}
-            </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );
