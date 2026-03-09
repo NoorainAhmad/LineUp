@@ -195,45 +195,27 @@ const renderMessageContent = (
       )}
 
       {msg.type === MessageType.IMAGE && (
-        <div className="p-1">
-          {hasAttachments ? (
-            <div
-              className={`grid gap-1 ${attachments.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
-            >
-              {attachments.map((attachment) => (
-                <img
-                  key={attachment.id}
-                  src={attachment.fileUrl}
-                  alt={attachment.fileName}
-                  className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${
-                    attachments.length > 1 ? "h-40" : "max-w-sm max-h-80"
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onImagePreview?.(attachment.fileUrl, attachment.fileName);
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="px-3 py-2 text-xs text-secondary">
-              Image unavailable
-            </div>
-          )}
-          {!isDefaultMediaCaption(msg.content) && (
-            <p className="px-3 pt-2 pb-1 text-sm">
-              <HighlightedText text={msg.content} highlight={searchQuery} />
-            </p>
-          )}
+  <div className="p-1">
+    {attachments.map((attachment) => (
+      <img
+        key={attachment.id}
+        src={attachment.fileUrl}
+        alt={attachment.fileName}
+        className="rounded-xl max-w-sm max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+        onClick={(e) => {
+          e.stopPropagation();
+          onImagePreview?.(attachment.fileUrl, attachment.fileName);
+        }}
+      />
+    ))}
 
-          {/* Show sender name at bottom for images in group chats (alternative position) */}
-          {isGroupChat && !isMe && (
-            <p className="px-3 pb-1 text-[10px] text-secondary font-medium">
-              {senderName}
-            </p>
-          )}
-        </div>
-      )}
+    {!isDefaultMediaCaption(msg.content) && (
+      <p className="px-3 pt-2 pb-1 text-sm">
+        <HighlightedText text={msg.content} highlight={searchQuery} />
+      </p>
+    )}
+  </div>
+)}
 
       {msg.type === MessageType.FILE && (
         <div className="p-1 m-1 rounded-xl border border-border/50 bg-black/5 dark:bg-black/20">
@@ -1089,11 +1071,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
     onSuccess: (response, variables) => {
       const pendingMessageId = response?.pendingMessageId;
       const sendResult = response?.result;
-      const newMessage = sendResult?.message?.data ?? sendResult?.message;
+const newMessages: Message[] = sendResult?.messages ?? [];
       const mediaReport = sendResult?.mediaReport;
       let matchedPendingMessage: Message | undefined;
 
-      if (!newMessage) {
+      if (!newMessages) {
         console.warn("Message response missing");
         return;
       }
@@ -1103,7 +1085,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         ["pending-messages", chat?.id],
         (old: Message[] = []) => {
           if (pendingMessageId) {
-            matchedPendingMessage = old.find((msg) => msg.id === pendingMessageId);
+            matchedPendingMessage = old.find((msg) => msg.id.startsWith("pending-"));
             return old.filter((msg) => msg.id !== pendingMessageId);
           }
 
@@ -1115,7 +1097,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           );
 
           if (pendingIndex === -1) {
-            return old.filter((msg) => msg.id !== newMessage.id);
+            return old.filter((msg) => msg.id !== newMessages[0].id);
           }
 
           matchedPendingMessage = old[pendingIndex];
@@ -1123,38 +1105,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
         },
       );
 
-      const hydratedMessage: Message = {
-        ...(matchedPendingMessage || {}),
-        ...newMessage,
-        attachments:
-          Array.isArray((newMessage as Message)?.attachments) &&
-          ((newMessage as Message).attachments?.length || 0) > 0
-            ? (newMessage as Message).attachments
-            : matchedPendingMessage?.attachments,
-        fileUrl: (newMessage as Message)?.fileUrl ?? matchedPendingMessage?.fileUrl,
-        fileName: (newMessage as Message)?.fileName ?? matchedPendingMessage?.fileName,
-        mimeType: (newMessage as Message)?.mimeType ?? matchedPendingMessage?.mimeType,
-        fileSize: (newMessage as Message)?.fileSize ?? matchedPendingMessage?.fileSize,
-        isPending: false,
-        uploadStage: undefined,
-        uploadProgress: undefined,
-        uploadCompletedFiles: undefined,
-        uploadTotalFiles: undefined,
-        uploadFailedFiles: undefined,
-      };
-
       queryClient.setQueryData(
-        ["chat-messages", chat?.id],
-        (old: Message[] = []) => {
-          const exists = old.some((msg) => msg.id === hydratedMessage.id);
-          if (exists) return old;
+  ["chat-messages", chat?.id],
+  (old: Message[] = []) => {
+    const existingIds = new Set(old.map((m) => m.id));
 
-          return [...old, hydratedMessage].sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-          );
-        },
-      );
+    const merged = [
+      ...old,
+      ...newMessages.filter((msg) => !existingIds.has(msg.id)),
+    ];
+
+    return merged.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }
+);
 
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
@@ -2081,7 +2046,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {previewImage && (
         <div
-          className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-`90` bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
           <button
