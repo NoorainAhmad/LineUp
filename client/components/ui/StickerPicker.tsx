@@ -18,18 +18,18 @@ const STICKER_PACKS = [
         ],
     },
     {
-        id: "gestures",
-        label: "👋",
-        name: "Gestures",
+        id: "hearts",
+        label: "❤️",
+        name: "Hearts",
         stickers: [
-            { id: "gestures_thumbsup", label: "Thumbs Up" },
-            { id: "gestures_thumbsdown", label: "Thumbs Down" },
-            { id: "gestures_wave", label: "Wave" },
-            { id: "gestures_clap", label: "Clap" },
-            { id: "gestures_pray", label: "Pray" },
-            { id: "gestures_peace", label: "Peace" },
-            { id: "gestures_fist", label: "Fist" },
-            { id: "gestures_ok", label: "OK" },
+            { id: "hearts_red", label: "Red Heart" },
+            { id: "hearts_broken", label: "Broken Heart" },
+            { id: "hearts_sparkling", label: "Sparkling Heart" },
+            { id: "hearts_growing", label: "Growing Heart" },
+            { id: "hearts_fire", label: "Heart on Fire" },
+            { id: "hearts_ribbon", label: "Heart with Ribbon" },
+            { id: "hearts_exclaim", label: "Heart Exclamation" },
+            { id: "hearts_facelovesmile", label: "Smiling with Hearts" },
         ],
     },
     {
@@ -90,8 +90,8 @@ export const StickerPicker: React.FC<StickerPickerProps> = ({
                         key={pack.id}
                         onClick={() => setActivePackId(pack.id)}
                         className={`flex-1 py-2 text-center text-lg transition-colors relative ${activePackId === pack.id
-                                ? "bg-primary/10"
-                                : "hover:bg-surface-hover"
+                            ? "bg-primary/10"
+                            : "hover:bg-surface-hover"
                             }`}
                         title={pack.name}
                     >
