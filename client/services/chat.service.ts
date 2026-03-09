@@ -65,7 +65,7 @@ type SendMessageOptions = {
 };
 
 type SendMessageResult = {
-  message: any;
+  messages: any[];
   mediaReport: MediaSendReport;
 };
 
@@ -264,7 +264,7 @@ export class ChatService {
           })),
         });
 
-        const uploads: UploadTicket[] = ticketResponse?.data?.data;
+        const uploads: UploadTicket[] = ticketResponse?.data?.data ?? [];
 
         if (!Array.isArray(uploads) || uploads.length !== filesForUpload.length) {
           throw new Error("Upload ticket response did not match selected files.");
@@ -289,7 +289,7 @@ export class ChatService {
                 failedFiles: invalidFiles.length + failedFiles.length,
                 progressPercent: toProgressPercent(
                   completedFiles,
-                  filesForUpload.length,
+                  uploadFiles.length,
                 ),
               });
 
@@ -333,7 +333,7 @@ export class ChatService {
                 failedFiles: invalidFiles.length + failedFiles.length,
                 progressPercent: toProgressPercent(
                   completedFiles,
-                  filesForUpload.length,
+                  uploadFiles.length,
                 ),
               });
             }
@@ -410,7 +410,7 @@ export class ChatService {
           mediaIds = [];
         }
 
-        mediaIds = Array.from(new Set(mediaIds));
+        mediaIds = [...new Set(mediaIds)];
 
         if (mediaIds.length === 0) {
           throw new Error("No media files could be uploaded successfully.");
@@ -433,9 +433,10 @@ export class ChatService {
       });
 
       const response = await api.post("/chats/messages", payload);
+      const messages = normalizeMessagesPayload(response.data);
 
       return {
-        message: response.data,
+        messages,
         mediaReport: {
           totalSelected: uploadFiles.length,
           uploaded: mediaIds.length,

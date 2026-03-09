@@ -148,39 +148,62 @@ export class ChatService {
 console.log("Send message data", data)
 console.log(" Media IDs", mediaIds)
       return prisma.$transaction(async (tx) => {
-        const message = await tx.message.create({
-          data: {
-            type,
-            content,
-            senderId,
-            chatId,
-            replyToId,
-          },
-          include: {
-            sender: { select: { id: true, name: true, avatarUrl: true } },
-          },
-        });
-        if (mediaIds?.length) {
-    await tx.messageMedia.createMany({
-      data: mediaIds.map((id: string, index: number) => ({
-        messageId: message.id,
-        mediaId: id,
-        order: index,
-      })),
+        const createdMessages = [];
+
+if (mediaIds?.length) {
+  for (const mediaId of mediaIds) {
+    const msg = await tx.message.create({
+      data: {
+        type,
+        content,
+        senderId,
+        chatId,
+        replyToId,
+      },
+      include: {
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+      },
     });
+
+    await tx.messageMedia.create({
+      data: {
+        messageId: msg.id,
+        mediaId,
+        order: 0,
+      },
+    });
+
+    createdMessages.push(msg);
   }
+} else {
+  const msg = await tx.message.create({
+    data: {
+      type,
+      content,
+      senderId,
+      chatId,
+      replyToId,
+    },
+    include: {
+      sender: { select: { id: true, name: true, avatarUrl: true } },
+    },
+  });
+
+  createdMessages.push(msg);
+}
+const lastMessage = createdMessages[createdMessages.length - 1];
         await tx.chat.update({
           where: { id: chatId },
           data: {
-            lastMessageId: message.id,
+            lastMessageId: lastMessage.id,
             updatedAt: new Date(),
           },
         });
         await tx.chatMember.updateMany({
           where: { chatId, userId: { not: senderId } },
-          data: { unreadCount: { increment: 1 } },
+          data: { unreadCount: { increment: createdMessages.length } },
         });
-        return message;
+        return createdMessages;
       });
     } catch (error) {
       console.log(`[Message Creation] Error: ${error}`);
