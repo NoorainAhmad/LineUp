@@ -244,8 +244,8 @@ const renderMessageContent = (
                             src={attachment.fileUrl}
                             alt={attachment.fileName}
                             className={`rounded-xl w-full object-cover cursor-pointer hover:opacity-95 transition-opacity ${mediaAttachments.length > 1
-                                ? "h-40"
-                                : "max-w-sm max-h-80"
+                              ? "h-40"
+                              : "max-w-sm max-h-80"
                               }`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -343,8 +343,8 @@ const renderMessageContent = (
             src={getStickerUrl(msg.content)}
             alt="Sticker"
             className={`w-40 h-40 object-contain drop-shadow-md transition-all duration-300 ${isPending
-                ? "opacity-60 scale-95"
-                : "hover:scale-105"
+              ? "opacity-60 scale-95"
+              : "hover:scale-105"
               }`}
             loading="lazy"
           />
@@ -1317,12 +1317,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   };
 
-  const markAsRead = async () => {
+  const markAsRead = useCallback(async () => {
     if (chat) {
       await ChatService.markAsRead(chat.id);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     }
-  };
+  }, [chat, queryClient]);
 
   // Effects
   useEffect(() => {
@@ -1356,6 +1356,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
       if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
         markAsRead();
 
+      // Reset message length tracking for the new chat
+      prevMessagesLengthRef.current = 0;
+
       // Scroll to bottom
       setTimeout(() => {
         scrollToBottom("auto");
@@ -1367,7 +1370,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   // Track new messages
   useEffect(() => {
     if (messages.length > prevMessagesLengthRef.current) {
-      const newCount = messages.length - prevMessagesLengthRef.current;
+      const newMessages = messages.slice(prevMessagesLengthRef.current);
+      const hasIncoming = newMessages.some((m) => m.senderId !== user?.id);
 
       if (!isScrolledToBottomRef.current) {
         setShowNewMessageIndicator(true);
@@ -1376,9 +1380,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
       if (isScrolledToBottomRef.current) {
         setTimeout(() => scrollToBottom("smooth"), 100);
       }
+
+      // If we have incoming messages and we are "active" (viewing this chat), mark them read
+      if (
+        hasIncoming &&
+        (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
+      ) {
+        markAsRead();
+      }
     }
     prevMessagesLengthRef.current = messages.length;
-  }, [messages]);
+  }, [messages, user, markAsRead]);
 
   // Setup scroll listener
   useEffect(() => {
