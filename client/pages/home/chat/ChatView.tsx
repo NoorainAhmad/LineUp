@@ -73,6 +73,9 @@ import {
   formatLastMessageTime,
   formatMessageTime,
 } from "@/utils/time_formatter.utils";
+import { getMessageStatus } from "@/utils/messageStatus";
+import { MessageStatusIcon } from "@/components/ui/MessageStatusIcon";
+import { useChatMessages } from "@/utils/useChatMessages";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -859,37 +862,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   // Polling query for messages
   const {
-    data: messages = [],
+    messages,
     isLoading: isLoadingMessages,
     error: messagesError,
     refetch: refetchMessages,
-  } = useQuery({
-    queryKey: ["chat-messages", chat?.id],
-    queryFn: async () => {
-      if (!chat?.id) return [];
-      try {
-        const response = await ChatService.getMessages(chat.id);
-        return Array.isArray(response.data) ? response.data : response;
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        return [];
-      }
-    },
-    enabled: !!chat?.id,
-    refetchInterval: 3000, // Poll every 3 seconds
-    refetchOnWindowFocus: false,
-    staleTime: 2000,
-    select: (data) => {
-      // Merge with pending messages
-      const pendingMessages =
-        queryClient.getQueryData<Message[]>(["pending-messages", chat?.id]) ||
-        [];
-      return [...data, ...pendingMessages].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-    },
-  });
+    resetCursor,
+  } = useChatMessages(chat);
 
   // Mutations
   const sendMessageMutation = useMutation({
@@ -1328,6 +1306,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   useEffect(() => {
     if (chat) {
       // Reset all states
+      resetCursor();
       setInputValue("");
       setShowEmojiPicker(false);
       setShowAttachMenu(false);
@@ -2621,15 +2600,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           </span>
                         )}
                         <span>{formatMessageTime(msg.createdAt)}</span>
-                        {isMe && !isDeleted && isPending && (
-                          <span className="inline-flex items-center">
-                            <Clock3 size={12} />
-                          </span>
-                        )}
-                        {isMe && !isDeleted && !isPending && (
-                          <span>
-                            <CheckCheck size={14} />
-                          </span>
+                        {isMe && !isDeleted && (
+                          <MessageStatusIcon
+                            status={getMessageStatus(msg, chat, user.id)}
+                            size={14}
+                          />
                         )}
                       </div>
                     </div>

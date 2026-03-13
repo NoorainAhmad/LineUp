@@ -56,6 +56,8 @@ export class ChatService {
         isMuted: true,
         isArchived: true,
         joinedAt: true,
+        lastDeliveredSeq: true,  // ← ADD
+        lastReadSeq: true,  
         user: {
           select: {
             id: true,
@@ -214,7 +216,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   // Edit a message content
   static async editMessage(
     userId: string,
-    messageId: string,
+    messageId: bigint,
     newContent: string,
   ) {
     try {
@@ -241,7 +243,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       // }
 
       // Update the message
-      const updatedMessage = await prisma.message.update({
+      return await prisma.message.update({
         where: { id: messageId },
         data: {
           content: newContent,
@@ -251,8 +253,6 @@ const lastMessage = createdMessages[createdMessages.length - 1];
           sender: { select: { id: true, name: true, avatarUrl: true } },
         },
       });
-
-      return updatedMessage;
     } catch (error) {
       console.log(`[Edit Message] Error: ${error}`);
       throw new Error("Message edit failed: " + (error as Error).message);
@@ -261,7 +261,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
 
   // Reaction logic for a message
   static async toggleReaction(
-    messageId: string,
+    messageId: bigint,
     userId: string,
     emoji: string,
   ) {
@@ -366,6 +366,8 @@ const lastMessage = createdMessages[createdMessages.length - 1];
               isMuted: true,
               isArchived: true,
               joinedAt: true,
+              lastDeliveredSeq: true,
+              lastReadSeq: true,
               user: {
                 select: {
                   id: true,
@@ -395,7 +397,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Get messages for a specific chat with role-based access control
-  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, cursor?: string) {
+  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, after?: bigint) {
     try {
       if (!chatId) return [];
       // Verify user has access to the chat based on role
@@ -429,11 +431,10 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       return []; // or throw 403
     }
      // 4️⃣ Only fetch messages AFTER authorization passes
-    return await prisma.message.findMany({
-      where: { chatId },
+    const messages = await prisma.message.findMany({
+      where: { chatId, ...(after !== undefined && { id: { gt: after } }), },
       take: limit,
-      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       include: {
         sender: {
           select: { id: true, name: true, avatarUrl: true },
@@ -447,6 +448,31 @@ const lastMessage = createdMessages[createdMessages.length - 1];
         asLastMessage: { select: { id: true } },
       },
     });
+    // ── Advance lastDeliveredSeq (side effect, best-effort) ──
+      //
+      // We only advance — never move the pointer backwards.
+      // Using updateMany with a condition is safe and index-backed.
+      // Runs even when messages[] is empty (pointer was already up to date).
+      if (messages.length > 0) {
+        const maxSeq = messages[messages.length - 1].id; // messages ordered asc
+
+        await prisma.chatMember.updateMany({
+          where: {
+            userId,
+            chatId,
+            // Only update if the new seq is actually higher.
+            // Prisma doesn't support "update if new value > old value" directly,
+            // so we use a raw conditional. This avoids unnecessary writes.
+            OR: [
+              { lastDeliveredSeq: null },
+              { lastDeliveredSeq: { lt: maxSeq } },
+            ],
+          },
+          data: { lastDeliveredSeq: maxSeq },
+        });
+      }
+
+      return messages;
     } catch (error) {
       console.log(`[Messages] Error: ${error}`);
       throw new Error("Messages not found: " + (error as Error).message);
@@ -529,11 +555,31 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Mark a chat as read
+  // ── Mark as read — advances lastReadSeq to latest in chat ───
+  //
+  // Called when user opens a chat. Advances read pointer to the
+  // latest message currently in the chat.
   static async markAsRead(chatId: string, userId: string) {
     try {
+      // Find the latest message in this chat (by id, which is our sequence)
+      const latestMessage = await prisma.message.findFirst({
+        where: { chatId },
+        orderBy: { id: "desc" },
+        select: { id: true },
+      });
+
+      // If no messages yet, just reset unread count
+      if (!latestMessage) {
+        return prisma.chatMember.update({
+          where: { userId_chatId: { userId, chatId } },
+          data: { unreadCount: 0 },
+        });
+      }
+
+      const latestSeq = latestMessage.id;
       return prisma.chatMember.update({
         where: { userId_chatId: { userId, chatId } },
-        data: { unreadCount: 0 },
+        data: { unreadCount: 0, lastReadSeq: latestSeq , lastDeliveredSeq: latestSeq },
       });
     } catch (error) {
       console.log(`[Mark As Read] Error: ${error}`);
@@ -559,7 +605,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Delete a message
-  static async deleteMessage(messageId: string, userId: string) {
+  static async deleteMessage(messageId: bigint, userId: string) {
     try {
       const message = await prisma.message.findFirst({
         where: { id: messageId, senderId: userId },

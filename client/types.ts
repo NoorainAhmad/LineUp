@@ -164,6 +164,9 @@ export interface ChatMember {
   isMuted: boolean;
   isArchived: boolean;
   joinedAt: string;
+
+  lastDeliveredSeq: string | null;  // BigInt comes as string from JSON
+  lastReadSeq: string | null;
 }
 
 export interface Message {

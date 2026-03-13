@@ -11,6 +11,9 @@ import { connectDB } from "@/config/db.js";
 
 dotenv.config();
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
 const app: Application = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
