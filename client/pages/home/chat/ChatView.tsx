@@ -1322,6 +1322,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setIsSearchOpen(false);
     setSearchQuery("");
     setSearchResults([]);
+    setPreviewImage(null);
 
     // Stop recording if active
     if (mediaRecorderRef.current?.state === "recording") {
@@ -2048,7 +2049,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {previewImage && (
         <div
-          className="fixed inset-0 z-`90` bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
           <button
