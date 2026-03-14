@@ -1296,55 +1296,58 @@ export const ChatView: React.FC<ChatViewProps> = ({
   };
 
   const markAsRead = useCallback(async () => {
-    if (chat) {
-      await ChatService.markAsRead(chat.id);
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-    }
-  }, [chat, queryClient]);
+    if (!chat?.id) return;
+
+    await ChatService.markAsRead(chat.id);
+    queryClient.invalidateQueries({ queryKey: ["chats"] });
+  }, [chat?.id, queryClient]);
 
   // Effects
   useEffect(() => {
-    if (chat) {
-      // Reset all states
-      resetCursor();
-      setInputValue("");
-      setShowEmojiPicker(false);
-      setShowAttachMenu(false);
-      setShowStickerPicker(false);
-      setIsRecording(false);
-      setReplyingTo(null);
-      setEditingMessage(null);
-      setActiveReactionMessageId(null);
-      setSelectedMessageId(null);
-      setShowCannedMenu(false);
-      setShowNewMessageIndicator(false);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-      setSearchResults([]);
+    if (!chat?.id) return;
+    // Reset all states
+    resetCursor();
+    queryClient.invalidateQueries({ queryKey: ["chat-messages", chat.id] }); // Ensure we fetch fresh messages for the new chat
+    setInputValue("");
+    setShowEmojiPicker(false);
+    setShowAttachMenu(false);
+    setShowStickerPicker(false);
+    setIsRecording(false);
+    setReplyingTo(null);
+    setEditingMessage(null);
+    setActiveReactionMessageId(null);
+    setSelectedMessageId(null);
+    setShowCannedMenu(false);
+    setShowNewMessageIndicator(false);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
 
-      // Stop recording if active
-      if (mediaRecorderRef.current?.state === "recording") {
-        mediaRecorderRef.current.stop();
-      }
-
-      // Clear pending messages
-      cleanupAllPendingAttachmentUrls();
-      queryClient.setQueryData(["pending-messages", chat.id], []);
-
-      // Mark as read
-      if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
-        markAsRead();
-
-      // Reset message length tracking for the new chat
-      prevMessagesLengthRef.current = 0;
-
-      // Scroll to bottom
-      setTimeout(() => {
-        scrollToBottom("auto");
-        isScrolledToBottomRef.current = true;
-      }, 100);
+    // Stop recording if active
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
     }
-  }, [chat, queryClient, cleanupAllPendingAttachmentUrls]);
+
+    // Clear pending messages
+    cleanupAllPendingAttachmentUrls();
+    queryClient.setQueryData(["pending-messages", chat.id], []);
+
+    // Mark as read
+    if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
+      setTimeout(() => { markAsRead();
+      }, 0);
+    }
+
+    // Reset message length tracking for the new chat
+    prevMessagesLengthRef.current = 0;
+
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollToBottom("auto");
+      isScrolledToBottomRef.current = true;
+    }, 100);
+  },
+  [chat?.id, cleanupAllPendingAttachmentUrls, markAsRead, queryClient, resetCursor, user?.role,]);
 
   // Track new messages
   useEffect(() => {

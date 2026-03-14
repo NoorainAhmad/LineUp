@@ -41,7 +41,11 @@ export class ChatController {
       if (!messageId || !newContent) {
         throw new Error("Message ID and message content are required");
       }
-      const message = await ChatService.editMessage(userId, messageId, newContent);
+      const message = await ChatService.editMessage(
+        userId,
+        BigInt(messageId),
+        newContent,
+      );
       return res.status(201).json(message);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -55,7 +59,7 @@ export class ChatController {
       const { emoji } = req.body;
       const userId = req.userId as string;
       const updatedMessage = await ChatService.toggleReaction(
-        messageId,
+        BigInt(messageId),
         userId,
         emoji,
       );
@@ -88,7 +92,7 @@ export class ChatController {
         userRole,
         chatId,
         limit ? parseInt(limit as string) : 50,
-        cursor as string,
+        typeof cursor === "string" ? BigInt(cursor) : undefined,
       );
       return res.status(200).json(messages);
     } catch (error: any) {
@@ -125,7 +129,10 @@ export class ChatController {
     try {
       const { messageId } = req.params as { messageId: string };
       const userId = req.userId as string;
-      const deletedMessage = await ChatService.deleteMessage(messageId, userId);
+      const deletedMessage = await ChatService.deleteMessage(
+        BigInt(messageId),
+        userId,
+      );
       return res.status(200).json(deletedMessage);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

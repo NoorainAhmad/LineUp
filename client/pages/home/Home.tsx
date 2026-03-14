@@ -152,6 +152,15 @@ export const Home: React.FC = () => {
     refetchInterval: activeTab === "chat" ? 1000 : 10000,
   });
 
+  // Keep the open conversation in sync with the latest chat query data
+  // so delivery/read pointers update without forcing the user to reselect it.
+  const resolvedSelectedChat = useMemo(() => {
+    if (!selectedChat) return null;
+
+    const liveChat = chatsData.find((chat: Chat) => chat.id === selectedChat.id);
+    return liveChat ?? selectedChat;
+  }, [chatsData, selectedChat]);
+
   const {
     data: statusesData = [],
     isLoading: isLoadingStatuses,
@@ -370,6 +379,8 @@ export const Home: React.FC = () => {
               isPinned: false,
               isMuted: false,
               isArchived: false,
+              lastDeliveredSeq: "0",
+              lastReadSeq: "0",
               joinedAt: new Date().toISOString(),
             },
             {
@@ -382,6 +393,8 @@ export const Home: React.FC = () => {
               isPinned: false,
               isMuted: false,
               isArchived: false,
+              lastDeliveredSeq: "0",
+              lastReadSeq: "0",
               joinedAt: new Date().toISOString(),
             },
           ],
@@ -903,6 +916,8 @@ export const Home: React.FC = () => {
               isPinned: false,
               isMuted: false,
               isArchived: false,
+              lastDeliveredSeq: "0",
+              lastReadSeq: "0",
               joinedAt: new Date().toISOString(),
             },
             {
@@ -915,6 +930,8 @@ export const Home: React.FC = () => {
               isPinned: false,
               isMuted: false,
               isArchived: false,
+              lastDeliveredSeq: "0",
+              lastReadSeq: "0",
               joinedAt: new Date().toISOString(),
             },
           ],
@@ -1144,7 +1161,7 @@ export const Home: React.FC = () => {
     if (activeTab === "chat") {
       return (
         <ChatView
-          chat={selectedChat}
+          chat={resolvedSelectedChat}
           onBack={handleBackToMenu}
           onToggleProfile={toggleProfile}
           cannedResponses={responsesData}
@@ -1493,26 +1510,26 @@ export const Home: React.FC = () => {
               className="absolute inset-0 bg-black/50 md:hidden"
               onClick={() => setShowProfile(false)}
             ></div>
-            {!selectedChat.isGroup && (
+            {resolvedSelectedChat && !resolvedSelectedChat.isGroup && (
               <ProfileView
                 userId={
                   currentUser?.role === UserRole.USER ||
                     currentUser?.role === UserRole.BRANCH
-                    ? selectedChat.members.find(
+                    ? resolvedSelectedChat.members.find(
                       (m) => m.user.id !== currentUser!.id,
-                    )?.user?.id || selectedChat.members[0].user?.id
-                    : selectedChat.members.find(
+                    )?.user?.id || resolvedSelectedChat.members[0].user?.id
+                    : resolvedSelectedChat.members.find(
                       (m) => m.user.role === UserRole.BRANCH,
-                    )?.user?.id || selectedChat.members[0].user?.id
+                    )?.user?.id || resolvedSelectedChat.members[0].user?.id
                 }
                 onClose={() => setShowProfile(false)}
                 onUpdate={handleUpdateUserProfile as any}
                 onDelete={handleDeleteContact}
               />
             )}
-            {selectedChat.isGroup && (
+            {resolvedSelectedChat?.isGroup && (
               <GroupProfileView
-                chat={selectedChat}
+                chat={resolvedSelectedChat}
                 onClose={() => setShowProfile(false)}
                 onUpdate={() => {
                   alert("Feature coming soon...");
