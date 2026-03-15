@@ -181,7 +181,9 @@ exports.Prisma.ChatMemberScalarFieldEnum = {
   isPinned: 'isPinned',
   isMuted: 'isMuted',
   isArchived: 'isArchived',
-  joinedAt: 'joinedAt'
+  joinedAt: 'joinedAt',
+  lastDeliveredSeq: 'lastDeliveredSeq',
+  lastReadSeq: 'lastReadSeq'
 };
 
 exports.Prisma.MessageScalarFieldEnum = {

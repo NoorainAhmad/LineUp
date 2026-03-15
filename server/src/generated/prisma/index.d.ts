@@ -2096,10 +2096,14 @@ export namespace Prisma {
 
   export type MessageCountOutputType = {
     medias: number
+    deliveredPointers: number
+    readPointers: number
   }
 
   export type MessageCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     medias?: boolean | MessageCountOutputTypeCountMediasArgs
+    deliveredPointers?: boolean | MessageCountOutputTypeCountDeliveredPointersArgs
+    readPointers?: boolean | MessageCountOutputTypeCountReadPointersArgs
   }
 
   // Custom InputTypes
@@ -2118,6 +2122,20 @@ export namespace Prisma {
    */
   export type MessageCountOutputTypeCountMediasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MessageMediaWhereInput
+  }
+
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeCountDeliveredPointersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChatMemberWhereInput
+  }
+
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeCountReadPointersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChatMemberWhereInput
   }
 
 
@@ -5854,8 +5872,18 @@ export namespace Prisma {
 
   export type AggregateChat = {
     _count: ChatCountAggregateOutputType | null
+    _avg: ChatAvgAggregateOutputType | null
+    _sum: ChatSumAggregateOutputType | null
     _min: ChatMinAggregateOutputType | null
     _max: ChatMaxAggregateOutputType | null
+  }
+
+  export type ChatAvgAggregateOutputType = {
+    lastMessageId: number | null
+  }
+
+  export type ChatSumAggregateOutputType = {
+    lastMessageId: bigint | null
   }
 
   export type ChatMinAggregateOutputType = {
@@ -5863,7 +5891,7 @@ export namespace Prisma {
     isGroup: boolean | null
     groupName: string | null
     groupImage: string | null
-    lastMessageId: string | null
+    lastMessageId: bigint | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5873,7 +5901,7 @@ export namespace Prisma {
     isGroup: boolean | null
     groupName: string | null
     groupImage: string | null
-    lastMessageId: string | null
+    lastMessageId: bigint | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5889,6 +5917,14 @@ export namespace Prisma {
     _all: number
   }
 
+
+  export type ChatAvgAggregateInputType = {
+    lastMessageId?: true
+  }
+
+  export type ChatSumAggregateInputType = {
+    lastMessageId?: true
+  }
 
   export type ChatMinAggregateInputType = {
     id?: true
@@ -5959,6 +5995,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ChatAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ChatSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ChatMinAggregateInputType
@@ -5989,6 +6037,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ChatCountAggregateInputType | true
+    _avg?: ChatAvgAggregateInputType
+    _sum?: ChatSumAggregateInputType
     _min?: ChatMinAggregateInputType
     _max?: ChatMaxAggregateInputType
   }
@@ -5998,10 +6048,12 @@ export namespace Prisma {
     isGroup: boolean
     groupName: string | null
     groupImage: string | null
-    lastMessageId: string | null
+    lastMessageId: bigint | null
     createdAt: Date
     updatedAt: Date
     _count: ChatCountAggregateOutputType | null
+    _avg: ChatAvgAggregateOutputType | null
+    _sum: ChatSumAggregateOutputType | null
     _min: ChatMinAggregateOutputType | null
     _max: ChatMaxAggregateOutputType | null
   }
@@ -6092,7 +6144,7 @@ export namespace Prisma {
       isGroup: boolean
       groupName: string | null
       groupImage: string | null
-      lastMessageId: string | null
+      lastMessageId: bigint | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["chat"]>
@@ -6525,7 +6577,7 @@ export namespace Prisma {
     readonly isGroup: FieldRef<"Chat", 'Boolean'>
     readonly groupName: FieldRef<"Chat", 'String'>
     readonly groupImage: FieldRef<"Chat", 'String'>
-    readonly lastMessageId: FieldRef<"Chat", 'String'>
+    readonly lastMessageId: FieldRef<"Chat", 'BigInt'>
     readonly createdAt: FieldRef<"Chat", 'DateTime'>
     readonly updatedAt: FieldRef<"Chat", 'DateTime'>
   }
@@ -7023,10 +7075,14 @@ export namespace Prisma {
 
   export type ChatMemberAvgAggregateOutputType = {
     unreadCount: number | null
+    lastDeliveredSeq: number | null
+    lastReadSeq: number | null
   }
 
   export type ChatMemberSumAggregateOutputType = {
     unreadCount: number | null
+    lastDeliveredSeq: bigint | null
+    lastReadSeq: bigint | null
   }
 
   export type ChatMemberMinAggregateOutputType = {
@@ -7038,6 +7094,8 @@ export namespace Prisma {
     isMuted: boolean | null
     isArchived: boolean | null
     joinedAt: Date | null
+    lastDeliveredSeq: bigint | null
+    lastReadSeq: bigint | null
   }
 
   export type ChatMemberMaxAggregateOutputType = {
@@ -7049,6 +7107,8 @@ export namespace Prisma {
     isMuted: boolean | null
     isArchived: boolean | null
     joinedAt: Date | null
+    lastDeliveredSeq: bigint | null
+    lastReadSeq: bigint | null
   }
 
   export type ChatMemberCountAggregateOutputType = {
@@ -7060,16 +7120,22 @@ export namespace Prisma {
     isMuted: number
     isArchived: number
     joinedAt: number
+    lastDeliveredSeq: number
+    lastReadSeq: number
     _all: number
   }
 
 
   export type ChatMemberAvgAggregateInputType = {
     unreadCount?: true
+    lastDeliveredSeq?: true
+    lastReadSeq?: true
   }
 
   export type ChatMemberSumAggregateInputType = {
     unreadCount?: true
+    lastDeliveredSeq?: true
+    lastReadSeq?: true
   }
 
   export type ChatMemberMinAggregateInputType = {
@@ -7081,6 +7147,8 @@ export namespace Prisma {
     isMuted?: true
     isArchived?: true
     joinedAt?: true
+    lastDeliveredSeq?: true
+    lastReadSeq?: true
   }
 
   export type ChatMemberMaxAggregateInputType = {
@@ -7092,6 +7160,8 @@ export namespace Prisma {
     isMuted?: true
     isArchived?: true
     joinedAt?: true
+    lastDeliveredSeq?: true
+    lastReadSeq?: true
   }
 
   export type ChatMemberCountAggregateInputType = {
@@ -7103,6 +7173,8 @@ export namespace Prisma {
     isMuted?: true
     isArchived?: true
     joinedAt?: true
+    lastDeliveredSeq?: true
+    lastReadSeq?: true
     _all?: true
   }
 
@@ -7201,6 +7273,8 @@ export namespace Prisma {
     isMuted: boolean
     isArchived: boolean
     joinedAt: Date
+    lastDeliveredSeq: bigint | null
+    lastReadSeq: bigint | null
     _count: ChatMemberCountAggregateOutputType | null
     _avg: ChatMemberAvgAggregateOutputType | null
     _sum: ChatMemberSumAggregateOutputType | null
@@ -7231,8 +7305,12 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: boolean
+    lastDeliveredSeq?: boolean
+    lastReadSeq?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }, ExtArgs["result"]["chatMember"]>
 
   export type ChatMemberSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7244,8 +7322,12 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: boolean
+    lastDeliveredSeq?: boolean
+    lastReadSeq?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }, ExtArgs["result"]["chatMember"]>
 
   export type ChatMemberSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7257,8 +7339,12 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: boolean
+    lastDeliveredSeq?: boolean
+    lastReadSeq?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }, ExtArgs["result"]["chatMember"]>
 
   export type ChatMemberSelectScalar = {
@@ -7270,20 +7356,28 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: boolean
+    lastDeliveredSeq?: boolean
+    lastReadSeq?: boolean
   }
 
-  export type ChatMemberOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "chatId" | "unreadCount" | "isPinned" | "isMuted" | "isArchived" | "joinedAt", ExtArgs["result"]["chatMember"]>
+  export type ChatMemberOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "chatId" | "unreadCount" | "isPinned" | "isMuted" | "isArchived" | "joinedAt" | "lastDeliveredSeq" | "lastReadSeq", ExtArgs["result"]["chatMember"]>
   export type ChatMemberInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }
   export type ChatMemberIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }
   export type ChatMemberIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     chat?: boolean | ChatDefaultArgs<ExtArgs>
+    lastDeliveredMsg?: boolean | ChatMember$lastDeliveredMsgArgs<ExtArgs>
+    lastReadMsg?: boolean | ChatMember$lastReadMsgArgs<ExtArgs>
   }
 
   export type $ChatMemberPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7291,6 +7385,8 @@ export namespace Prisma {
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
       chat: Prisma.$ChatPayload<ExtArgs>
+      lastDeliveredMsg: Prisma.$MessagePayload<ExtArgs> | null
+      lastReadMsg: Prisma.$MessagePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7301,6 +7397,8 @@ export namespace Prisma {
       isMuted: boolean
       isArchived: boolean
       joinedAt: Date
+      lastDeliveredSeq: bigint | null
+      lastReadSeq: bigint | null
     }, ExtArgs["result"]["chatMember"]>
     composites: {}
   }
@@ -7697,6 +7795,8 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     chat<T extends ChatDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChatDefaultArgs<ExtArgs>>): Prisma__ChatClient<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    lastDeliveredMsg<T extends ChatMember$lastDeliveredMsgArgs<ExtArgs> = {}>(args?: Subset<T, ChatMember$lastDeliveredMsgArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    lastReadMsg<T extends ChatMember$lastReadMsgArgs<ExtArgs> = {}>(args?: Subset<T, ChatMember$lastReadMsgArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7734,6 +7834,8 @@ export namespace Prisma {
     readonly isMuted: FieldRef<"ChatMember", 'Boolean'>
     readonly isArchived: FieldRef<"ChatMember", 'Boolean'>
     readonly joinedAt: FieldRef<"ChatMember", 'DateTime'>
+    readonly lastDeliveredSeq: FieldRef<"ChatMember", 'BigInt'>
+    readonly lastReadSeq: FieldRef<"ChatMember", 'BigInt'>
   }
     
 
@@ -8130,6 +8232,44 @@ export namespace Prisma {
   }
 
   /**
+   * ChatMember.lastDeliveredMsg
+   */
+  export type ChatMember$lastDeliveredMsgArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Message
+     */
+    omit?: MessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    where?: MessageWhereInput
+  }
+
+  /**
+   * ChatMember.lastReadMsg
+   */
+  export type ChatMember$lastReadMsgArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Message
+     */
+    omit?: MessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    where?: MessageWhereInput
+  }
+
+  /**
    * ChatMember without action
    */
   export type ChatMemberDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8154,18 +8294,32 @@ export namespace Prisma {
 
   export type AggregateMessage = {
     _count: MessageCountAggregateOutputType | null
+    _avg: MessageAvgAggregateOutputType | null
+    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
   }
 
+  export type MessageAvgAggregateOutputType = {
+    id: number | null
+    replyToId: number | null
+    forwardedFromId: number | null
+  }
+
+  export type MessageSumAggregateOutputType = {
+    id: bigint | null
+    replyToId: bigint | null
+    forwardedFromId: bigint | null
+  }
+
   export type MessageMinAggregateOutputType = {
-    id: string | null
+    id: bigint | null
     type: $Enums.MessageType | null
     content: string | null
     senderId: string | null
     chatId: string | null
-    replyToId: string | null
-    forwardedFromId: string | null
+    replyToId: bigint | null
+    forwardedFromId: bigint | null
     originalSenderId: string | null
     isEdited: boolean | null
     isDeleted: boolean | null
@@ -8174,13 +8328,13 @@ export namespace Prisma {
   }
 
   export type MessageMaxAggregateOutputType = {
-    id: string | null
+    id: bigint | null
     type: $Enums.MessageType | null
     content: string | null
     senderId: string | null
     chatId: string | null
-    replyToId: string | null
-    forwardedFromId: string | null
+    replyToId: bigint | null
+    forwardedFromId: bigint | null
     originalSenderId: string | null
     isEdited: boolean | null
     isDeleted: boolean | null
@@ -8205,6 +8359,18 @@ export namespace Prisma {
     _all: number
   }
 
+
+  export type MessageAvgAggregateInputType = {
+    id?: true
+    replyToId?: true
+    forwardedFromId?: true
+  }
+
+  export type MessageSumAggregateInputType = {
+    id?: true
+    replyToId?: true
+    forwardedFromId?: true
+  }
 
   export type MessageMinAggregateInputType = {
     id?: true
@@ -8291,6 +8457,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: MessageAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MessageSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: MessageMinAggregateInputType
@@ -8321,18 +8499,20 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: MessageCountAggregateInputType | true
+    _avg?: MessageAvgAggregateInputType
+    _sum?: MessageSumAggregateInputType
     _min?: MessageMinAggregateInputType
     _max?: MessageMaxAggregateInputType
   }
 
   export type MessageGroupByOutputType = {
-    id: string
+    id: bigint
     type: $Enums.MessageType
     content: string
     senderId: string
     chatId: string
-    replyToId: string | null
-    forwardedFromId: string | null
+    replyToId: bigint | null
+    forwardedFromId: bigint | null
     originalSenderId: string | null
     isEdited: boolean
     isDeleted: boolean
@@ -8340,6 +8520,8 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     _count: MessageCountAggregateOutputType | null
+    _avg: MessageAvgAggregateOutputType | null
+    _sum: MessageSumAggregateOutputType | null
     _min: MessageMinAggregateOutputType | null
     _max: MessageMaxAggregateOutputType | null
   }
@@ -8376,6 +8558,8 @@ export namespace Prisma {
     chat?: boolean | ChatDefaultArgs<ExtArgs>
     medias?: boolean | Message$mediasArgs<ExtArgs>
     asLastMessage?: boolean | Message$asLastMessageArgs<ExtArgs>
+    deliveredPointers?: boolean | Message$deliveredPointersArgs<ExtArgs>
+    readPointers?: boolean | Message$readPointersArgs<ExtArgs>
     _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
@@ -8437,6 +8621,8 @@ export namespace Prisma {
     chat?: boolean | ChatDefaultArgs<ExtArgs>
     medias?: boolean | Message$mediasArgs<ExtArgs>
     asLastMessage?: boolean | Message$asLastMessageArgs<ExtArgs>
+    deliveredPointers?: boolean | Message$deliveredPointersArgs<ExtArgs>
+    readPointers?: boolean | Message$readPointersArgs<ExtArgs>
     _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8455,15 +8641,17 @@ export namespace Prisma {
       chat: Prisma.$ChatPayload<ExtArgs>
       medias: Prisma.$MessageMediaPayload<ExtArgs>[]
       asLastMessage: Prisma.$ChatPayload<ExtArgs> | null
+      deliveredPointers: Prisma.$ChatMemberPayload<ExtArgs>[]
+      readPointers: Prisma.$ChatMemberPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
-      id: string
+      id: bigint
       type: $Enums.MessageType
       content: string
       senderId: string
       chatId: string
-      replyToId: string | null
-      forwardedFromId: string | null
+      replyToId: bigint | null
+      forwardedFromId: bigint | null
       originalSenderId: string | null
       isEdited: boolean
       isDeleted: boolean
@@ -8868,6 +9056,8 @@ export namespace Prisma {
     chat<T extends ChatDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChatDefaultArgs<ExtArgs>>): Prisma__ChatClient<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     medias<T extends Message$mediasArgs<ExtArgs> = {}>(args?: Subset<T, Message$mediasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessageMediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     asLastMessage<T extends Message$asLastMessageArgs<ExtArgs> = {}>(args?: Subset<T, Message$asLastMessageArgs<ExtArgs>>): Prisma__ChatClient<$Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    deliveredPointers<T extends Message$deliveredPointersArgs<ExtArgs> = {}>(args?: Subset<T, Message$deliveredPointersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    readPointers<T extends Message$readPointersArgs<ExtArgs> = {}>(args?: Subset<T, Message$readPointersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8897,13 +9087,13 @@ export namespace Prisma {
    * Fields of the Message model
    */
   interface MessageFieldRefs {
-    readonly id: FieldRef<"Message", 'String'>
+    readonly id: FieldRef<"Message", 'BigInt'>
     readonly type: FieldRef<"Message", 'MessageType'>
     readonly content: FieldRef<"Message", 'String'>
     readonly senderId: FieldRef<"Message", 'String'>
     readonly chatId: FieldRef<"Message", 'String'>
-    readonly replyToId: FieldRef<"Message", 'String'>
-    readonly forwardedFromId: FieldRef<"Message", 'String'>
+    readonly replyToId: FieldRef<"Message", 'BigInt'>
+    readonly forwardedFromId: FieldRef<"Message", 'BigInt'>
     readonly originalSenderId: FieldRef<"Message", 'String'>
     readonly isEdited: FieldRef<"Message", 'Boolean'>
     readonly isDeleted: FieldRef<"Message", 'Boolean'>
@@ -9349,6 +9539,54 @@ export namespace Prisma {
   }
 
   /**
+   * Message.deliveredPointers
+   */
+  export type Message$deliveredPointersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChatMember
+     */
+    select?: ChatMemberSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChatMember
+     */
+    omit?: ChatMemberOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChatMemberInclude<ExtArgs> | null
+    where?: ChatMemberWhereInput
+    orderBy?: ChatMemberOrderByWithRelationInput | ChatMemberOrderByWithRelationInput[]
+    cursor?: ChatMemberWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ChatMemberScalarFieldEnum | ChatMemberScalarFieldEnum[]
+  }
+
+  /**
+   * Message.readPointers
+   */
+  export type Message$readPointersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChatMember
+     */
+    select?: ChatMemberSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChatMember
+     */
+    omit?: ChatMemberOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChatMemberInclude<ExtArgs> | null
+    where?: ChatMemberWhereInput
+    orderBy?: ChatMemberOrderByWithRelationInput | ChatMemberOrderByWithRelationInput[]
+    cursor?: ChatMemberWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ChatMemberScalarFieldEnum | ChatMemberScalarFieldEnum[]
+  }
+
+  /**
    * Message without action
    */
   export type MessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9380,23 +9618,25 @@ export namespace Prisma {
   }
 
   export type MessageMediaAvgAggregateOutputType = {
+    messageId: number | null
     order: number | null
   }
 
   export type MessageMediaSumAggregateOutputType = {
+    messageId: bigint | null
     order: number | null
   }
 
   export type MessageMediaMinAggregateOutputType = {
     id: string | null
-    messageId: string | null
+    messageId: bigint | null
     mediaId: string | null
     order: number | null
   }
 
   export type MessageMediaMaxAggregateOutputType = {
     id: string | null
-    messageId: string | null
+    messageId: bigint | null
     mediaId: string | null
     order: number | null
   }
@@ -9411,10 +9651,12 @@ export namespace Prisma {
 
 
   export type MessageMediaAvgAggregateInputType = {
+    messageId?: true
     order?: true
   }
 
   export type MessageMediaSumAggregateInputType = {
+    messageId?: true
     order?: true
   }
 
@@ -9528,7 +9770,7 @@ export namespace Prisma {
 
   export type MessageMediaGroupByOutputType = {
     id: string
-    messageId: string
+    messageId: bigint
     mediaId: string
     order: number
     _count: MessageMediaCountAggregateOutputType | null
@@ -9608,7 +9850,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      messageId: string
+      messageId: bigint
       mediaId: string
       order: number
     }, ExtArgs["result"]["messageMedia"]>
@@ -10037,7 +10279,7 @@ export namespace Prisma {
    */
   interface MessageMediaFieldRefs {
     readonly id: FieldRef<"MessageMedia", 'String'>
-    readonly messageId: FieldRef<"MessageMedia", 'String'>
+    readonly messageId: FieldRef<"MessageMedia", 'BigInt'>
     readonly mediaId: FieldRef<"MessageMedia", 'String'>
     readonly order: FieldRef<"MessageMedia", 'Int'>
   }
@@ -16171,7 +16413,9 @@ export namespace Prisma {
     isPinned: 'isPinned',
     isMuted: 'isMuted',
     isArchived: 'isArchived',
-    joinedAt: 'joinedAt'
+    joinedAt: 'joinedAt',
+    lastDeliveredSeq: 'lastDeliveredSeq',
+    lastReadSeq: 'lastReadSeq'
   };
 
   export type ChatMemberScalarFieldEnum = (typeof ChatMemberScalarFieldEnum)[keyof typeof ChatMemberScalarFieldEnum]
@@ -16408,6 +16652,20 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'BigInt'
+   */
+  export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+  /**
+   * Reference to a field of type 'BigInt[]'
+   */
+  export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 
@@ -16778,7 +17036,7 @@ export namespace Prisma {
     isGroup?: BoolFilter<"Chat"> | boolean
     groupName?: StringNullableFilter<"Chat"> | string | null
     groupImage?: StringNullableFilter<"Chat"> | string | null
-    lastMessageId?: StringNullableFilter<"Chat"> | string | null
+    lastMessageId?: BigIntNullableFilter<"Chat"> | bigint | number | null
     createdAt?: DateTimeFilter<"Chat"> | Date | string
     updatedAt?: DateTimeFilter<"Chat"> | Date | string
     members?: ChatMemberListRelationFilter
@@ -16801,7 +17059,7 @@ export namespace Prisma {
 
   export type ChatWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    lastMessageId?: string
+    lastMessageId?: bigint | number
     AND?: ChatWhereInput | ChatWhereInput[]
     OR?: ChatWhereInput[]
     NOT?: ChatWhereInput | ChatWhereInput[]
@@ -16824,8 +17082,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ChatCountOrderByAggregateInput
+    _avg?: ChatAvgOrderByAggregateInput
     _max?: ChatMaxOrderByAggregateInput
     _min?: ChatMinOrderByAggregateInput
+    _sum?: ChatSumOrderByAggregateInput
   }
 
   export type ChatScalarWhereWithAggregatesInput = {
@@ -16836,7 +17096,7 @@ export namespace Prisma {
     isGroup?: BoolWithAggregatesFilter<"Chat"> | boolean
     groupName?: StringNullableWithAggregatesFilter<"Chat"> | string | null
     groupImage?: StringNullableWithAggregatesFilter<"Chat"> | string | null
-    lastMessageId?: StringNullableWithAggregatesFilter<"Chat"> | string | null
+    lastMessageId?: BigIntNullableWithAggregatesFilter<"Chat"> | bigint | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Chat"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Chat"> | Date | string
   }
@@ -16853,8 +17113,12 @@ export namespace Prisma {
     isMuted?: BoolFilter<"ChatMember"> | boolean
     isArchived?: BoolFilter<"ChatMember"> | boolean
     joinedAt?: DateTimeFilter<"ChatMember"> | Date | string
+    lastDeliveredSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
+    lastReadSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
+    lastDeliveredMsg?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
+    lastReadMsg?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
   }
 
   export type ChatMemberOrderByWithRelationInput = {
@@ -16866,8 +17130,12 @@ export namespace Prisma {
     isMuted?: SortOrder
     isArchived?: SortOrder
     joinedAt?: SortOrder
+    lastDeliveredSeq?: SortOrderInput | SortOrder
+    lastReadSeq?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
     chat?: ChatOrderByWithRelationInput
+    lastDeliveredMsg?: MessageOrderByWithRelationInput
+    lastReadMsg?: MessageOrderByWithRelationInput
   }
 
   export type ChatMemberWhereUniqueInput = Prisma.AtLeast<{
@@ -16883,8 +17151,12 @@ export namespace Prisma {
     isMuted?: BoolFilter<"ChatMember"> | boolean
     isArchived?: BoolFilter<"ChatMember"> | boolean
     joinedAt?: DateTimeFilter<"ChatMember"> | Date | string
+    lastDeliveredSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
+    lastReadSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
+    lastDeliveredMsg?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
+    lastReadMsg?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
   }, "id" | "userId_chatId">
 
   export type ChatMemberOrderByWithAggregationInput = {
@@ -16896,6 +17168,8 @@ export namespace Prisma {
     isMuted?: SortOrder
     isArchived?: SortOrder
     joinedAt?: SortOrder
+    lastDeliveredSeq?: SortOrderInput | SortOrder
+    lastReadSeq?: SortOrderInput | SortOrder
     _count?: ChatMemberCountOrderByAggregateInput
     _avg?: ChatMemberAvgOrderByAggregateInput
     _max?: ChatMemberMaxOrderByAggregateInput
@@ -16915,19 +17189,21 @@ export namespace Prisma {
     isMuted?: BoolWithAggregatesFilter<"ChatMember"> | boolean
     isArchived?: BoolWithAggregatesFilter<"ChatMember"> | boolean
     joinedAt?: DateTimeWithAggregatesFilter<"ChatMember"> | Date | string
+    lastDeliveredSeq?: BigIntNullableWithAggregatesFilter<"ChatMember"> | bigint | number | null
+    lastReadSeq?: BigIntNullableWithAggregatesFilter<"ChatMember"> | bigint | number | null
   }
 
   export type MessageWhereInput = {
     AND?: MessageWhereInput | MessageWhereInput[]
     OR?: MessageWhereInput[]
     NOT?: MessageWhereInput | MessageWhereInput[]
-    id?: StringFilter<"Message"> | string
+    id?: BigIntFilter<"Message"> | bigint | number
     type?: EnumMessageTypeFilter<"Message"> | $Enums.MessageType
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    replyToId?: StringNullableFilter<"Message"> | string | null
-    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    replyToId?: BigIntNullableFilter<"Message"> | bigint | number | null
+    forwardedFromId?: BigIntNullableFilter<"Message"> | bigint | number | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
@@ -16938,6 +17214,8 @@ export namespace Prisma {
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
     medias?: MessageMediaListRelationFilter
     asLastMessage?: XOR<ChatNullableScalarRelationFilter, ChatWhereInput> | null
+    deliveredPointers?: ChatMemberListRelationFilter
+    readPointers?: ChatMemberListRelationFilter
   }
 
   export type MessageOrderByWithRelationInput = {
@@ -16958,10 +17236,12 @@ export namespace Prisma {
     chat?: ChatOrderByWithRelationInput
     medias?: MessageMediaOrderByRelationAggregateInput
     asLastMessage?: ChatOrderByWithRelationInput
+    deliveredPointers?: ChatMemberOrderByRelationAggregateInput
+    readPointers?: ChatMemberOrderByRelationAggregateInput
   }
 
   export type MessageWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
+    id?: bigint | number
     AND?: MessageWhereInput | MessageWhereInput[]
     OR?: MessageWhereInput[]
     NOT?: MessageWhereInput | MessageWhereInput[]
@@ -16969,8 +17249,8 @@ export namespace Prisma {
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    replyToId?: StringNullableFilter<"Message"> | string | null
-    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    replyToId?: BigIntNullableFilter<"Message"> | bigint | number | null
+    forwardedFromId?: BigIntNullableFilter<"Message"> | bigint | number | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
@@ -16981,6 +17261,8 @@ export namespace Prisma {
     chat?: XOR<ChatScalarRelationFilter, ChatWhereInput>
     medias?: MessageMediaListRelationFilter
     asLastMessage?: XOR<ChatNullableScalarRelationFilter, ChatWhereInput> | null
+    deliveredPointers?: ChatMemberListRelationFilter
+    readPointers?: ChatMemberListRelationFilter
   }, "id">
 
   export type MessageOrderByWithAggregationInput = {
@@ -16998,21 +17280,23 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: MessageCountOrderByAggregateInput
+    _avg?: MessageAvgOrderByAggregateInput
     _max?: MessageMaxOrderByAggregateInput
     _min?: MessageMinOrderByAggregateInput
+    _sum?: MessageSumOrderByAggregateInput
   }
 
   export type MessageScalarWhereWithAggregatesInput = {
     AND?: MessageScalarWhereWithAggregatesInput | MessageScalarWhereWithAggregatesInput[]
     OR?: MessageScalarWhereWithAggregatesInput[]
     NOT?: MessageScalarWhereWithAggregatesInput | MessageScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"Message"> | string
+    id?: BigIntWithAggregatesFilter<"Message"> | bigint | number
     type?: EnumMessageTypeWithAggregatesFilter<"Message"> | $Enums.MessageType
     content?: StringWithAggregatesFilter<"Message"> | string
     senderId?: StringWithAggregatesFilter<"Message"> | string
     chatId?: StringWithAggregatesFilter<"Message"> | string
-    replyToId?: StringNullableWithAggregatesFilter<"Message"> | string | null
-    forwardedFromId?: StringNullableWithAggregatesFilter<"Message"> | string | null
+    replyToId?: BigIntNullableWithAggregatesFilter<"Message"> | bigint | number | null
+    forwardedFromId?: BigIntNullableWithAggregatesFilter<"Message"> | bigint | number | null
     originalSenderId?: StringNullableWithAggregatesFilter<"Message"> | string | null
     isEdited?: BoolWithAggregatesFilter<"Message"> | boolean
     isDeleted?: BoolWithAggregatesFilter<"Message"> | boolean
@@ -17026,7 +17310,7 @@ export namespace Prisma {
     OR?: MessageMediaWhereInput[]
     NOT?: MessageMediaWhereInput | MessageMediaWhereInput[]
     id?: StringFilter<"MessageMedia"> | string
-    messageId?: StringFilter<"MessageMedia"> | string
+    messageId?: BigIntFilter<"MessageMedia"> | bigint | number
     mediaId?: StringFilter<"MessageMedia"> | string
     order?: IntFilter<"MessageMedia"> | number
     message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
@@ -17048,7 +17332,7 @@ export namespace Prisma {
     AND?: MessageMediaWhereInput | MessageMediaWhereInput[]
     OR?: MessageMediaWhereInput[]
     NOT?: MessageMediaWhereInput | MessageMediaWhereInput[]
-    messageId?: StringFilter<"MessageMedia"> | string
+    messageId?: BigIntFilter<"MessageMedia"> | bigint | number
     mediaId?: StringFilter<"MessageMedia"> | string
     order?: IntFilter<"MessageMedia"> | number
     message?: XOR<MessageScalarRelationFilter, MessageWhereInput>
@@ -17072,7 +17356,7 @@ export namespace Prisma {
     OR?: MessageMediaScalarWhereWithAggregatesInput[]
     NOT?: MessageMediaScalarWhereWithAggregatesInput | MessageMediaScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"MessageMedia"> | string
-    messageId?: StringWithAggregatesFilter<"MessageMedia"> | string
+    messageId?: BigIntWithAggregatesFilter<"MessageMedia"> | bigint | number
     mediaId?: StringWithAggregatesFilter<"MessageMedia"> | string
     order?: IntWithAggregatesFilter<"MessageMedia"> | number
   }
@@ -17787,7 +18071,7 @@ export namespace Prisma {
     isGroup?: boolean
     groupName?: string | null
     groupImage?: string | null
-    lastMessageId?: string | null
+    lastMessageId?: bigint | number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatMemberUncheckedCreateNestedManyWithoutChatInput
@@ -17811,7 +18095,7 @@ export namespace Prisma {
     isGroup?: BoolFieldUpdateOperationsInput | boolean
     groupName?: NullableStringFieldUpdateOperationsInput | string | null
     groupImage?: NullableStringFieldUpdateOperationsInput | string | null
-    lastMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMessageId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatMemberUncheckedUpdateManyWithoutChatNestedInput
@@ -17823,7 +18107,7 @@ export namespace Prisma {
     isGroup?: boolean
     groupName?: string | null
     groupImage?: string | null
-    lastMessageId?: string | null
+    lastMessageId?: bigint | number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17842,7 +18126,7 @@ export namespace Prisma {
     isGroup?: BoolFieldUpdateOperationsInput | boolean
     groupName?: NullableStringFieldUpdateOperationsInput | string | null
     groupImage?: NullableStringFieldUpdateOperationsInput | string | null
-    lastMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMessageId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17856,6 +18140,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     user: UserCreateNestedOneWithoutMembersInput
     chat: ChatCreateNestedOneWithoutMembersInput
+    lastDeliveredMsg?: MessageCreateNestedOneWithoutDeliveredPointersInput
+    lastReadMsg?: MessageCreateNestedOneWithoutReadPointersInput
   }
 
   export type ChatMemberUncheckedCreateInput = {
@@ -17867,6 +18153,8 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type ChatMemberUpdateInput = {
@@ -17878,6 +18166,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMembersNestedInput
     chat?: ChatUpdateOneRequiredWithoutMembersNestedInput
+    lastDeliveredMsg?: MessageUpdateOneWithoutDeliveredPointersNestedInput
+    lastReadMsg?: MessageUpdateOneWithoutReadPointersNestedInput
   }
 
   export type ChatMemberUncheckedUpdateInput = {
@@ -17889,6 +18179,8 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type ChatMemberCreateManyInput = {
@@ -17900,6 +18192,8 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type ChatMemberUpdateManyMutationInput = {
@@ -17920,14 +18214,16 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type MessageCreateInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -17938,16 +18234,18 @@ export namespace Prisma {
     chat: ChatCreateNestedOneWithoutMessagesInput
     medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUncheckedCreateInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -17956,14 +18254,16 @@ export namespace Prisma {
     updatedAt?: Date | string
     medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -17974,16 +18274,18 @@ export namespace Prisma {
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
     medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -17992,16 +18294,18 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageCreateManyInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -18011,11 +18315,11 @@ export namespace Prisma {
   }
 
   export type MessageUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -18025,13 +18329,13 @@ export namespace Prisma {
   }
 
   export type MessageUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -18049,7 +18353,7 @@ export namespace Prisma {
 
   export type MessageMediaUncheckedCreateInput = {
     id?: string
-    messageId: string
+    messageId: bigint | number
     mediaId: string
     order?: number
   }
@@ -18063,14 +18367,14 @@ export namespace Prisma {
 
   export type MessageMediaUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    messageId?: StringFieldUpdateOperationsInput | string
+    messageId?: BigIntFieldUpdateOperationsInput | bigint | number
     mediaId?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
   }
 
   export type MessageMediaCreateManyInput = {
     id?: string
-    messageId: string
+    messageId: bigint | number
     mediaId: string
     order?: number
   }
@@ -18082,7 +18386,7 @@ export namespace Prisma {
 
   export type MessageMediaUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    messageId?: StringFieldUpdateOperationsInput | string
+    messageId?: BigIntFieldUpdateOperationsInput | bigint | number
     mediaId?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
   }
@@ -18901,6 +19205,17 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type BigIntNullableFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel> | null
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntNullableFilter<$PrismaModel> | bigint | number | null
+  }
+
   export type MessageNullableScalarRelationFilter = {
     is?: MessageWhereInput | null
     isNot?: MessageWhereInput | null
@@ -18914,6 +19229,10 @@ export namespace Prisma {
     lastMessageId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ChatAvgOrderByAggregateInput = {
+    lastMessageId?: SortOrder
   }
 
   export type ChatMaxOrderByAggregateInput = {
@@ -18936,6 +19255,26 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type ChatSumOrderByAggregateInput = {
+    lastMessageId?: SortOrder
+  }
+
+  export type BigIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel> | null
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntNullableWithAggregatesFilter<$PrismaModel> | bigint | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedBigIntNullableFilter<$PrismaModel>
+    _min?: NestedBigIntNullableFilter<$PrismaModel>
+    _max?: NestedBigIntNullableFilter<$PrismaModel>
+  }
+
   export type ChatScalarRelationFilter = {
     is?: ChatWhereInput
     isNot?: ChatWhereInput
@@ -18955,10 +19294,14 @@ export namespace Prisma {
     isMuted?: SortOrder
     isArchived?: SortOrder
     joinedAt?: SortOrder
+    lastDeliveredSeq?: SortOrder
+    lastReadSeq?: SortOrder
   }
 
   export type ChatMemberAvgOrderByAggregateInput = {
     unreadCount?: SortOrder
+    lastDeliveredSeq?: SortOrder
+    lastReadSeq?: SortOrder
   }
 
   export type ChatMemberMaxOrderByAggregateInput = {
@@ -18970,6 +19313,8 @@ export namespace Prisma {
     isMuted?: SortOrder
     isArchived?: SortOrder
     joinedAt?: SortOrder
+    lastDeliveredSeq?: SortOrder
+    lastReadSeq?: SortOrder
   }
 
   export type ChatMemberMinOrderByAggregateInput = {
@@ -18981,10 +19326,25 @@ export namespace Prisma {
     isMuted?: SortOrder
     isArchived?: SortOrder
     joinedAt?: SortOrder
+    lastDeliveredSeq?: SortOrder
+    lastReadSeq?: SortOrder
   }
 
   export type ChatMemberSumOrderByAggregateInput = {
     unreadCount?: SortOrder
+    lastDeliveredSeq?: SortOrder
+    lastReadSeq?: SortOrder
+  }
+
+  export type BigIntFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntFilter<$PrismaModel> | bigint | number
   }
 
   export type EnumMessageTypeFilter<$PrismaModel = never> = {
@@ -19048,6 +19408,12 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type MessageAvgOrderByAggregateInput = {
+    id?: SortOrder
+    replyToId?: SortOrder
+    forwardedFromId?: SortOrder
+  }
+
   export type MessageMaxOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
@@ -19076,6 +19442,28 @@ export namespace Prisma {
     isDeleted?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type MessageSumOrderByAggregateInput = {
+    id?: SortOrder
+    replyToId?: SortOrder
+    forwardedFromId?: SortOrder
+  }
+
+  export type BigIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntWithAggregatesFilter<$PrismaModel> | bigint | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedBigIntFilter<$PrismaModel>
+    _min?: NestedBigIntFilter<$PrismaModel>
+    _max?: NestedBigIntFilter<$PrismaModel>
   }
 
   export type EnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -19125,7 +19513,7 @@ export namespace Prisma {
   }
 
   export type MessageMediaMessageIdMediaIdCompoundUniqueInput = {
-    messageId: string
+    messageId: bigint | number
     mediaId: string
   }
 
@@ -19137,6 +19525,7 @@ export namespace Prisma {
   }
 
   export type MessageMediaAvgOrderByAggregateInput = {
+    messageId?: SortOrder
     order?: SortOrder
   }
 
@@ -19155,6 +19544,7 @@ export namespace Prisma {
   }
 
   export type MessageMediaSumOrderByAggregateInput = {
+    messageId?: SortOrder
     order?: SortOrder
   }
 
@@ -19944,6 +20334,14 @@ export namespace Prisma {
     update?: XOR<XOR<MessageUpdateToOneWithWhereWithoutAsLastMessageInput, MessageUpdateWithoutAsLastMessageInput>, MessageUncheckedUpdateWithoutAsLastMessageInput>
   }
 
+  export type NullableBigIntFieldUpdateOperationsInput = {
+    set?: bigint | number | null
+    increment?: bigint | number
+    decrement?: bigint | number
+    multiply?: bigint | number
+    divide?: bigint | number
+  }
+
   export type ChatMemberUncheckedUpdateManyWithoutChatNestedInput = {
     create?: XOR<ChatMemberCreateWithoutChatInput, ChatMemberUncheckedCreateWithoutChatInput> | ChatMemberCreateWithoutChatInput[] | ChatMemberUncheckedCreateWithoutChatInput[]
     connectOrCreate?: ChatMemberCreateOrConnectWithoutChatInput | ChatMemberCreateOrConnectWithoutChatInput[]
@@ -19984,6 +20382,18 @@ export namespace Prisma {
     connect?: ChatWhereUniqueInput
   }
 
+  export type MessageCreateNestedOneWithoutDeliveredPointersInput = {
+    create?: XOR<MessageCreateWithoutDeliveredPointersInput, MessageUncheckedCreateWithoutDeliveredPointersInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutDeliveredPointersInput
+    connect?: MessageWhereUniqueInput
+  }
+
+  export type MessageCreateNestedOneWithoutReadPointersInput = {
+    create?: XOR<MessageCreateWithoutReadPointersInput, MessageUncheckedCreateWithoutReadPointersInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutReadPointersInput
+    connect?: MessageWhereUniqueInput
+  }
+
   export type UserUpdateOneRequiredWithoutMembersNestedInput = {
     create?: XOR<UserCreateWithoutMembersInput, UserUncheckedCreateWithoutMembersInput>
     connectOrCreate?: UserCreateOrConnectWithoutMembersInput
@@ -19998,6 +20408,26 @@ export namespace Prisma {
     upsert?: ChatUpsertWithoutMembersInput
     connect?: ChatWhereUniqueInput
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutMembersInput, ChatUpdateWithoutMembersInput>, ChatUncheckedUpdateWithoutMembersInput>
+  }
+
+  export type MessageUpdateOneWithoutDeliveredPointersNestedInput = {
+    create?: XOR<MessageCreateWithoutDeliveredPointersInput, MessageUncheckedCreateWithoutDeliveredPointersInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutDeliveredPointersInput
+    upsert?: MessageUpsertWithoutDeliveredPointersInput
+    disconnect?: MessageWhereInput | boolean
+    delete?: MessageWhereInput | boolean
+    connect?: MessageWhereUniqueInput
+    update?: XOR<XOR<MessageUpdateToOneWithWhereWithoutDeliveredPointersInput, MessageUpdateWithoutDeliveredPointersInput>, MessageUncheckedUpdateWithoutDeliveredPointersInput>
+  }
+
+  export type MessageUpdateOneWithoutReadPointersNestedInput = {
+    create?: XOR<MessageCreateWithoutReadPointersInput, MessageUncheckedCreateWithoutReadPointersInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutReadPointersInput
+    upsert?: MessageUpsertWithoutReadPointersInput
+    disconnect?: MessageWhereInput | boolean
+    delete?: MessageWhereInput | boolean
+    connect?: MessageWhereUniqueInput
+    update?: XOR<XOR<MessageUpdateToOneWithWhereWithoutReadPointersInput, MessageUpdateWithoutReadPointersInput>, MessageUncheckedUpdateWithoutReadPointersInput>
   }
 
   export type UserCreateNestedOneWithoutMessagesInput = {
@@ -20025,6 +20455,20 @@ export namespace Prisma {
     connect?: ChatWhereUniqueInput
   }
 
+  export type ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput = {
+    create?: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput> | ChatMemberCreateWithoutLastDeliveredMsgInput[] | ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput | ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput[]
+    createMany?: ChatMemberCreateManyLastDeliveredMsgInputEnvelope
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+  }
+
+  export type ChatMemberCreateNestedManyWithoutLastReadMsgInput = {
+    create?: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput> | ChatMemberCreateWithoutLastReadMsgInput[] | ChatMemberUncheckedCreateWithoutLastReadMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastReadMsgInput | ChatMemberCreateOrConnectWithoutLastReadMsgInput[]
+    createMany?: ChatMemberCreateManyLastReadMsgInputEnvelope
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+  }
+
   export type MessageMediaUncheckedCreateNestedManyWithoutMessageInput = {
     create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
     connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
@@ -20036,6 +20480,28 @@ export namespace Prisma {
     create?: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
     connectOrCreate?: ChatCreateOrConnectWithoutLastMessageInput
     connect?: ChatWhereUniqueInput
+  }
+
+  export type ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput = {
+    create?: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput> | ChatMemberCreateWithoutLastDeliveredMsgInput[] | ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput | ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput[]
+    createMany?: ChatMemberCreateManyLastDeliveredMsgInputEnvelope
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+  }
+
+  export type ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput = {
+    create?: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput> | ChatMemberCreateWithoutLastReadMsgInput[] | ChatMemberUncheckedCreateWithoutLastReadMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastReadMsgInput | ChatMemberCreateOrConnectWithoutLastReadMsgInput[]
+    createMany?: ChatMemberCreateManyLastReadMsgInputEnvelope
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+  }
+
+  export type BigIntFieldUpdateOperationsInput = {
+    set?: bigint | number
+    increment?: bigint | number
+    decrement?: bigint | number
+    multiply?: bigint | number
+    divide?: bigint | number
   }
 
   export type EnumMessageTypeFieldUpdateOperationsInput = {
@@ -20082,6 +20548,34 @@ export namespace Prisma {
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutLastMessageInput, ChatUpdateWithoutLastMessageInput>, ChatUncheckedUpdateWithoutLastMessageInput>
   }
 
+  export type ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput = {
+    create?: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput> | ChatMemberCreateWithoutLastDeliveredMsgInput[] | ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput | ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput[]
+    upsert?: ChatMemberUpsertWithWhereUniqueWithoutLastDeliveredMsgInput | ChatMemberUpsertWithWhereUniqueWithoutLastDeliveredMsgInput[]
+    createMany?: ChatMemberCreateManyLastDeliveredMsgInputEnvelope
+    set?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    disconnect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    delete?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    update?: ChatMemberUpdateWithWhereUniqueWithoutLastDeliveredMsgInput | ChatMemberUpdateWithWhereUniqueWithoutLastDeliveredMsgInput[]
+    updateMany?: ChatMemberUpdateManyWithWhereWithoutLastDeliveredMsgInput | ChatMemberUpdateManyWithWhereWithoutLastDeliveredMsgInput[]
+    deleteMany?: ChatMemberScalarWhereInput | ChatMemberScalarWhereInput[]
+  }
+
+  export type ChatMemberUpdateManyWithoutLastReadMsgNestedInput = {
+    create?: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput> | ChatMemberCreateWithoutLastReadMsgInput[] | ChatMemberUncheckedCreateWithoutLastReadMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastReadMsgInput | ChatMemberCreateOrConnectWithoutLastReadMsgInput[]
+    upsert?: ChatMemberUpsertWithWhereUniqueWithoutLastReadMsgInput | ChatMemberUpsertWithWhereUniqueWithoutLastReadMsgInput[]
+    createMany?: ChatMemberCreateManyLastReadMsgInputEnvelope
+    set?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    disconnect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    delete?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    update?: ChatMemberUpdateWithWhereUniqueWithoutLastReadMsgInput | ChatMemberUpdateWithWhereUniqueWithoutLastReadMsgInput[]
+    updateMany?: ChatMemberUpdateManyWithWhereWithoutLastReadMsgInput | ChatMemberUpdateManyWithWhereWithoutLastReadMsgInput[]
+    deleteMany?: ChatMemberScalarWhereInput | ChatMemberScalarWhereInput[]
+  }
+
   export type MessageMediaUncheckedUpdateManyWithoutMessageNestedInput = {
     create?: XOR<MessageMediaCreateWithoutMessageInput, MessageMediaUncheckedCreateWithoutMessageInput> | MessageMediaCreateWithoutMessageInput[] | MessageMediaUncheckedCreateWithoutMessageInput[]
     connectOrCreate?: MessageMediaCreateOrConnectWithoutMessageInput | MessageMediaCreateOrConnectWithoutMessageInput[]
@@ -20104,6 +20598,34 @@ export namespace Prisma {
     delete?: ChatWhereInput | boolean
     connect?: ChatWhereUniqueInput
     update?: XOR<XOR<ChatUpdateToOneWithWhereWithoutLastMessageInput, ChatUpdateWithoutLastMessageInput>, ChatUncheckedUpdateWithoutLastMessageInput>
+  }
+
+  export type ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput = {
+    create?: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput> | ChatMemberCreateWithoutLastDeliveredMsgInput[] | ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput | ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput[]
+    upsert?: ChatMemberUpsertWithWhereUniqueWithoutLastDeliveredMsgInput | ChatMemberUpsertWithWhereUniqueWithoutLastDeliveredMsgInput[]
+    createMany?: ChatMemberCreateManyLastDeliveredMsgInputEnvelope
+    set?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    disconnect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    delete?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    update?: ChatMemberUpdateWithWhereUniqueWithoutLastDeliveredMsgInput | ChatMemberUpdateWithWhereUniqueWithoutLastDeliveredMsgInput[]
+    updateMany?: ChatMemberUpdateManyWithWhereWithoutLastDeliveredMsgInput | ChatMemberUpdateManyWithWhereWithoutLastDeliveredMsgInput[]
+    deleteMany?: ChatMemberScalarWhereInput | ChatMemberScalarWhereInput[]
+  }
+
+  export type ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput = {
+    create?: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput> | ChatMemberCreateWithoutLastReadMsgInput[] | ChatMemberUncheckedCreateWithoutLastReadMsgInput[]
+    connectOrCreate?: ChatMemberCreateOrConnectWithoutLastReadMsgInput | ChatMemberCreateOrConnectWithoutLastReadMsgInput[]
+    upsert?: ChatMemberUpsertWithWhereUniqueWithoutLastReadMsgInput | ChatMemberUpsertWithWhereUniqueWithoutLastReadMsgInput[]
+    createMany?: ChatMemberCreateManyLastReadMsgInputEnvelope
+    set?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    disconnect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    delete?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    connect?: ChatMemberWhereUniqueInput | ChatMemberWhereUniqueInput[]
+    update?: ChatMemberUpdateWithWhereUniqueWithoutLastReadMsgInput | ChatMemberUpdateWithWhereUniqueWithoutLastReadMsgInput[]
+    updateMany?: ChatMemberUpdateManyWithWhereWithoutLastReadMsgInput | ChatMemberUpdateManyWithWhereWithoutLastReadMsgInput[]
+    deleteMany?: ChatMemberScalarWhereInput | ChatMemberScalarWhereInput[]
   }
 
   export type MessageCreateNestedOneWithoutMediasInput = {
@@ -20580,11 +21102,76 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type NestedBigIntNullableFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel> | null
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntNullableFilter<$PrismaModel> | bigint | number | null
+  }
+
+  export type NestedBigIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel> | null
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel> | null
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntNullableWithAggregatesFilter<$PrismaModel> | bigint | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedBigIntNullableFilter<$PrismaModel>
+    _min?: NestedBigIntNullableFilter<$PrismaModel>
+    _max?: NestedBigIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBigIntFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntFilter<$PrismaModel> | bigint | number
+  }
+
   export type NestedEnumMessageTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageType | EnumMessageTypeFieldRefInput<$PrismaModel>
     in?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
     notIn?: $Enums.MessageType[] | ListEnumMessageTypeFieldRefInput<$PrismaModel>
     not?: NestedEnumMessageTypeFilter<$PrismaModel> | $Enums.MessageType
+  }
+
+  export type NestedBigIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    gte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
+    not?: NestedBigIntWithAggregatesFilter<$PrismaModel> | bigint | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedBigIntFilter<$PrismaModel>
+    _min?: NestedBigIntFilter<$PrismaModel>
+    _max?: NestedBigIntFilter<$PrismaModel>
   }
 
   export type NestedEnumMessageTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -20668,17 +21255,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedBoolNullableFilter<$PrismaModel = never> = {
@@ -20867,6 +21443,8 @@ export namespace Prisma {
     isArchived?: boolean
     joinedAt?: Date | string
     chat: ChatCreateNestedOneWithoutMembersInput
+    lastDeliveredMsg?: MessageCreateNestedOneWithoutDeliveredPointersInput
+    lastReadMsg?: MessageCreateNestedOneWithoutReadPointersInput
   }
 
   export type ChatMemberUncheckedCreateWithoutUserInput = {
@@ -20877,6 +21455,8 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type ChatMemberCreateOrConnectWithoutUserInput = {
@@ -20890,11 +21470,11 @@ export namespace Prisma {
   }
 
   export type MessageCreateWithoutSenderInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -20904,15 +21484,17 @@ export namespace Prisma {
     chat: ChatCreateNestedOneWithoutMessagesInput
     medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUncheckedCreateWithoutSenderInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -20921,6 +21503,8 @@ export namespace Prisma {
     updatedAt?: Date | string
     medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageCreateOrConnectWithoutSenderInput = {
@@ -21253,6 +21837,8 @@ export namespace Prisma {
     isMuted?: BoolFilter<"ChatMember"> | boolean
     isArchived?: BoolFilter<"ChatMember"> | boolean
     joinedAt?: DateTimeFilter<"ChatMember"> | Date | string
+    lastDeliveredSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
+    lastReadSeq?: BigIntNullableFilter<"ChatMember"> | bigint | number | null
   }
 
   export type MessageUpsertWithWhereUniqueWithoutSenderInput = {
@@ -21275,13 +21861,13 @@ export namespace Prisma {
     AND?: MessageScalarWhereInput | MessageScalarWhereInput[]
     OR?: MessageScalarWhereInput[]
     NOT?: MessageScalarWhereInput | MessageScalarWhereInput[]
-    id?: StringFilter<"Message"> | string
+    id?: BigIntFilter<"Message"> | bigint | number
     type?: EnumMessageTypeFilter<"Message"> | $Enums.MessageType
     content?: StringFilter<"Message"> | string
     senderId?: StringFilter<"Message"> | string
     chatId?: StringFilter<"Message"> | string
-    replyToId?: StringNullableFilter<"Message"> | string | null
-    forwardedFromId?: StringNullableFilter<"Message"> | string | null
+    replyToId?: BigIntNullableFilter<"Message"> | bigint | number | null
+    forwardedFromId?: BigIntNullableFilter<"Message"> | bigint | number | null
     originalSenderId?: StringNullableFilter<"Message"> | string | null
     isEdited?: BoolFilter<"Message"> | boolean
     isDeleted?: BoolFilter<"Message"> | boolean
@@ -21574,6 +22160,8 @@ export namespace Prisma {
     isArchived?: boolean
     joinedAt?: Date | string
     user: UserCreateNestedOneWithoutMembersInput
+    lastDeliveredMsg?: MessageCreateNestedOneWithoutDeliveredPointersInput
+    lastReadMsg?: MessageCreateNestedOneWithoutReadPointersInput
   }
 
   export type ChatMemberUncheckedCreateWithoutChatInput = {
@@ -21584,6 +22172,8 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type ChatMemberCreateOrConnectWithoutChatInput = {
@@ -21597,11 +22187,11 @@ export namespace Prisma {
   }
 
   export type MessageCreateWithoutChatInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -21611,15 +22201,17 @@ export namespace Prisma {
     sender: UserCreateNestedOneWithoutMessagesInput
     medias?: MessageMediaCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUncheckedCreateWithoutChatInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -21628,6 +22220,8 @@ export namespace Prisma {
     updatedAt?: Date | string
     medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageCreateOrConnectWithoutChatInput = {
@@ -21641,11 +22235,11 @@ export namespace Prisma {
   }
 
   export type MessageCreateWithoutAsLastMessageInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -21655,16 +22249,18 @@ export namespace Prisma {
     sender: UserCreateNestedOneWithoutMessagesInput
     chat: ChatCreateNestedOneWithoutMessagesInput
     medias?: MessageMediaCreateNestedManyWithoutMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUncheckedCreateWithoutAsLastMessageInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -21672,6 +22268,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageCreateOrConnectWithoutAsLastMessageInput = {
@@ -21723,11 +22321,11 @@ export namespace Prisma {
   }
 
   export type MessageUpdateWithoutAsLastMessageInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -21737,16 +22335,18 @@ export namespace Prisma {
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
     medias?: MessageMediaUpdateManyWithoutMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutAsLastMessageInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -21754,6 +22354,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type UserCreateWithoutMembersInput = {
@@ -21833,7 +22435,7 @@ export namespace Prisma {
     isGroup?: boolean
     groupName?: string | null
     groupImage?: string | null
-    lastMessageId?: string | null
+    lastMessageId?: bigint | number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: MessageUncheckedCreateNestedManyWithoutChatInput
@@ -21842,6 +22444,92 @@ export namespace Prisma {
   export type ChatCreateOrConnectWithoutMembersInput = {
     where: ChatWhereUniqueInput
     create: XOR<ChatCreateWithoutMembersInput, ChatUncheckedCreateWithoutMembersInput>
+  }
+
+  export type MessageCreateWithoutDeliveredPointersInput = {
+    id?: bigint | number
+    type?: $Enums.MessageType
+    content: string
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sender: UserCreateNestedOneWithoutMessagesInput
+    chat: ChatCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
+    asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
+  }
+
+  export type MessageUncheckedCreateWithoutDeliveredPointersInput = {
+    id?: bigint | number
+    type?: $Enums.MessageType
+    content: string
+    senderId: string
+    chatId: string
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
+    asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
+  }
+
+  export type MessageCreateOrConnectWithoutDeliveredPointersInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutDeliveredPointersInput, MessageUncheckedCreateWithoutDeliveredPointersInput>
+  }
+
+  export type MessageCreateWithoutReadPointersInput = {
+    id?: bigint | number
+    type?: $Enums.MessageType
+    content: string
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sender: UserCreateNestedOneWithoutMessagesInput
+    chat: ChatCreateNestedOneWithoutMessagesInput
+    medias?: MessageMediaCreateNestedManyWithoutMessageInput
+    asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+  }
+
+  export type MessageUncheckedCreateWithoutReadPointersInput = {
+    id?: bigint | number
+    type?: $Enums.MessageType
+    content: string
+    senderId: string
+    chatId: string
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
+    originalSenderId?: string | null
+    isEdited?: boolean
+    isDeleted?: boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    medias?: MessageMediaUncheckedCreateNestedManyWithoutMessageInput
+    asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+  }
+
+  export type MessageCreateOrConnectWithoutReadPointersInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutReadPointersInput, MessageUncheckedCreateWithoutReadPointersInput>
   }
 
   export type UserUpsertWithoutMembersInput = {
@@ -21938,10 +22626,108 @@ export namespace Prisma {
     isGroup?: BoolFieldUpdateOperationsInput | boolean
     groupName?: NullableStringFieldUpdateOperationsInput | string | null
     groupImage?: NullableStringFieldUpdateOperationsInput | string | null
-    lastMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMessageId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: MessageUncheckedUpdateManyWithoutChatNestedInput
+  }
+
+  export type MessageUpsertWithoutDeliveredPointersInput = {
+    update: XOR<MessageUpdateWithoutDeliveredPointersInput, MessageUncheckedUpdateWithoutDeliveredPointersInput>
+    create: XOR<MessageCreateWithoutDeliveredPointersInput, MessageUncheckedCreateWithoutDeliveredPointersInput>
+    where?: MessageWhereInput
+  }
+
+  export type MessageUpdateToOneWithWhereWithoutDeliveredPointersInput = {
+    where?: MessageWhereInput
+    data: XOR<MessageUpdateWithoutDeliveredPointersInput, MessageUncheckedUpdateWithoutDeliveredPointersInput>
+  }
+
+  export type MessageUpdateWithoutDeliveredPointersInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
+    chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
+    asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
+  }
+
+  export type MessageUncheckedUpdateWithoutDeliveredPointersInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
+    asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
+  }
+
+  export type MessageUpsertWithoutReadPointersInput = {
+    update: XOR<MessageUpdateWithoutReadPointersInput, MessageUncheckedUpdateWithoutReadPointersInput>
+    create: XOR<MessageCreateWithoutReadPointersInput, MessageUncheckedCreateWithoutReadPointersInput>
+    where?: MessageWhereInput
+  }
+
+  export type MessageUpdateToOneWithWhereWithoutReadPointersInput = {
+    where?: MessageWhereInput
+    data: XOR<MessageUpdateWithoutReadPointersInput, MessageUncheckedUpdateWithoutReadPointersInput>
+  }
+
+  export type MessageUpdateWithoutReadPointersInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
+    chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
+    medias?: MessageMediaUpdateManyWithoutMessageNestedInput
+    asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+  }
+
+  export type MessageUncheckedUpdateWithoutReadPointersInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
+    content?: StringFieldUpdateOperationsInput | string
+    senderId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
+    isEdited?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    reactions?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
+    asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
   }
 
   export type UserCreateWithoutMessagesInput = {
@@ -22021,7 +22807,7 @@ export namespace Prisma {
     isGroup?: boolean
     groupName?: string | null
     groupImage?: string | null
-    lastMessageId?: string | null
+    lastMessageId?: bigint | number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     members?: ChatMemberUncheckedCreateNestedManyWithoutChatInput
@@ -22079,6 +22865,74 @@ export namespace Prisma {
   export type ChatCreateOrConnectWithoutLastMessageInput = {
     where: ChatWhereUniqueInput
     create: XOR<ChatCreateWithoutLastMessageInput, ChatUncheckedCreateWithoutLastMessageInput>
+  }
+
+  export type ChatMemberCreateWithoutLastDeliveredMsgInput = {
+    id?: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    user: UserCreateNestedOneWithoutMembersInput
+    chat: ChatCreateNestedOneWithoutMembersInput
+    lastReadMsg?: MessageCreateNestedOneWithoutReadPointersInput
+  }
+
+  export type ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput = {
+    id?: string
+    userId: string
+    chatId: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    lastReadSeq?: bigint | number | null
+  }
+
+  export type ChatMemberCreateOrConnectWithoutLastDeliveredMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    create: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput>
+  }
+
+  export type ChatMemberCreateManyLastDeliveredMsgInputEnvelope = {
+    data: ChatMemberCreateManyLastDeliveredMsgInput | ChatMemberCreateManyLastDeliveredMsgInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ChatMemberCreateWithoutLastReadMsgInput = {
+    id?: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    user: UserCreateNestedOneWithoutMembersInput
+    chat: ChatCreateNestedOneWithoutMembersInput
+    lastDeliveredMsg?: MessageCreateNestedOneWithoutDeliveredPointersInput
+  }
+
+  export type ChatMemberUncheckedCreateWithoutLastReadMsgInput = {
+    id?: string
+    userId: string
+    chatId: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+  }
+
+  export type ChatMemberCreateOrConnectWithoutLastReadMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    create: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput>
+  }
+
+  export type ChatMemberCreateManyLastReadMsgInputEnvelope = {
+    data: ChatMemberCreateManyLastReadMsgInput | ChatMemberCreateManyLastReadMsgInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserUpsertWithoutMessagesInput = {
@@ -22175,7 +23029,7 @@ export namespace Prisma {
     isGroup?: BoolFieldUpdateOperationsInput | boolean
     groupName?: NullableStringFieldUpdateOperationsInput | string | null
     groupImage?: NullableStringFieldUpdateOperationsInput | string | null
-    lastMessageId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastMessageId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     members?: ChatMemberUncheckedUpdateManyWithoutChatNestedInput
@@ -22202,7 +23056,7 @@ export namespace Prisma {
     OR?: MessageMediaScalarWhereInput[]
     NOT?: MessageMediaScalarWhereInput | MessageMediaScalarWhereInput[]
     id?: StringFilter<"MessageMedia"> | string
-    messageId?: StringFilter<"MessageMedia"> | string
+    messageId?: BigIntFilter<"MessageMedia"> | bigint | number
     mediaId?: StringFilter<"MessageMedia"> | string
     order?: IntFilter<"MessageMedia"> | number
   }
@@ -22240,12 +23094,44 @@ export namespace Prisma {
     messages?: MessageUncheckedUpdateManyWithoutChatNestedInput
   }
 
+  export type ChatMemberUpsertWithWhereUniqueWithoutLastDeliveredMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    update: XOR<ChatMemberUpdateWithoutLastDeliveredMsgInput, ChatMemberUncheckedUpdateWithoutLastDeliveredMsgInput>
+    create: XOR<ChatMemberCreateWithoutLastDeliveredMsgInput, ChatMemberUncheckedCreateWithoutLastDeliveredMsgInput>
+  }
+
+  export type ChatMemberUpdateWithWhereUniqueWithoutLastDeliveredMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    data: XOR<ChatMemberUpdateWithoutLastDeliveredMsgInput, ChatMemberUncheckedUpdateWithoutLastDeliveredMsgInput>
+  }
+
+  export type ChatMemberUpdateManyWithWhereWithoutLastDeliveredMsgInput = {
+    where: ChatMemberScalarWhereInput
+    data: XOR<ChatMemberUpdateManyMutationInput, ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgInput>
+  }
+
+  export type ChatMemberUpsertWithWhereUniqueWithoutLastReadMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    update: XOR<ChatMemberUpdateWithoutLastReadMsgInput, ChatMemberUncheckedUpdateWithoutLastReadMsgInput>
+    create: XOR<ChatMemberCreateWithoutLastReadMsgInput, ChatMemberUncheckedCreateWithoutLastReadMsgInput>
+  }
+
+  export type ChatMemberUpdateWithWhereUniqueWithoutLastReadMsgInput = {
+    where: ChatMemberWhereUniqueInput
+    data: XOR<ChatMemberUpdateWithoutLastReadMsgInput, ChatMemberUncheckedUpdateWithoutLastReadMsgInput>
+  }
+
+  export type ChatMemberUpdateManyWithWhereWithoutLastReadMsgInput = {
+    where: ChatMemberScalarWhereInput
+    data: XOR<ChatMemberUpdateManyMutationInput, ChatMemberUncheckedUpdateManyWithoutLastReadMsgInput>
+  }
+
   export type MessageCreateWithoutMediasInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -22255,16 +23141,18 @@ export namespace Prisma {
     sender: UserCreateNestedOneWithoutMessagesInput
     chat: ChatCreateNestedOneWithoutMessagesInput
     asLastMessage?: ChatCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageUncheckedCreateWithoutMediasInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -22272,6 +23160,8 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     asLastMessage?: ChatUncheckedCreateNestedOneWithoutLastMessageInput
+    deliveredPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastDeliveredMsgInput
+    readPointers?: ChatMemberUncheckedCreateNestedManyWithoutLastReadMsgInput
   }
 
   export type MessageCreateOrConnectWithoutMediasInput = {
@@ -22322,11 +23212,11 @@ export namespace Prisma {
   }
 
   export type MessageUpdateWithoutMediasInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -22336,16 +23226,18 @@ export namespace Prisma {
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutMediasInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -22353,6 +23245,8 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MediaUpsertWithoutMessageLinksInput = {
@@ -22883,7 +23777,7 @@ export namespace Prisma {
 
   export type MessageMediaUncheckedCreateWithoutMediaInput = {
     id?: string
-    messageId: string
+    messageId: bigint | number
     order?: number
   }
 
@@ -23337,15 +24231,17 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type MessageCreateManySenderInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     chatId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -23527,6 +24423,8 @@ export namespace Prisma {
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     chat?: ChatUpdateOneRequiredWithoutMembersNestedInput
+    lastDeliveredMsg?: MessageUpdateOneWithoutDeliveredPointersNestedInput
+    lastReadMsg?: MessageUpdateOneWithoutReadPointersNestedInput
   }
 
   export type ChatMemberUncheckedUpdateWithoutUserInput = {
@@ -23537,6 +24435,8 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type ChatMemberUncheckedUpdateManyWithoutUserInput = {
@@ -23547,14 +24447,16 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type MessageUpdateWithoutSenderInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23564,15 +24466,17 @@ export namespace Prisma {
     chat?: ChatUpdateOneRequiredWithoutMessagesNestedInput
     medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutSenderInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23581,15 +24485,17 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateManyWithoutSenderInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     chatId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23756,15 +24662,17 @@ export namespace Prisma {
     isMuted?: boolean
     isArchived?: boolean
     joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
+    lastReadSeq?: bigint | number | null
   }
 
   export type MessageCreateManyChatInput = {
-    id?: string
+    id?: bigint | number
     type?: $Enums.MessageType
     content: string
     senderId: string
-    replyToId?: string | null
-    forwardedFromId?: string | null
+    replyToId?: bigint | number | null
+    forwardedFromId?: bigint | number | null
     originalSenderId?: string | null
     isEdited?: boolean
     isDeleted?: boolean
@@ -23781,6 +24689,8 @@ export namespace Prisma {
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutMembersNestedInput
+    lastDeliveredMsg?: MessageUpdateOneWithoutDeliveredPointersNestedInput
+    lastReadMsg?: MessageUpdateOneWithoutReadPointersNestedInput
   }
 
   export type ChatMemberUncheckedUpdateWithoutChatInput = {
@@ -23791,6 +24701,8 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type ChatMemberUncheckedUpdateManyWithoutChatInput = {
@@ -23801,14 +24713,16 @@ export namespace Prisma {
     isMuted?: BoolFieldUpdateOperationsInput | boolean
     isArchived?: BoolFieldUpdateOperationsInput | boolean
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type MessageUpdateWithoutChatInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23818,15 +24732,17 @@ export namespace Prisma {
     sender?: UserUpdateOneRequiredWithoutMessagesNestedInput
     medias?: MessageMediaUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutChatInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23835,15 +24751,17 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     medias?: MessageMediaUncheckedUpdateManyWithoutMessageNestedInput
     asLastMessage?: ChatUncheckedUpdateOneWithoutLastMessageNestedInput
+    deliveredPointers?: ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgNestedInput
+    readPointers?: ChatMemberUncheckedUpdateManyWithoutLastReadMsgNestedInput
   }
 
   export type MessageUncheckedUpdateManyWithoutChatInput = {
-    id?: StringFieldUpdateOperationsInput | string
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
     type?: EnumMessageTypeFieldUpdateOperationsInput | $Enums.MessageType
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    replyToId?: NullableStringFieldUpdateOperationsInput | string | null
-    forwardedFromId?: NullableStringFieldUpdateOperationsInput | string | null
+    replyToId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    forwardedFromId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     originalSenderId?: NullableStringFieldUpdateOperationsInput | string | null
     isEdited?: BoolFieldUpdateOperationsInput | boolean
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -23856,6 +24774,30 @@ export namespace Prisma {
     id?: string
     mediaId: string
     order?: number
+  }
+
+  export type ChatMemberCreateManyLastDeliveredMsgInput = {
+    id?: string
+    userId: string
+    chatId: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    lastReadSeq?: bigint | number | null
+  }
+
+  export type ChatMemberCreateManyLastReadMsgInput = {
+    id?: string
+    userId: string
+    chatId: string
+    unreadCount?: number
+    isPinned?: boolean
+    isMuted?: boolean
+    isArchived?: boolean
+    joinedAt?: Date | string
+    lastDeliveredSeq?: bigint | number | null
   }
 
   export type MessageMediaUpdateWithoutMessageInput = {
@@ -23874,6 +24816,78 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     mediaId?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type ChatMemberUpdateWithoutLastDeliveredMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembersNestedInput
+    chat?: ChatUpdateOneRequiredWithoutMembersNestedInput
+    lastReadMsg?: MessageUpdateOneWithoutReadPointersNestedInput
+  }
+
+  export type ChatMemberUncheckedUpdateWithoutLastDeliveredMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  }
+
+  export type ChatMemberUncheckedUpdateManyWithoutLastDeliveredMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastReadSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  }
+
+  export type ChatMemberUpdateWithoutLastReadMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembersNestedInput
+    chat?: ChatUpdateOneRequiredWithoutMembersNestedInput
+    lastDeliveredMsg?: MessageUpdateOneWithoutDeliveredPointersNestedInput
+  }
+
+  export type ChatMemberUncheckedUpdateWithoutLastReadMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  }
+
+  export type ChatMemberUncheckedUpdateManyWithoutLastReadMsgInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    chatId?: StringFieldUpdateOperationsInput | string
+    unreadCount?: IntFieldUpdateOperationsInput | number
+    isPinned?: BoolFieldUpdateOperationsInput | boolean
+    isMuted?: BoolFieldUpdateOperationsInput | boolean
+    isArchived?: BoolFieldUpdateOperationsInput | boolean
+    joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastDeliveredSeq?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   }
 
   export type StatusViewCreateManyStatusInput = {
@@ -23902,7 +24916,7 @@ export namespace Prisma {
 
   export type MessageMediaCreateManyMediaInput = {
     id?: string
-    messageId: string
+    messageId: bigint | number
     order?: number
   }
 
@@ -23914,13 +24928,13 @@ export namespace Prisma {
 
   export type MessageMediaUncheckedUpdateWithoutMediaInput = {
     id?: StringFieldUpdateOperationsInput | string
-    messageId?: StringFieldUpdateOperationsInput | string
+    messageId?: BigIntFieldUpdateOperationsInput | bigint | number
     order?: IntFieldUpdateOperationsInput | number
   }
 
   export type MessageMediaUncheckedUpdateManyWithoutMediaInput = {
     id?: StringFieldUpdateOperationsInput | string
-    messageId?: StringFieldUpdateOperationsInput | string
+    messageId?: BigIntFieldUpdateOperationsInput | bigint | number
     order?: IntFieldUpdateOperationsInput | number
   }
 

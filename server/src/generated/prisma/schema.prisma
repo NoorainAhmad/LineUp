@@ -134,7 +134,7 @@ model Chat {
   members  ChatMember[]
   messages Message[]
 
-  lastMessageId String?  @unique
+  lastMessageId BigInt?  @unique
   lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
@@ -156,12 +156,20 @@ model ChatMember {
   isArchived  Boolean  @default(false)
   joinedAt    DateTime @default(now())
 
+  lastDeliveredSeq BigInt?
+  lastDeliveredMsg Message? @relation("LastDelivered", fields: [lastDeliveredSeq], references: [id], onDelete: SetNull)
+
+  lastReadSeq BigInt?
+  lastReadMsg Message? @relation("LastRead", fields: [lastReadSeq], references: [id], onDelete: SetNull)
+
   @@unique([userId, chatId])
+  @@index([chatId, lastDeliveredSeq]) // query: who has delivered up to X?
+  @@index([chatId, lastReadSeq]) // query: who has read up to X?
   @@map("chat_members")
 }
 
 model Message {
-  id      String      @id @default(uuid())
+  id      BigInt      @id @default(autoincrement()) // Global BIGSERIAL — IS the sequence
   type    MessageType @default(TEXT)
   content String      @db.Text
 
@@ -172,8 +180,8 @@ model Message {
 
   medias MessageMedia[]
 
-  replyToId        String?
-  forwardedFromId  String?
+  replyToId        BigInt? // was String?
+  forwardedFromId  BigInt? // was String?
   originalSenderId String?
   isEdited         Boolean @default(false)
   isDeleted        Boolean @default(false)
@@ -181,17 +189,21 @@ model Message {
 
   asLastMessage Chat? @relation("LastMessage")
 
+  // Back-relations for ChatMember pointers
+  deliveredPointers ChatMember[] @relation("LastDelivered")
+  readPointers      ChatMember[] @relation("LastRead")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([chatId, createdAt])
+  @@index([chatId, id]) // primary polling index: chatId + id range scan
   @@index([senderId])
   @@map("messages")
 }
 
 model MessageMedia {
   id        String @id @default(uuid())
-  messageId String
+  messageId BigInt
   mediaId   String
   order     Int    @default(0)
 
