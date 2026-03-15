@@ -860,6 +860,28 @@ export const ChatView: React.FC<ChatViewProps> = ({
     };
   }, [cleanupAllPendingAttachmentUrls]);
 
+  // Join the Socket.IO chat room when the user opens this chat
+  useEffect(() => {
+    let currentSocket: any = null;
+    let currentChatId = chat?.id;
+
+    if (currentChatId) {
+       import('@/utils/socket').then(({ getSocket }) => {
+          const s = getSocket();
+          if (s) {
+            currentSocket = s;
+            s.emit("join_chat", currentChatId);
+          }
+       }).catch(err => console.error("Failed to load socket for join_chat", err));
+    }
+
+    return () => {
+      if (currentSocket && currentChatId) {
+        currentSocket.emit("leave_chat", currentChatId);
+      }
+    };
+  }, [chat?.id]);
+
   // Polling query for messages
   const {
     messages,

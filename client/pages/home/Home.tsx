@@ -39,6 +39,7 @@ import GroupProfileView from "./chat/GroupProfileView";
 import { MyProfileView } from "./profile/MyProfileView";
 import { z } from "zod";
 import api from "@/api/axios";
+import { getSocket } from "@/utils/socket";
 
 //State to handle create User error
 //const [error, setError] = useState<string | null>(null);
@@ -149,8 +150,28 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeChatData);
     },
     enabled: activeTab === "chat" || activeTab === "dashboard",
-    refetchInterval: activeTab === "chat" ? 1000 : 10000,
   });
+
+  // Listen to Socket.IO events to refetch the chat list in real-time
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleChatUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    };
+
+    socket.on("chat_updated", handleChatUpdate);
+    socket.on("messages_read", handleChatUpdate);
+    // Also invalidate on new_message just in case it's a new chat entirely
+    socket.on("new_message", handleChatUpdate);
+
+    return () => {
+      socket.off("chat_updated", handleChatUpdate);
+      socket.off("messages_read", handleChatUpdate);
+      socket.off("new_message", handleChatUpdate);
+    };
+  }, [queryClient]);
 
   // Keep the open conversation in sync with the latest chat query data
   // so delivery/read pointers update without forcing the user to reselect it.

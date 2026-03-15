@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { ChatService } from "@/services/chat.service";
 import type { Message, Chat } from "@/types";
+import { getSocket } from "./socket";
 
 export function useChatMessages(chat: Chat | null) {
   const queryClient = useQueryClient();
@@ -67,7 +68,6 @@ export function useChatMessages(chat: Chat | null) {
     },
 
     enabled: !!chat?.id,
-    refetchInterval: 3000,
     refetchOnWindowFocus: false,
 
     // Don't treat data as stale immediately — we're merging incrementally
@@ -82,6 +82,31 @@ export function useChatMessages(chat: Chat | null) {
       return [...data, ...pendingMessages];
     },
   });
+
+  useEffect(() => {
+    if (!chat?.id) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleMessageUpdate = (data: any) => {
+      if (data.chatId !== chat.id) return;
+      
+      // Invalidate the query to force a fresh fetch of messages and statuses
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    // Listen for all direct message changes
+    socket.on("new_message", handleMessageUpdate);
+    socket.on("message_updated", handleMessageUpdate);
+    socket.on("messages_read", handleMessageUpdate);
+
+    return () => {
+      socket.off("new_message", handleMessageUpdate);
+      socket.off("message_updated", handleMessageUpdate);
+      socket.off("messages_read", handleMessageUpdate);
+    };
+  }, [chat?.id, queryClient, queryKey[1]]);
 
   // Call this when switching chats to reset the cursor
   const resetCursor = useCallback(() => {
