@@ -7,8 +7,8 @@ export const sendMessageSchema = z.object({
   type: MessageTypeEnum.default("TEXT"),
   content: z.string().min(1).max(5000),
   chatId: z.string(),
-  replyToId: z.string().optional().nullable(),
-  mediaIds: z.array(z.string().uuid()).optional()
+  replyToId: z.coerce.bigint().optional().nullable(),
+  mediaIds: z.array(z.string().uuid()).optional(),
 });
 
 // CHAT CREATE VALIDATOR
@@ -29,7 +29,7 @@ export const chatMemberUpdateSchema = z.object({
 
 // REACTION VALIDATOR
 export const messageReactionSchema = z.object({
-  messageId: z.string(),
+  messageId: z.bigint(),
   emoji: z.string(),
 });
 
@@ -39,7 +39,7 @@ export type ChatMemberUpdateInput = z.infer<typeof chatMemberUpdateSchema>;
 
 // FORWARD MESSAGE VALIDATOR
 export const forwardMessageSchema = z.object({
-  originalMessageId: z.string(),
+  originalMessageId: z.coerce.bigint(),
   targetChatIds: z.array(z.string()).min(1),
 });
 

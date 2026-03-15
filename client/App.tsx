@@ -17,6 +17,9 @@ import { Privacy } from "./pages/Privacy";
 import { DataProcessing } from "./pages/DataProcessing";
 import { Compliance } from "./pages/Compliance";
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {

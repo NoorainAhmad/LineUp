@@ -56,6 +56,8 @@ export class ChatService {
         isMuted: true,
         isArchived: true,
         joinedAt: true,
+        lastDeliveredSeq: true,  // ← ADD
+        lastReadSeq: true,  
         user: {
           select: {
             id: true,
@@ -214,7 +216,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   // Edit a message content
   static async editMessage(
     userId: string,
-    messageId: string,
+    messageId: bigint,
     newContent: string,
   ) {
     try {
@@ -241,7 +243,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       // }
 
       // Update the message
-      const updatedMessage = await prisma.message.update({
+      return await prisma.message.update({
         where: { id: messageId },
         data: {
           content: newContent,
@@ -251,8 +253,6 @@ const lastMessage = createdMessages[createdMessages.length - 1];
           sender: { select: { id: true, name: true, avatarUrl: true } },
         },
       });
-
-      return updatedMessage;
     } catch (error) {
       console.log(`[Edit Message] Error: ${error}`);
       throw new Error("Message edit failed: " + (error as Error).message);
@@ -261,7 +261,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
 
   // Reaction logic for a message
   static async toggleReaction(
-    messageId: string,
+    messageId: bigint,
     userId: string,
     emoji: string,
   ) {
@@ -366,6 +366,8 @@ const lastMessage = createdMessages[createdMessages.length - 1];
               isMuted: true,
               isArchived: true,
               joinedAt: true,
+              lastDeliveredSeq: true,
+              lastReadSeq: true,
               user: {
                 select: {
                   id: true,
@@ -387,6 +389,42 @@ const lastMessage = createdMessages[createdMessages.length - 1];
         },
       });
 
+      const chatsNeedingDeliveredAdvance = chats.filter((chat) => {
+        if (!chat.lastMessageId) return false;
+
+        const membership = chat.members.find((member) => member.userId === userId);
+        return (
+          !!membership &&
+          (membership.lastDeliveredSeq === null ||
+            membership.lastDeliveredSeq < chat.lastMessageId)
+        );
+      });
+
+      if (chatsNeedingDeliveredAdvance.length > 0) {
+        await prisma.$transaction(
+          chatsNeedingDeliveredAdvance.map((chat) =>
+            prisma.chatMember.updateMany({
+              where: {
+                userId,
+                chatId: chat.id,
+                OR: [
+                  { lastDeliveredSeq: null },
+                  { lastDeliveredSeq: { lt: chat.lastMessageId! } },
+                ],
+              },
+              data: { lastDeliveredSeq: chat.lastMessageId! },
+            }),
+          ),
+        );
+
+        chatsNeedingDeliveredAdvance.forEach((chat) => {
+          const membership = chat.members.find((member) => member.userId === userId);
+          if (membership) {
+            membership.lastDeliveredSeq = chat.lastMessageId;
+          }
+        });
+      }
+
       return chats;
     } catch (error) {
       console.error(`[Inbox] Error for user ${userId}:`, error);
@@ -395,7 +433,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Get messages for a specific chat with role-based access control
-  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, cursor?: string) {
+  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, after?: bigint) {
     try {
       if (!chatId) return [];
       // Verify user has access to the chat based on role
@@ -429,11 +467,10 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       return []; // or throw 403
     }
      // 4️⃣ Only fetch messages AFTER authorization passes
-    return await prisma.message.findMany({
-      where: { chatId },
+    const messages = await prisma.message.findMany({
+      where: { chatId, ...(after !== undefined && { id: { gt: after } }), },
       take: limit,
-      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "asc" },
       include: {
         sender: {
           select: { id: true, name: true, avatarUrl: true },
@@ -447,6 +484,31 @@ const lastMessage = createdMessages[createdMessages.length - 1];
         asLastMessage: { select: { id: true } },
       },
     });
+    // ── Advance lastDeliveredSeq (side effect, best-effort) ──
+      //
+      // We only advance — never move the pointer backwards.
+      // Using updateMany with a condition is safe and index-backed.
+      // Runs even when messages[] is empty (pointer was already up to date).
+      if (messages.length > 0) {
+        const maxSeq = messages[messages.length - 1].id; // messages ordered asc
+
+        await prisma.chatMember.updateMany({
+          where: {
+            userId,
+            chatId,
+            // Only update if the new seq is actually higher.
+            // Prisma doesn't support "update if new value > old value" directly,
+            // so we use a raw conditional. This avoids unnecessary writes.
+            OR: [
+              { lastDeliveredSeq: null },
+              { lastDeliveredSeq: { lt: maxSeq } },
+            ],
+          },
+          data: { lastDeliveredSeq: maxSeq },
+        });
+      }
+
+      return messages;
     } catch (error) {
       console.log(`[Messages] Error: ${error}`);
       throw new Error("Messages not found: " + (error as Error).message);
@@ -529,17 +591,39 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Mark a chat as read
+  // ── Mark as read — advances lastReadSeq to latest in chat ───
+  //
+  // Called when user opens a chat. Advances read pointer to the
+  // latest message currently in the chat.
   static async markAsRead(chatId: string, userId: string) {
-    try {
+  try {
+    const chat = await prisma.chat.findUnique({
+      where: { id: chatId },
+      select: { lastMessageId: true },
+    });
+
+    if (!chat?.lastMessageId) {
       return prisma.chatMember.update({
         where: { userId_chatId: { userId, chatId } },
         data: { unreadCount: 0 },
       });
-    } catch (error) {
-      console.log(`[Mark As Read] Error: ${error}`);
-      throw new Error("Mark as read failed: " + (error as Error).message);
     }
+
+    return prisma.chatMember.update({
+      where: { userId_chatId: { userId, chatId } },
+      data: {
+        unreadCount: 0,
+        lastReadSeq: chat.lastMessageId,
+        lastDeliveredSeq: chat.lastMessageId,
+      },
+    });
+
+  } catch (error) {
+    console.log(`[Mark As Read] Error: ${error}`);
+    throw new Error("Mark as read failed");
   }
+}
+
 
   // Toggle archive status for a chat
   static async toggleArchive(chatId: string, userId: string) {
@@ -559,7 +643,7 @@ const lastMessage = createdMessages[createdMessages.length - 1];
   }
 
   // Delete a message
-  static async deleteMessage(messageId: string, userId: string) {
+  static async deleteMessage(messageId: bigint, userId: string) {
     try {
       const message = await prisma.message.findFirst({
         where: { id: messageId, senderId: userId },
