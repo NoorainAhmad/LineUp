@@ -87,21 +87,46 @@ export function useChatMessages(chat: Chat | null) {
     if (!chat?.id) return;
 
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      console.warn("[useChatMessages] Socket not available");
+      return;
+    }
+
+    console.log(`[useChatMessages] Setting up listeners for chat ${chat.id}`);
 
     const handleMessageUpdate = (data: any) => {
-      if (data.chatId !== chat.id) return;
+      console.log(`[useChatMessages] Received event with data:`, data);
+      console.log(`[useChatMessages] Current chat ID: ${chat.id}`);
+      console.log(`[useChatMessages] Data chat ID: ${data.chatId}`);
       
+      if (data.chatId !== chat.id) {
+        console.log(`[useChatMessages] Ignoring event for different chat`);
+        return;
+      }
+      
+      console.log(`[useChatMessages] Invalidating query for chat ${chat.id}`);
       // Invalidate the query to force a fresh fetch of messages and statuses
       queryClient.invalidateQueries({ queryKey });
     };
 
     // Listen for all direct message changes
-    socket.on("new_message", handleMessageUpdate);
-    socket.on("message_updated", handleMessageUpdate);
-    socket.on("messages_read", handleMessageUpdate);
+    socket.on("new_message", (data) => {
+      console.log(`[useChatMessages] new_message event received:`, data);
+      handleMessageUpdate(data);
+    });
+    
+    socket.on("message_updated", (data) => {
+      console.log(`[useChatMessages] message_updated event received:`, data);
+      handleMessageUpdate(data);
+    });
+    
+    socket.on("messages_read", (data) => {
+      console.log(`[useChatMessages] messages_read event received:`, data);
+      handleMessageUpdate(data);
+    });
 
     return () => {
+      console.log(`[useChatMessages] Cleaning up listeners for chat ${chat.id}`);
       socket.off("new_message", handleMessageUpdate);
       socket.off("message_updated", handleMessageUpdate);
       socket.off("messages_read", handleMessageUpdate);

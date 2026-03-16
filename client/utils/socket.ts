@@ -7,7 +7,10 @@ const SOCKET_URL = (import.meta as any).env?.VITE_API_BASE_URL?.replace(/\/api(\
 let socket: Socket | null = null;
 
 export const initSocket = (): Socket | null => {
-  if (socket) return socket;
+  if (socket) {
+    console.log("[Socket.IO] Already initialized, returning existing connection");
+    return socket;
+  }
 
   const token = localStorage.getItem("access_token");
 
@@ -15,6 +18,8 @@ export const initSocket = (): Socket | null => {
     console.warn("[Socket.IO] No auth token found. Cannot connect.");
     return null;
   }
+
+  console.log("[Socket.IO] Attempting to connect with token");
 
   socket = io(SOCKET_URL, {
     auth: {
@@ -27,16 +32,17 @@ export const initSocket = (): Socket | null => {
   });
 
   socket.on("connect", () => {
-    console.log("[Socket.IO] Connected with ID:", socket?.id);
+    console.log("[Socket.IO] ✅ Connected with ID:", socket?.id);
   });
 
   socket.on("connect_error", (error) => {
-    console.error("[Socket.IO] Connection error:", error.message);
+    console.error("[Socket.IO] ❌ Connection error:", error.message);
   });
 
   socket.on("disconnect", (reason) => {
-    console.log("[Socket.IO] Disconnected. Reason:", reason);
+    console.log("[Socket.IO] 🔌 Disconnected. Reason:", reason);
     if (reason === "io server disconnect") {
+      console.log("[Socket.IO] Server initiated disconnect, attempting reconnect");
       // The disconnection was initiated by the server, you need to reconnect manually
       // This happens if the token is invalid
       socket?.connect();

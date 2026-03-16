@@ -94,6 +94,7 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
 
     // 2. Handle explicit chat room joins (for typing indicators, read receipts)
     socket.on("join_chat", async (chatId) => {
+      console.log(`[Socket.io] User ${userId} attempting to join chat room: ${chatId}`);
       // Verify membership before allowing join
       try {
          const membership = await prisma.chatMember.findUnique({
@@ -101,12 +102,14 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
          });
          if (membership) {
              socket.join(`chat:${chatId}`);
-             console.log(`User ${userId} joined chat room chat:${chatId}`);
+             console.log(`[Socket.io] ✅ User ${userId} successfully joined room chat:${chatId}`);
+             console.log(`[Socket.io] Room ${chatId} now has: ${io.sockets.adapter.rooms.get(`chat:${chatId}`)?.size || 0} members`);
          } else {
+             console.warn(`[Socket.io] ❌ User ${userId} unauthorized to join chat ${chatId}`);
              socket.emit("error", { message: "Unauthorized to join this chat room" });
          }
       } catch (err) {
-          console.error("Error joining chat room", err);
+          console.error(`[Socket.io] Error joining chat room ${chatId}:`, err);
       }
     });
 

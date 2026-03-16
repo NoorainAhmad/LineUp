@@ -7,6 +7,7 @@ import {
 } from "../validators/chat.validator.js";
 import { UserRole } from "@/generated/prisma/index.js";
 import { HierarchyService } from "@/utils/hierarchy.service.js";
+import { getIO } from "@/socket/index.js";
 
 export class ChatService {
   private static chatSelection = {
@@ -149,8 +150,8 @@ export class ChatService {
   }
 console.log("Send message data", data)
 console.log(" Media IDs", mediaIds)
-      return prisma.$transaction(async (tx) => {
-        const createdMessages = [];
+      const createdMessages = await prisma.$transaction(async (tx) => {
+        const messages = [];
 
 if (mediaIds?.length) {
   for (const mediaId of mediaIds) {
@@ -175,7 +176,7 @@ if (mediaIds?.length) {
       },
     });
 
-    createdMessages.push(msg);
+    messages.push(msg);
   }
 } else {
   const msg = await tx.message.create({
@@ -191,9 +192,9 @@ if (mediaIds?.length) {
     },
   });
 
-  createdMessages.push(msg);
+  messages.push(msg);
 }
-const lastMessage = createdMessages[createdMessages.length - 1];
+const lastMessage = messages[messages.length - 1];
         await tx.chat.update({
           where: { id: chatId },
           data: {
@@ -203,10 +204,50 @@ const lastMessage = createdMessages[createdMessages.length - 1];
         });
         await tx.chatMember.updateMany({
           where: { chatId, userId: { not: senderId } },
-          data: { unreadCount: { increment: createdMessages.length } },
+          data: { unreadCount: { increment: messages.length } },
         });
-        return createdMessages;
+        return messages;
       });
+
+      // Emit socket events
+      try {
+        const io = getIO();
+        const room = `chat:${chatId}`;
+        
+        console.log(`[Socket.io] Preparing to emit new_message to room: ${room} (${createdMessages.length} messages)`);
+        
+        // Emit individual new_message events for each created message
+        for (const message of createdMessages) {
+          const messageData = {
+            id: String(message.id),
+            type: message.type,
+            content: message.content,
+            senderId: message.senderId,
+            chatId: message.chatId,
+            replyToId: message.replyToId ? String(message.replyToId) : null,
+            sender: message.sender,
+            createdAt: message.createdAt,
+            isEdited: message.isEdited,
+            isDeleted: message.isDeleted,
+          };
+          console.log(`[Socket.io] Emitting new_message to room ${room}:`, JSON.stringify(messageData));
+          io.to(room).emit('new_message', messageData);
+        }
+        
+        // Emit single chat_updated event
+        const chatUpdateData = {
+          chatId: chatId,
+          updatedAt: new Date(),
+        };
+        console.log(`[Socket.io] Emitting chat_updated to room ${room}:`, JSON.stringify(chatUpdateData));
+        io.to(room).emit('chat_updated', chatUpdateData);
+        console.log(`[Socket.io] Finished emitting events for chat ${chatId}`);
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] sendMessage:`, emitError);
+        console.error(`[Socket Emit Error] Stack:`, (emitError as Error).stack);
+      }
+
+      return createdMessages;
     } catch (error) {
       console.log(`[Message Creation] Error: ${error}`);
       throw new Error("Message creation failed: " + (error as Error).message);
@@ -243,16 +284,33 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       // }
 
       // Update the message
-      return await prisma.message.update({
+      const updatedMessage = await prisma.message.update({
         where: { id: messageId },
         data: {
           content: newContent,
           isEdited: true,
         },
         include: {
+          chat: { select: { id: true } },
           sender: { select: { id: true, name: true, avatarUrl: true } },
         },
       });
+
+      // Emit socket event
+      try {
+        const io = getIO();
+        const room = `chat:${updatedMessage.chat.id}`;
+        io.to(room).emit('message_updated', {
+          id: String(updatedMessage.id),
+          content: updatedMessage.content,
+          isEdited: updatedMessage.isEdited,
+          updatedAt: updatedMessage.updatedAt,
+        });
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] editMessage: ${emitError}`);
+      }
+
+      return updatedMessage;
     } catch (error) {
       console.log(`[Edit Message] Error: ${error}`);
       throw new Error("Message edit failed: " + (error as Error).message);
@@ -283,10 +341,25 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       if (!reactions[emoji]) reactions[emoji] = [];
       reactions[emoji].push(userId);
     }
-      return prisma.message.update({
+      const updatedMessage = await prisma.message.update({
         where: { id: messageId },
         data: { reactions },
+        include: { chat: { select: { id: true } } },
       });
+
+      // Emit socket event
+      try {
+        const io = getIO();
+        const room = `chat:${updatedMessage.chat.id}`;
+        io.to(room).emit('message_updated', {
+          id: String(updatedMessage.id),
+          reactions: updatedMessage.reactions,
+        });
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] toggleReaction: ${emitError}`);
+      }
+
+      return updatedMessage;
     } catch (error) {
       console.log(`[Reaction Toggle] Error: ${error}`);
       throw new Error("Reaction toggle failed: " + (error as Error).message);
@@ -602,21 +675,37 @@ const lastMessage = createdMessages[createdMessages.length - 1];
       select: { lastMessageId: true },
     });
 
+    let result;
     if (!chat?.lastMessageId) {
-      return prisma.chatMember.update({
+      result = await prisma.chatMember.update({
         where: { userId_chatId: { userId, chatId } },
         data: { unreadCount: 0 },
       });
+    } else {
+      result = await prisma.chatMember.update({
+        where: { userId_chatId: { userId, chatId } },
+        data: {
+          unreadCount: 0,
+          lastReadSeq: chat.lastMessageId,
+          lastDeliveredSeq: chat.lastMessageId,
+        },
+      });
     }
 
-    return prisma.chatMember.update({
-      where: { userId_chatId: { userId, chatId } },
-      data: {
-        unreadCount: 0,
-        lastReadSeq: chat.lastMessageId,
-        lastDeliveredSeq: chat.lastMessageId,
-      },
-    });
+    // Emit socket event
+    try {
+      const io = getIO();
+      const room = `chat:${chatId}`;
+      io.to(room).emit('messages_read', {
+        chatId: chatId,
+        userId: userId,
+        lastReadSeq: chat?.lastMessageId ? String(chat.lastMessageId) : null,
+      });
+    } catch (emitError) {
+      console.error(`[Socket Emit Error] markAsRead: ${emitError}`);
+    }
+
+    return result;
 
   } catch (error) {
     console.log(`[Mark As Read] Error: ${error}`);

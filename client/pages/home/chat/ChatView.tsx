@@ -866,17 +866,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
     let currentChatId = chat?.id;
 
     if (currentChatId) {
+      console.log(`[ChatView] Attempting to join chat room: ${currentChatId}`);
        import('@/utils/socket').then(({ getSocket }) => {
           const s = getSocket();
           if (s) {
             currentSocket = s;
+            console.log(`[ChatView] Socket connected, emitting join_chat for: ${currentChatId}`);
             s.emit("join_chat", currentChatId);
+            console.log(`[ChatView] ✅ join_chat emitted for: ${currentChatId}`);
+          } else {
+            console.warn(`[ChatView] Socket not available for chat: ${currentChatId}`);
           }
-       }).catch(err => console.error("Failed to load socket for join_chat", err));
+       }).catch(err => console.error("[ChatView] Failed to load socket for join_chat", err));
+    } else {
+      console.log(`[ChatView] No chat ID available, skipping join_chat`);
     }
 
     return () => {
       if (currentSocket && currentChatId) {
+        console.log(`[ChatView] Emitting leave_chat for: ${currentChatId}`);
         currentSocket.emit("leave_chat", currentChatId);
       }
     };
