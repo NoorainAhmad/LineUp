@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 
 import { connectRedis } from "@/config/redis.js";
 import { connectDB } from "@/config/db.js";
+import { initSocket } from "@/socket/index.js";
 
 dotenv.config();
 
@@ -37,7 +38,7 @@ if (cluster.isPrimary) {
 // The number indicates how many proxy hops to trust
 // app.set("trust proxy", 1); // Use 1 if behind a single proxy like Nginx
 // Or for AWS load balancers, you might need:
-app.set("trust proxy", true); // Trust all proxies
+app.set("trust proxy", 1); // Trust the first proxy (e.g., Nginx, Load Balancer)
 
 // Log requests
 app.use((req, res, next) => {
@@ -179,6 +180,10 @@ async function bootstrap() {
     clearTimeout(timeout);
 
     console.log("✅ Databases connected successfully.");
+    
+    // Initialize Socket.io after databases
+    initSocket(httpServer);
+    console.log("✅ Socket.io initialized.");
 
     httpServer.listen(PORT, () => {
       console.log(`-----------------------------------------------`);

@@ -860,6 +860,61 @@ export const ChatView: React.FC<ChatViewProps> = ({
     };
   }, [cleanupAllPendingAttachmentUrls]);
 
+  // Join the Socket.IO chat room when the user opens this chat
+  useEffect(() => {
+    const currentChatId = chat?.id;
+    if (!currentChatId) {
+      console.log(`[ChatView] No chat ID available, skipping join_chat`);
+      return;
+    }
+
+    console.log(`[ChatView] Attempting to join chat room: ${currentChatId}`);
+
+    import("@/utils/socket")
+      .then(({ getSocket }) => {
+        const s = getSocket();
+        if (!s) {
+          console.warn(`[ChatView] Socket not available for chat: ${currentChatId}`);
+          return;
+        }
+
+        const doJoin = () => {
+          console.log(`[ChatView] ✅ join_chat emitted for: ${currentChatId}`);
+          s.emit("join_chat", currentChatId);
+        };
+
+        // FIX: If the socket hasn't connected yet (e.g. token just became
+        // available), wait for the 'connect' event before emitting join_chat.
+        // Without this, join_chat fires into the void and the client never
+        // enters the room — meaning all real-time events are silently missed.
+        if (s.connected) {
+          doJoin();
+        }
+
+        // FIX: Always listen for 'connect' (using .on instead of .once) so that
+        // if the socket drops and reconnects, the client re-emits join_chat. 
+        // Without this, the server-side room membership is lost on disconnect.
+        s.on("connect", doJoin);
+      })
+      .catch((err) =>
+        console.error("[ChatView] Failed to load socket for join_chat", err)
+      );
+
+    return () => {
+      import("@/utils/socket")
+        .then(({ getSocket }) => {
+          const s = getSocket();
+          if (s) {
+            console.log(`[ChatView] Emitting leave_chat for: ${currentChatId}`);
+            s.emit("leave_chat", currentChatId);
+            // Remove any queued connect handler if cleanup fires before connect
+            s.off("connect");
+          }
+        })
+        .catch(() => {/* best-effort cleanup */});
+    };
+  }, [chat?.id]);
+
   // Polling query for messages
   const {
     messages,
@@ -2049,7 +2104,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {previewImage && (
         <div
-          className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-90 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
           <button

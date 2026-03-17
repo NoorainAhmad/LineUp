@@ -1,13 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { ChatService } from "@/services/chat.service";
 import type { Message, Chat } from "@/types";
+import { getSocket } from "./socket";
 
 export function useChatMessages(chat: Chat | null) {
   const queryClient = useQueryClient();
 
-  // Tracks the highest message id we've seen for this chat.
-  // Persists across re-renders but resets when chat changes (see useEffect below).
   const lastKnownSeqRef = useRef<bigint | undefined>(undefined);
 
   const queryKey = ["chat-messages", chat?.id];
@@ -29,35 +28,25 @@ export function useChatMessages(chat: Chat | null) {
           : response;
 
         if (newMessages.length === 0) {
-          // Nothing new — return existing cache untouched (cheap poll)
-          return (
-            queryClient.getQueryData<Message[]>(queryKey) ?? []
-          );
+          return queryClient.getQueryData<Message[]>(queryKey) ?? [];
         }
 
-        // Advance our local cursor to the highest id in this batch
-        // Advance our local cursor to the highest id in this batch
         const maxSeq = newMessages.reduce<bigint>(
-        (max, m) => {
+          (max, m) => {
             const curr = BigInt(m.id);
             return curr > max ? curr : max;
-        },
-        lastKnownSeqRef.current ?? 0n
+          },
+          lastKnownSeqRef.current ?? 0n
         );
 
         lastKnownSeqRef.current = maxSeq;
 
-        // Merge with existing messages (append-only, deduplicated)
-        const existing =
-          queryClient.getQueryData<Message[]>(queryKey) ?? [];
+        const existing = queryClient.getQueryData<Message[]>(queryKey) ?? [];
         const existingIds = new Set(existing.map((m) => String(m.id)));
         const merged = [
           ...existing,
           ...newMessages.filter((m) => !existingIds.has(String(m.id))),
-        ].sort((a, b) => {
-          // Sort by id (BIGSERIAL) — safer than createdAt for ordering
-          return Number(BigInt(a.id) - BigInt(b.id));
-        });
+        ].sort((a, b) => Number(BigInt(a.id) - BigInt(b.id)));
 
         return merged;
       } catch (error) {
@@ -67,23 +56,118 @@ export function useChatMessages(chat: Chat | null) {
     },
 
     enabled: !!chat?.id,
-    refetchInterval: 3000,
     refetchOnWindowFocus: false,
-
-    // Don't treat data as stale immediately — we're merging incrementally
     staleTime: Infinity,
 
-    // Merge with pending messages for optimistic display
     select: (data) => {
       const pendingMessages =
-        queryClient.getQueryData<Message[]>(["pending-messages", chat?.id]) ??
-        [];
-      // Pending messages go at the end (they have fake ids like "pending-xxx")
+        queryClient.getQueryData<Message[]>(["pending-messages", chat?.id]) ?? [];
       return [...data, ...pendingMessages];
     },
   });
 
-  // Call this when switching chats to reset the cursor
+  useEffect(() => {
+    if (!chat?.id) return;
+
+    const chatId = chat.id;
+
+    const applyMessageToCache = (incomingMessage: Message) => {
+      queryClient.setQueryData<Message[]>(
+        ["chat-messages", chatId],
+        (existing = []) => {
+          const idStr = String(incomingMessage.id);
+          if (existing.some((m) => String(m.id) === idStr)) return existing;
+          return [...existing, incomingMessage].sort(
+            (a, b) => Number(BigInt(a.id) - BigInt(b.id))
+          );
+        }
+      );
+    };
+
+    const patchMessageInCache = (patch: Partial<Message> & { id: string }) => {
+      queryClient.setQueryData<Message[]>(
+        ["chat-messages", chatId],
+        (existing = []) =>
+          existing.map((m) =>
+            String(m.id) === String(patch.id) ? { ...m, ...patch } : m
+          )
+      );
+    };
+
+    const handleNewMessage = (data: any) => {
+      console.log(`[useChatMessages] new_message received:`, data);
+      if (String(data.chatId) !== String(chatId)) return;
+      applyMessageToCache(data as Message);
+    };
+
+    const handleMessageUpdated = (data: any) => {
+      console.log(`[useChatMessages] message_updated received:`, data);
+      if (data.chatId && String(data.chatId) !== String(chatId)) return;
+      patchMessageInCache(data);
+    };
+
+    const handleMessagesRead = (data: any) => {
+      console.log(`[useChatMessages] messages_read received:`, data);
+      if (String(data.chatId) !== String(chatId)) return;
+      refetch();
+    };
+
+    const attachListeners = (s: NonNullable<ReturnType<typeof getSocket>>) => {
+      console.log(`[useChatMessages] Attaching listeners for chat ${chatId} (socket ${s.id})`);
+      s.on("new_message", handleNewMessage);
+      s.on("message_updated", handleMessageUpdated);
+      s.on("messages_read", handleMessagesRead);
+      return () => {
+        console.log(`[useChatMessages] Removing listeners for chat ${chatId}`);
+        s.off("new_message", handleNewMessage);
+        s.off("message_updated", handleMessageUpdated);
+        s.off("messages_read", handleMessagesRead);
+      };
+    };
+
+    const socket = getSocket();
+
+    // Case 1: Socket already connected — attach listeners immediately.
+    if (socket?.connected) {
+      return attachListeners(socket);
+    }
+
+    // Case 2: Socket exists but still connecting (handshake in progress).
+    // Defer listener attachment until the 'connect' event fires.
+    // THIS is the race condition that was causing missed messages:
+    // the effect ran before the WebSocket handshake completed, so
+    // socket.connected was false and listeners were never attached.
+    if (socket) {
+      console.log(`[useChatMessages] Attaching connection-aware listener for chat ${chatId}`);
+      let detachListeners = () => {};
+
+      const onConnect = () => {
+        detachListeners(); // clean up previous if any
+        detachListeners = attachListeners(socket);
+      };
+
+      // Case 1: Already connected
+      if (socket.connected) {
+        onConnect();
+      }
+
+      // Case 2: Always listen for reconnections
+      socket.on("connect", onConnect);
+
+      return () => {
+        socket.off("connect", onConnect);
+        detachListeners();
+      };
+    }
+
+    // Case 3: No socket at all (initSocket() not yet called).
+    console.warn(
+      `[useChatMessages] No socket instance for chat ${chatId} — listeners NOT attached. ` +
+      `Ensure initSocket() is called in AuthContext after login.`
+    );
+
+  }, [chat?.id, queryClient, refetch]);
+
   const resetCursor = useCallback(() => {
     lastKnownSeqRef.current = undefined;
     queryClient.setQueryData(queryKey, []);
