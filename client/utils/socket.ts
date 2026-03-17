@@ -42,10 +42,13 @@ export const initSocket = (): Socket | null => {
   socket.on("disconnect", (reason) => {
     console.log("[Socket.IO] 🔌 Disconnected. Reason:", reason);
     if (reason === "io server disconnect") {
-      console.log("[Socket.IO] Server initiated disconnect, attempting reconnect");
+      console.warn(
+        "[Socket.IO] Server-initiated disconnect — clearing socket singleton. " +
+        "Re-connect will happen on next initSocket() call with a fresh token."
+      );
       // The disconnection was initiated by the server, you need to reconnect manually
       // This happens if the token is invalid
-      socket?.connect();
+      socket = null; // Clear the socket instance so that next init will create a new connection
     }
   });
 

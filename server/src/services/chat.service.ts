@@ -212,11 +212,20 @@ const lastMessage = messages[messages.length - 1];
       // Emit socket events
       try {
         const io = getIO();
-        const room = `chat:${chatId}`;
-        
-        console.log(`[Socket.io] Preparing to emit new_message to room: ${room} (${createdMessages.length} messages)`);
-        
-        // Emit individual new_message events for each created message
+        const chatRoom = `chat:${chatId}`;
+
+        // Fetch all member userIds for this chat so we can fan-out to personal
+        // rooms. This covers members who are online but currently viewing a
+        // different chat (they have joined their personal userId room but NOT
+        // the chat:${chatId} room, so io.to(chatRoom) alone would miss them).
+        const members = await prisma.chatMember.findMany({
+          where: { chatId },
+          select: { userId: true },
+        });
+        const memberUserIds = members.map((m) => m.userId);
+
+        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${memberUserIds.length} personal rooms`);
+
         for (const message of createdMessages) {
           const messageData = {
             id: String(message.id),
@@ -230,17 +239,23 @@ const lastMessage = messages[messages.length - 1];
             isEdited: message.isEdited,
             isDeleted: message.isDeleted,
           };
-          console.log(`[Socket.io] Emitting new_message to room ${room}:`, JSON.stringify(messageData));
-          io.to(room).emit('new_message', messageData);
+
+          // Deliver to members currently inside the chat room
+          io.to(chatRoom).emit("new_message", messageData);
+
+          // FIX: Also deliver to each member's personal room so users who are
+          // online but viewing a different chat still receive inbox/badge updates.
+          for (const userId of memberUserIds) {
+            io.to(userId).emit("new_message", messageData);
+          }
         }
-        
-        // Emit single chat_updated event
-        const chatUpdateData = {
-          chatId: chatId,
-          updatedAt: new Date(),
-        };
-        console.log(`[Socket.io] Emitting chat_updated to room ${room}:`, JSON.stringify(chatUpdateData));
-        io.to(room).emit('chat_updated', chatUpdateData);
+
+        const chatUpdateData = { chatId, updatedAt: new Date() };
+        io.to(chatRoom).emit("chat_updated", chatUpdateData);
+        for (const userId of memberUserIds) {
+          io.to(userId).emit("chat_updated", chatUpdateData);
+        }
+
         console.log(`[Socket.io] Finished emitting events for chat ${chatId}`);
       } catch (emitError) {
         console.error(`[Socket Emit Error] sendMessage:`, emitError);
@@ -300,8 +315,12 @@ const lastMessage = messages[messages.length - 1];
       try {
         const io = getIO();
         const room = `chat:${updatedMessage.chat.id}`;
-        io.to(room).emit('message_updated', {
+        // FIX: Include chatId in the payload. Without it the client-side
+        // handler (which guards on data.chatId !== chat.id) silently drops
+        // every message_updated event.
+        io.to(room).emit("message_updated", {
           id: String(updatedMessage.id),
+          chatId: updatedMessage.chat.id,
           content: updatedMessage.content,
           isEdited: updatedMessage.isEdited,
           updatedAt: updatedMessage.updatedAt,
@@ -351,8 +370,10 @@ const lastMessage = messages[messages.length - 1];
       try {
         const io = getIO();
         const room = `chat:${updatedMessage.chat.id}`;
-        io.to(room).emit('message_updated', {
+        // FIX: Include chatId so the client-side filter doesn't drop this event.
+        io.to(room).emit("message_updated", {
           id: String(updatedMessage.id),
+          chatId: updatedMessage.chat.id,
           reactions: updatedMessage.reactions,
         });
       } catch (emitError) {
@@ -664,54 +685,68 @@ const lastMessage = messages[messages.length - 1];
   }
 
   // Mark a chat as read
-  // ── Mark as read — advances lastReadSeq to latest in chat ───
-  //
-  // Called when user opens a chat. Advances read pointer to the
-  // latest message currently in the chat.
+  // Advances lastReadSeq to the latest message in chat.
+  // Called when the user opens a chat.
   static async markAsRead(chatId: string, userId: string) {
-  try {
-    const chat = await prisma.chat.findUnique({
-      where: { id: chatId },
-      select: { lastMessageId: true },
-    });
-
-    let result;
-    if (!chat?.lastMessageId) {
-      result = await prisma.chatMember.update({
-        where: { userId_chatId: { userId, chatId } },
-        data: { unreadCount: 0 },
-      });
-    } else {
-      result = await prisma.chatMember.update({
-        where: { userId_chatId: { userId, chatId } },
-        data: {
-          unreadCount: 0,
-          lastReadSeq: chat.lastMessageId,
-          lastDeliveredSeq: chat.lastMessageId,
-        },
-      });
-    }
-
-    // Emit socket event
     try {
-      const io = getIO();
-      const room = `chat:${chatId}`;
-      io.to(room).emit('messages_read', {
-        chatId: chatId,
-        userId: userId,
-        lastReadSeq: chat?.lastMessageId ? String(chat.lastMessageId) : null,
+      // FIX: Verify the caller is actually a member of this chat before
+      // attempting any writes. Supervisors/admins can VIEW chats they don't
+      // belong to, but they have no ChatMember row — so update() throws
+      // "record not found". We silently no-op for non-members since
+      // marking-as-read is meaningless for read-only viewers.
+      const membership = await prisma.chatMember.findUnique({
+        where: { userId_chatId: { userId, chatId } },
+        select: { userId: true },
       });
-    } catch (emitError) {
-      console.error(`[Socket Emit Error] markAsRead: ${emitError}`);
+
+      if (!membership) {
+        console.log(
+          `[Mark As Read] User ${userId} is not a member of chat ${chatId} — skipping (read-only access).`
+        );
+        return null;
+      }
+
+      const chat = await prisma.chat.findUnique({
+        where: { id: chatId },
+        select: { lastMessageId: true },
+      });
+
+      let result;
+      if (!chat?.lastMessageId) {
+        result = await prisma.chatMember.update({
+          where: { userId_chatId: { userId, chatId } },
+          data: { unreadCount: 0 },
+        });
+      } else {
+        result = await prisma.chatMember.update({
+          where: { userId_chatId: { userId, chatId } },
+          data: {
+            unreadCount: 0,
+            lastReadSeq: chat.lastMessageId,
+            lastDeliveredSeq: chat.lastMessageId,
+          },
+        });
+      }
+
+      // Emit socket event
+      try {
+        const io = getIO();
+        const room = `chat:${chatId}`;
+        io.to(room).emit("messages_read", {
+          chatId,
+          userId,
+          lastReadSeq: chat?.lastMessageId ? String(chat.lastMessageId) : null,
+        });
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] markAsRead: ${emitError}`);
+      }
+
+      return result;
+    } catch (error) {
+      console.log(`[Mark As Read] Error: ${error}`);
+      throw new Error("Mark as read failed");
     }
-
-    return result;
-
-  } catch (error) {
-    console.log(`[Mark As Read] Error: ${error}`);
-    throw new Error("Mark as read failed");
   }
-}
 
 
   // Toggle archive status for a chat
@@ -736,15 +771,34 @@ const lastMessage = messages[messages.length - 1];
     try {
       const message = await prisma.message.findFirst({
         where: { id: messageId, senderId: userId },
+        include: { chat: { select: { id: true } } },
       });
       if (!message) throw new Error("Unauthorized or message not found");
-      return prisma.message.update({
+
+      const updated = await prisma.message.update({
         where: { id: messageId },
         data: {
           isDeleted: true,
           content: "This message has been deleted",
         },
       });
+
+      // FIX: Emit deletion as a message_updated event so all clients
+      // immediately reflect the soft-delete without waiting for a poll.
+      try {
+        const io = getIO();
+        const room = `chat:${message.chat.id}`;
+        io.to(room).emit("message_updated", {
+          id: String(updated.id),
+          chatId: message.chat.id,
+          isDeleted: true,
+          content: "This message has been deleted",
+        });
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] deleteMessage: ${emitError}`);
+      }
+
+      return updated;
     } catch (error) {
       console.log(`[Delete Message] Error: ${error}`);
       throw new Error("Delete message failed: " + (error as Error).message);
