@@ -889,10 +889,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
         // enters the room — meaning all real-time events are silently missed.
         if (s.connected) {
           doJoin();
-        } else {
-          console.log(`[ChatView] Socket not yet connected — queuing join_chat for: ${currentChatId}`);
-          s.once("connect", doJoin);
         }
+
+        // FIX: Always listen for 'connect' (using .on instead of .once) so that
+        // if the socket drops and reconnects, the client re-emits join_chat. 
+        // Without this, the server-side room membership is lost on disconnect.
+        s.on("connect", doJoin);
       })
       .catch((err) =>
         console.error("[ChatView] Failed to load socket for join_chat", err)

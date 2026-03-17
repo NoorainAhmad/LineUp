@@ -138,17 +138,24 @@ export function useChatMessages(chat: Chat | null) {
     // the effect ran before the WebSocket handshake completed, so
     // socket.connected was false and listeners were never attached.
     if (socket) {
-      console.log(`[useChatMessages] Socket connecting — queuing listener attach for chat ${chatId}`);
+      console.log(`[useChatMessages] Attaching connection-aware listener for chat ${chatId}`);
       let detachListeners = () => {};
 
       const onConnect = () => {
+        detachListeners(); // clean up previous if any
         detachListeners = attachListeners(socket);
       };
 
-      socket.once("connect", onConnect);
+      // Case 1: Already connected
+      if (socket.connected) {
+        onConnect();
+      }
+
+      // Case 2: Always listen for reconnections
+      socket.on("connect", onConnect);
 
       return () => {
-        socket.off("connect", onConnect); // cancel if effect cleans up before connect
+        socket.off("connect", onConnect);
         detachListeners();
       };
     }

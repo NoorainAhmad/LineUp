@@ -224,7 +224,23 @@ const lastMessage = messages[messages.length - 1];
         });
         const memberUserIds = members.map((m) => m.userId);
 
-        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${memberUserIds.length} personal rooms`);
+        // FIX: Also find supervisors/parents of these members who are authorized
+        // to see this chat. This ensures they get real-time updates even if they
+        // aren't explicit members.
+        const parentIdsSet = new Set<string>();
+        for (const uid of memberUserIds) {
+          const userWithParent = await prisma.user.findUnique({
+            where: { id: uid },
+            select: { parentId: true }
+          });
+          if (userWithParent?.parentId) {
+            parentIdsSet.add(userWithParent.parentId);
+          }
+        }
+        const supervisorUserIds = Array.from(parentIdsSet);
+        const allRelevantUserIds = [...new Set([...memberUserIds, ...supervisorUserIds])];
+
+        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${allRelevantUserIds.length} personal rooms`);
 
         for (const message of createdMessages) {
           const messageData = {
@@ -243,16 +259,16 @@ const lastMessage = messages[messages.length - 1];
           // Deliver to members currently inside the chat room
           io.to(chatRoom).emit("new_message", messageData);
 
-          // FIX: Also deliver to each member's personal room so users who are
-          // online but viewing a different chat still receive inbox/badge updates.
-          for (const userId of memberUserIds) {
+          // FIX: Also deliver to each member's personal room (and their supervisors')
+          // so users who are online but viewing a different chat still receive inbox/badge updates.
+          for (const userId of allRelevantUserIds) {
             io.to(userId).emit("new_message", messageData);
           }
         }
 
         const chatUpdateData = { chatId, updatedAt: new Date() };
         io.to(chatRoom).emit("chat_updated", chatUpdateData);
-        for (const userId of memberUserIds) {
+        for (const userId of allRelevantUserIds) {
           io.to(userId).emit("chat_updated", chatUpdateData);
         }
 

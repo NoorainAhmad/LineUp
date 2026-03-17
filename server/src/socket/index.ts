@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
 import { prisma } from "../config/db.js";
+import { HierarchyService } from "../utils/hierarchy.service.js";
 
 interface ServerToClientEvents {
   new_message: (data: any) => void;
@@ -55,7 +56,7 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
     try {
       // Allow token from auth header or connection URL query
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
-      
+
       if (!token) {
         return next(new Error("Authentication error: Token missing"));
       }
@@ -95,21 +96,37 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
     // 2. Handle explicit chat room joins (for typing indicators, read receipts)
     socket.on("join_chat", async (chatId) => {
       console.log(`[Socket.io] User ${userId} attempting to join chat room: ${chatId}`);
-      // Verify membership before allowing join
+      // Verify membership OR hierarchical visibility before allowing join
       try {
-         const membership = await prisma.chatMember.findUnique({
-             where: { userId_chatId: { userId, chatId } }
-         });
-         if (membership) {
-             socket.join(`chat:${chatId}`);
-             console.log(`[Socket.io] ✅ User ${userId} successfully joined room chat:${chatId}`);
-             console.log(`[Socket.io] Room ${chatId} now has: ${io.sockets.adapter.rooms.get(`chat:${chatId}`)?.size || 0} members`);
-         } else {
-             console.warn(`[Socket.io] ❌ User ${userId} unauthorized to join chat ${chatId}`);
-             socket.emit("error", { message: "Unauthorized to join this chat room" });
-         }
+        const membership = await prisma.chatMember.findUnique({
+          where: { userId_chatId: { userId, chatId } }
+        });
+
+        if (membership) {
+          socket.join(`chat:${chatId}`);
+          console.log(`[Socket.io] ✅ User ${userId} successfully joined room chat:${chatId} (Member)`);
+          return;
+        }
+
+        // If not a member, check if the user has hierarchical visibility over this chat.
+        const visibleUserIds = await HierarchyService.getVisibleUserIds(userId);
+        const isVisible = await prisma.chatMember.findFirst({
+          where: {
+            chatId: chatId,
+            userId: { in: visibleUserIds }
+          },
+          select: { id: true }
+        });
+
+        if (isVisible) {
+          socket.join(`chat:${chatId}`);
+          console.log(`[Socket.io] ✅ User ${userId} successfully joined room chat:${chatId} (Supervisor)`);
+        } else {
+          console.warn(`[Socket.io] ❌ User ${userId} unauthorized to join chat ${chatId}`);
+          socket.emit("error", { message: "Unauthorized to join this chat room" });
+        }
       } catch (err) {
-          console.error(`[Socket.io] Error joining chat room ${chatId}:`, err);
+        console.error(`[Socket.io] Error joining chat room ${chatId}:`, err);
       }
     });
 
