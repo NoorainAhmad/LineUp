@@ -38,7 +38,8 @@ if (cluster.isPrimary) {
 // The number indicates how many proxy hops to trust
 // app.set("trust proxy", 1); // Use 1 if behind a single proxy like Nginx
 // Or for AWS load balancers, you might need:
-app.set("trust proxy", 1); // Trust the first proxy (e.g., Nginx, Load Balancer)
+// app.set("trust proxy", 1); // Trust the first proxy (e.g., Nginx, Load Balancer)
+app.set("trust proxy", true); // Trust all proxies
 
 // Log requests
 app.use((req, res, next) => {
