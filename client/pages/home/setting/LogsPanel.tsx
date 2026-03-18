@@ -76,7 +76,7 @@ export const LogsPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] text-gray-300 font-mono text-sm">
+    <div className="flex flex-col h-full bg-[#1e1e1e] text-gray-300 font-mono text-sm pb-16 md:pb-0">
       {/* Toolbar */}
       <div className="min-h-14 bg-[#252526] border-b border-[#333] flex items-center justify-between px-2 sm:px-4 shrink-0 gap-2 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-2 shrink-0">

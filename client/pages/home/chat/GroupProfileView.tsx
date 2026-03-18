@@ -200,7 +200,7 @@ export const GroupProfileView: React.FC<GroupProfileViewProps> = ({
   };
 
   return (
-    <div className="w-[320px] bg-surface border-l border-border h-full flex flex-col overflow-y-auto custom-scrollbar shadow-2xl absolute right-0 z-30 md:static animate-in slide-in-from-right duration-200">
+    <div className="w-[320px] bg-surface border-l border-border h-full flex flex-col overflow-y-auto custom-scrollbar shadow-2xl absolute right-0 z-120 md:static animate-in slide-in-from-right duration-200">
       {/* Header */}
       <div className="h-18 px-6 flex items-center justify-between border-b border-border bg-surface shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-4">

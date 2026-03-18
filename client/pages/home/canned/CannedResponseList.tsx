@@ -24,7 +24,7 @@ export const CannedResponseList: React.FC<CannedResponseListProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-full bg-surface border-r border-border w-full md:w-95 lg:w-105 relative z-20">
+    <div className="flex flex-col h-full bg-surface border-r border-border w-full md:w-95 lg:w-105 relative z-20 pb-16 md:pb-0">
       {/* Header */}
       <div className="h-20 px-6 flex items-center justify-between shrink-0 bg-surface border-b border-border/50">
         <h1 className="text-2xl font-black text-text-main tracking-tight">

@@ -107,7 +107,7 @@ const HierarchyNode = ({
   };
 
   return (
-    <div className="select-none animate-in fade-in slide-in-from-left-2 duration-300">
+    <div className="select-none animate-in fade-in slide-in-from-left-2 duration-300 pb-16 md:pb-0">
       <div
         onClick={handleUserClick}
         className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-border hover:bg-surface-hover ${

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, memo } from "react";
+import React, { useState, useMemo, useCallback, memo, useEffect } from "react";
 import {
   MessageSquare,
   LogOut,
@@ -19,7 +19,7 @@ import {
 import { UserRole, User } from "../../types";
 import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface NavigationItem {
   id: string;
@@ -99,7 +99,7 @@ const ALL_NAV_ITEMS: NavigationItem[] = [
     id: "setting",
     icon: Settings,
     label: "Settings",
-    roles: [UserRole.DEVELOPER],
+    roles: [UserRole.DEVELOPER, UserRole.MASTER], // Added MASTER role
   },
 ];
 
@@ -113,7 +113,7 @@ const NavigationItemButton = memo(
     item: NavigationItem;
     isActive: boolean;
     onClick: () => void;
-    variant?: "mobile" | "desktop";
+    variant?: "mobile" | "desktop" | "bottom";
   }) => {
     const Icon = item.icon;
 
@@ -131,6 +131,30 @@ const NavigationItemButton = memo(
         >
           <Icon size={20} aria-hidden="true" />
           <span className="font-medium">{item.label}</span>
+        </button>
+      );
+    }
+
+    if (variant === "bottom") {
+      return (
+        <button
+          onClick={onClick}
+          className={`flex-1 flex flex-col items-center justify-center py-2 px-1 transition-colors relative ${
+            isActive
+              ? "text-primary"
+              : "text-text-secondary hover:text-text-main"
+          }`}
+          aria-current={isActive ? "page" : undefined}
+          aria-label={item.label}
+        >
+          <Icon size={24} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
+          <span className="text-xs mt-1 font-medium">{item.label}</span>
+          {isActive && (
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full"
+              aria-hidden="true"
+            />
+          )}
         </button>
       );
     }
@@ -185,63 +209,147 @@ const ThemeToggleButton = memo(
 );
 ThemeToggleButton.displayName = "ThemeToggleButton";
 
-const LogoutButton = memo(
-  ({ onLogout }: { onLogout?: () => void; }) => {
-    const handleClick = useCallback(() => {
-      if (onLogout) {
-        onLogout();
-      }
-    }, [onLogout]);
+const LogoutButton = memo(({ onLogout }: { onLogout?: () => void }) => {
+  const handleClick = useCallback(() => {
+    if (onLogout) {
+      onLogout();
+    }
+  }, [onLogout]);
 
-    return (
-      <button
-        className="w-full aspect-square rounded-xl flex items-center justify-center text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
-        onClick={handleClick}
-        title="Logout"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        aria-label="Logout"
-      >
-        <LogOutIcon size={20} aria-hidden="true" />
-      </button>
-    );
-  },
-);
+  return (
+    <button
+      className="w-full aspect-square rounded-xl flex items-center justify-center text-secondary hover:bg-surface-hover hover:text-text-main transition-colors"
+      onClick={handleClick}
+      title="Logout"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      aria-label="Logout"
+    >
+      <LogOutIcon size={20} aria-hidden="true" />
+    </button>
+  );
+});
 LogoutButton.displayName = "LogoutButton";
 
-const MyProfileButton = memo(
-  ({ handleClick }: { handleClick: () => void; }) => {
+const MyProfileButton = memo(({ handleClick }: { handleClick: () => void }) => {
+  const { user } = useAuth();
+  return (
+    <div
+      className="pt-3 border-t border-text-main/10 mt-2 flex justify-center cursor-pointer group relative"
+      onClick={handleClick}
+      title="My Profile"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      aria-label="My Profile"
+    >
+      <Avatar user={user as User} size="sm" showStatus />
+      <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border rounded shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+        My Profile
+      </div>
+    </div>
+  );
+});
+MyProfileButton.displayName = "MyProfileButton";
+
+// New component for mobile top bar with settings
+const MobileTopBar = memo(
+  ({
+    theme,
+    onToggleTheme,
+    onLogout,
+    onProfileClick,
+    showSettings,
+    onSettingsClick,
+  }: {
+    theme: "dark" | "light";
+    onToggleTheme: () => void;
+    onLogout?: () => void;
+    onProfileClick: () => void;
+    showSettings: boolean;
+    onSettingsClick: () => void;
+  }) => {
+    const [showMenu, setShowMenu] = useState(false);
     const { user } = useAuth();
+
     return (
-      <div
-        className="pt-3 border-t border-text-main/10 mt-2 flex justify-center cursor-pointer group relative"
-        onClick={handleClick}
-        title="My Profile"
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        aria-label="My Profile"
-      >
-        <Avatar user={user as User} size="sm" showStatus />
-        <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border rounded shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-          My Profile
+      <div className="md:hidden h-16 w-full bg-surface border-b border-border flex items-center justify-between px-4 z-50 sticky top-0">
+        <div className="font-bold text-xl text-primary tracking-tight">
+          LineUp
+        </div>
+        <div className="flex items-center gap-2">
+          {showSettings && (
+            <button
+              onClick={onSettingsClick}
+              className="p-2 text-text-main hover:bg-surface-hover rounded-lg"
+              aria-label="Settings"
+            >
+              <Settings size={22} />
+            </button>
+          )}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-2 text-text-main hover:bg-surface-hover rounded-lg"
+              aria-label="User menu"
+              aria-expanded={showMenu}
+            >
+              <Avatar user={user as User} size="sm" showStatus />
+            </button>
+
+            {/* Dropdown menu */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-lg shadow-lg py-2 z-50">
+                <button
+                  onClick={() => {
+                    onProfileClick();
+                    setShowMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-text-main hover:bg-surface-hover"
+                >
+                  <UserCircle2Icon size={18} />
+                  <span>My Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onToggleTheme();
+                    setShowMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-text-main hover:bg-surface-hover"
+                >
+                  {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                  <span>Toggle Theme</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onLogout?.();
+                    setShowMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-500/10"
+                >
+                  <LogOut size={18} />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   },
 );
-MyProfileButton.displayName = "MyProfileButton";
+MobileTopBar.displayName = "MobileTopBar";
 
 export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
@@ -251,6 +359,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   onLogout,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -261,14 +370,32 @@ export const Navigation: React.FC<NavigationProps> = ({
     );
   }, [currentUser!.role]);
 
+  // Get bottom navigation items (first 5 items or all for mobile)
+  const bottomNavItems = useMemo(() => {
+    return navItems.slice(0, 5); // Limit to 5 items for bottom nav like WhatsApp
+  }, [navItems]);
+
+  // Check if user can see settings
+  const canSeeSettings = useMemo(() => {
+    return [UserRole.DEVELOPER, UserRole.MASTER].includes(currentUser!.role);
+  }, [currentUser!.role]);
+
   // Memoize tab change handler
   const handleTabChange = useCallback(
-    (tabId: string) => { 
+    (tabId: string) => {
       onTabChange(tabId);
       setIsMobileMenuOpen(false);
     },
     [onTabChange],
   );
+
+  const handleSettingsClick = useCallback(() => {
+    onTabChange("setting");
+  }, [onTabChange]);
+
+  const handleProfileClick = useCallback(() => {
+    onTabChange("my-profile");
+  }, [onTabChange]);
 
   // Memoize mobile menu handlers
   const openMobileMenu = useCallback(() => {
@@ -281,23 +408,32 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <>
-      {/* Mobile Header */}
-      <div className="md:hidden h-16 w-full bg-surface border-b border-border flex items-center justify-between px-4 z-50 sticky top-0">
-        <div className="font-bold text-xl text-primary tracking-tight">
-          LineUp
-        </div>
-        <button
-          onClick={openMobileMenu}
-          className="p-2 text-text-main"
-          aria-label="Open menu"
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-menu"
-        >
-          <Menu size={24} aria-hidden="true" />
-        </button>
+      {/* Mobile Top Bar with Settings */}
+      <MobileTopBar
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        onLogout={onLogout}
+        onProfileClick={handleProfileClick}
+        showSettings={canSeeSettings}
+        onSettingsClick={handleSettingsClick}
+      />
+
+      {/* Mobile Bottom Navigation - WhatsApp Style */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50">
+        <nav className="flex items-center justify-around px-2">
+          {bottomNavItems.map((item) => (
+            <NavigationItemButton
+              key={item.id}
+              item={item}
+              isActive={activeTab === item.id}
+              onClick={() => handleTabChange(item.id)}
+              variant="bottom"
+            />
+          ))}
+        </nav>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Now only for additional items if needed */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 z-60 bg-background flex flex-col animate-in slide-in-from-right duration-200"
@@ -317,7 +453,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             </button>
           </div>
           <div className="p-4 space-y-2">
-            {navItems.map((item) => (
+            {navItems.slice(5).map((item) => (
               <NavigationItemButton
                 key={item.id}
                 item={item}
@@ -326,41 +462,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                 variant="mobile"
               />
             ))}
-            <div className="border-t border-text-main/10 my-2 pt-2">
-              <button
-                onClick={onToggleTheme}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-text-main hover:bg-surface-hover"
-                aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              >
-                {theme === "dark" ? (
-                  <Sun size={20} aria-hidden="true" />
-                ) : (
-                  <Moon size={20} aria-hidden="true" />
-                )}
-                <span className="font-medium">Toggle Theme</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-red-500 hover:bg-red-500/10"
-                aria-label="Log out"
-              >
-                <LogOut size={20} aria-hidden="true" />
-                <span className="font-medium">Log Out</span>
-              </button>
-              <button 
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-primary hover:bg-primary/10"
-                onClick={() => handleTabChange("my-profile")}
-                aria-label="My Profile"
-              >
-                <UserCircle2Icon size={20} aria-hidden="true" />
-                <span className="font-medium">My Profile</span>
-              </button>
-            </div>
+            {navItems.length <= 5 && (
+              <div className="text-text-secondary text-center py-4">
+                No additional menu items
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Keep unchanged */}
       <div className="hidden md:flex w-16 h-full bg-surface flex-col items-center py-4 border-r border-border z-40">
         <div className="mb-6">
           <div
@@ -398,7 +509,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="mt-auto flex flex-col gap-2 w-full px-2">
           <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
           <LogoutButton onLogout={onLogout} />
-          <MyProfileButton handleClick={() => {handleTabChange("my-profile")}} />
+          <MyProfileButton handleClick={handleProfileClick} />
         </div>
       </div>
     </>

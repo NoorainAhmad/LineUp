@@ -224,7 +224,7 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({
   ];
 
   return (
-    <div className="h-full w-full flex flex-col bg-background">
+    <div className="h-full w-full flex flex-col bg-background pb-16 md:pb-0">
       {/* Header */}
       <header className="h-16 px-4 bg-surface flex items-center justify-between border-b border-border shrink-0">
         <div className="flex items-center gap-3">

@@ -499,7 +499,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface border-r border-border w-full md:w-95 lg:w-105 relative z-20 overflow-hidden">
+    <div className="flex flex-col h-full bg-surface border-r border-border w-full md:w-95 lg:w-105 relative z-20 overflow-hidden pb-16 md:pb-0">
       {/* Header - High-end font-extrabold styling */}
       <div className="h-20 px-6 flex items-center justify-between shrink-0 border-b border-border/40 bg-surface/80 backdrop-blur-md">
         <div className="flex items-center gap-3">

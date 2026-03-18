@@ -1526,7 +1526,7 @@ export const Home: React.FC = () => {
 
         {/* 4. Right Profile Sidebar */}
         {showProfile && selectedChat && activeTab === "chat" && (
-          <div className="absolute inset-0 z-50 md:relative md:z-0 md:inset-auto md:flex shrink-0">
+          <div className="absolute inset-0 z-120 md:relative md:z-0 md:inset-auto md:flex shrink-0">
             <div
               className="absolute inset-0 bg-black/50 md:hidden"
               onClick={() => setShowProfile(false)}

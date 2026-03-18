@@ -162,7 +162,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="flex-1 h-full bg-background overflow-y-auto custom-scrollbar p-4 md:p-8 animate-in fade-in duration-500">
-      <div className="mx-auto space-y-8 pb-24 md:pb-12">
+      <div className="mx-auto space-y-8 pb-16 md:pb-0">
         {/* Hero Section */}
         <div className="relative rounded-2xl bg-linear-to-br from-surface to-background border border-border overflow-hidden shadow-lg group">
           <div className="relative z-10 p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">

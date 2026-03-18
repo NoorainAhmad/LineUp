@@ -67,7 +67,7 @@ export const BackupPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-8 mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="pt-8 px-4 md:px-8 mx-auto space-y-8 relative pb-20 md:pb-8">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-bold text-text-main mb-2">

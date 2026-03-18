@@ -69,7 +69,7 @@ export const CannedResponseView: React.FC<CannedResponseViewProps> = ({
   };
 
   return (
-    <div className="flex-1 h-full bg-background relative overflow-hidden flex flex-col animate-in fade-in duration-300">
+    <div className="flex-1 h-full bg-background relative overflow-hidden flex flex-col animate-in fade-in duration-300 pb-16 md:pb-0">
       {/* Mobile Header */}
       <div className="md:hidden h-16 flex items-center px-4 bg-surface border-b border-border z-20 shrink-0 justify-between">
         <div className="flex items-center">
@@ -107,7 +107,7 @@ export const CannedResponseView: React.FC<CannedResponseViewProps> = ({
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-linear-to-t from-background to-transparent"></div>
         </div>
 
-        <div className="mx-auto px-4 md:px-8 pb-12 -mt-24 relative z-10">
+        <div className="mx-auto px-4 md:px-8 pb-8 -mt-24 relative z-10">
           <div className="flex flex-col gap-6">
             {/* Main Card */}
             <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm">

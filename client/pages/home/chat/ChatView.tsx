@@ -2084,7 +2084,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background relative overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-background relative overflow-hidden z-100">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-40 pointer-events-none"

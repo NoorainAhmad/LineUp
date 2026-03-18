@@ -121,7 +121,7 @@ export const GeneralPanel: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 mx-auto space-y-8 pb-24 relative">
+    <div className="pt-8 px-4 md:px-8 mx-auto space-y-8 relative pb-20 md:pb-8">
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl">
