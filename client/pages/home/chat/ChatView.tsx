@@ -869,6 +869,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
 
     console.log(`[ChatView] Attempting to join chat room: ${currentChatId}`);
+    let cleanup = () => {};
 
     import("@/utils/socket")
       .then(({ getSocket }) => {
@@ -883,36 +884,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
           s.emit("join_chat", currentChatId);
         };
 
-        // FIX: If the socket hasn't connected yet (e.g. token just became
-        // available), wait for the 'connect' event before emitting join_chat.
-        // Without this, join_chat fires into the void and the client never
-        // enters the room — meaning all real-time events are silently missed.
         if (s.connected) {
           doJoin();
         }
 
-        // FIX: Always listen for 'connect' (using .on instead of .once) so that
-        // if the socket drops and reconnects, the client re-emits join_chat. 
-        // Without this, the server-side room membership is lost on disconnect.
         s.on("connect", doJoin);
+
+        cleanup = () => {
+          console.log(`[ChatView] Cleaning up socket for chat: ${currentChatId}`);
+          s.off("connect", doJoin);
+          s.emit("leave_chat", currentChatId);
+        };
       })
       .catch((err) =>
         console.error("[ChatView] Failed to load socket for join_chat", err)
       );
 
-    return () => {
-      import("@/utils/socket")
-        .then(({ getSocket }) => {
-          const s = getSocket();
-          if (s) {
-            console.log(`[ChatView] Emitting leave_chat for: ${currentChatId}`);
-            s.emit("leave_chat", currentChatId);
-            // Remove any queued connect handler if cleanup fires before connect
-            s.off("connect");
-          }
-        })
-        .catch(() => {/* best-effort cleanup */});
-    };
+    return () => cleanup();
   }, [chat?.id]);
 
   // Polling query for messages
@@ -2390,7 +2378,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div> */}
 
             {messages.map((msg) => {
-              const isMe = msg.sender?.id === currentUserMember?.user?.id;
+              const isMe = msg.sender?.id === user?.id;
               const isPending = msg.isPending;
               const pendingLabel = getPendingStatusLabel(msg);
               const pendingProgress =
