@@ -2223,7 +2223,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
  
       {/* Header */}
-      <header className="h-18 px-4 lg:px-6 bg-surface/90 backdrop-blur-xl fixed lg:relative top-0 left-0 right-0 flex items-center justify-between border-b border-border/60 shadow-sm z-50 transition-all shrink-0">
+      <header className="h-18 px-4 lg:px-6 bg-surface/90 backdrop-blur-xl sticky lg:relative top-0 left-0 right-0 flex items-center justify-between border-b border-border/60 shadow-sm z-50 transition-all shrink-0">
         {isSearchOpen ? (
           <div className="flex items-center w-full gap-2 md:gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <button
