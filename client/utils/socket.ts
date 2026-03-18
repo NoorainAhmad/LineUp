@@ -1,8 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const BASE_URL = (process.env.API_BASE_URL || "").replace(/\/api(\/v1)?\/?$/, "");
-
-const SOCKET_URL = BASE_URL || ((import.meta as any).env.DEV ? "http://localhost:5000" : window.location.origin);
+const SOCKET_URL = process.env.SOCKET_URL || "http://localhost:5000";
 
 let socket: Socket | null = null;
 
