@@ -2212,7 +2212,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
       )}
 
-
       {/* Forward Message Modal */}
       {forwardingMessage && (
         <ForwardMessageModal
@@ -2858,7 +2857,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
               )}
 
               {/* Attachments & Emoji */}
-              <div className="flex items-center pl-1 pb-1">
+              <div className="flex items-center pl-1 pb-1 transition-all duration-500 ease-in-out gap-0" 
+                style={{ 
+                  opacity: (inputValue.trim() || isRecording) ? 0 : 1,
+                  width: (inputValue.trim() || isRecording) ? 0 : 'auto',
+                  pointerEvents: (inputValue.trim() || isRecording) ? 'none' : 'auto',
+                  overflow: 'hidden',
+                }}>
                 <button
                   onClick={() => {
                     setShowEmojiPicker(!showEmojiPicker);
@@ -2866,7 +2871,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     setShowAttachMenu(false);
                     setShowStickerPicker(false);
                   }}
-                  className={`p-2.5 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  className={`p-2 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
                 >
                   <Smile size={24} />
                 </button>
@@ -2878,7 +2883,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     setActiveReactionMessageId(null);
                     setShowAttachMenu(false);
                   }}
-                  className={`p-2.5 rounded-full transition-colors ${showStickerPicker ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  className={`p-2 rounded-full transition-colors ${showStickerPicker ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
                 >
                   <Sticker size={24} />
                 </button>
@@ -2890,7 +2895,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         setShowAttachMenu(!showAttachMenu);
                         setShowEmojiPicker(false);
                       }}
-                      className={`p-2.5 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                      className={`p-2 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
                     >
                       <Plus
                         size={24}
@@ -2952,7 +2957,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {" "}
                 {/* Changed from min-h-12.5 flex items-center */}
                 {isRecording ? (
-                  <div className="absolute inset-0 z-20 flex items-center justify-between px-3">
+                  <div className="absolute inset-0 z-20 flex items-center justify-between ps-0 pe-3">
                     {/* LEFT: Cancel */}
                     <button
                       onClick={() => stopRecording(true)}
@@ -3053,7 +3058,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
 
               {/* Send Button */}
-              <div className="pb-1 pr-1">
+              <div className="pr-1 pb-0.5">
                 {inputValue.trim() || isRecording ? (
                   <button
                     onClick={
