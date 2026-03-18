@@ -2221,20 +2221,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
           onForward={forwardMessageHandler}
         />
       )}
-
+ 
       {/* Header */}
-      <header className="h-18 px-4 md:px-6 bg-surface/90 backdrop-blur-xl flex items-center justify-between border-b border-border/60 shadow-sm relative z-20 transition-all shrink-0">
+      <header className="h-18 px-4 lg:px-6 bg-surface/90 backdrop-blur-xl fixed lg:relative top-0 left-0 right-0 flex items-center justify-between border-b border-border/60 shadow-sm z-50 transition-all shrink-0">
         {isSearchOpen ? (
-          <div className="flex items-center w-full gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center w-full gap-2 md:gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <button
               onClick={closeSearch}
-              className="p-2 text-secondary hover:text-text-main hover:bg-surface-hover rounded-full transition-colors"
+              className="p-2 text-secondary hover:text-text-main hover:bg-surface-hover rounded-full transition-colors shrink-0"
             >
               <ArrowLeft size={20} />
             </button>
-            <div className="flex-1 relative group">
+            <div className="flex-1 relative group min-w-0">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-secondary group-focus-within:text-primary transition-colors">
-                <Search size={20} />
+                <Search size={18} className="md:size-20" />
               </div>
               <input
                 ref={searchInputRef}
@@ -2242,19 +2242,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 placeholder="Search in conversation..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-hover/50 text-text-main pl-10 pr-10 py-2 rounded-xl focus:outline-none border border-transparent focus:border-primary/30 focus:bg-surface transition-all font-medium"
+                className="w-full bg-surface-hover/50 text-text-main pl-9 md:pl-10 pr-9 md:pr-10 py-2 rounded-xl focus:outline-none border border-transparent focus:border-primary/30 focus:bg-surface transition-all font-medium text-sm md:text-base"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-secondary hover:text-text-main rounded-full bg-black/5 dark:bg-white/10"
+                  className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-1 text-secondary hover:text-text-main rounded-full bg-black/5 dark:bg-white/10"
                 >
-                  <X size={12} />
+                  <X size={14} className="md:size-12" />
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-1 border-l border-border pl-3">
-              <span className="text-xs font-mono font-medium text-secondary mr-2 min-w-[3ch] text-center">
+            <div className="flex items-center gap-1 border-l border-border pl-2 md:pl-3 shrink-0">
+              <span className="text-xs font-mono font-medium text-secondary mr-1 md:mr-2 min-w-[3ch] text-center">
                 {searchResults.length > 0
                   ? `${currentResultIndex + 1}/${searchResults.length}`
                   : "0"}
@@ -2262,70 +2262,71 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <button
                 onClick={handlePrevMatch}
                 disabled={searchResults.length === 0}
-                className="p-1.5 hover:bg-surface-hover rounded-lg text-secondary hover:text-text-main disabled:opacity-30 transition-colors"
+                className="p-1 md:p-1.5 hover:bg-surface-hover rounded-lg text-secondary hover:text-text-main disabled:opacity-30 transition-colors"
               >
-                <ChevronUp size={18} />
+                <ChevronUp size={16} className="md:size-18" />
               </button>
               <button
                 onClick={handleNextMatch}
                 disabled={searchResults.length === 0}
-                className="p-1.5 hover:bg-surface-hover rounded-lg text-secondary hover:text-text-main disabled:opacity-30 transition-colors"
+                className="p-1 md:p-1.5 hover:bg-surface-hover rounded-lg text-secondary hover:text-text-main disabled:opacity-30 transition-colors"
               >
-                <ChevronDown size={18} />
+                <ChevronDown size={16} className="md:size-18" />
               </button>
             </div>
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+            <div className="flex items-center gap-2 md:gap-4 overflow-hidden flex-1 min-w-0">
               <button
                 onClick={onBack}
-                className="md:hidden p-2 -ml-2 text-secondary hover:text-text-main hover:bg-surface-hover rounded-full transition-colors"
+                className="md:hidden p-2 -ml-2 text-secondary hover:text-text-main hover:bg-surface-hover rounded-full transition-colors shrink-0"
               >
                 <ArrowLeft size={20} />
               </button>
 
               <div
-                className="flex items-center gap-3 cursor-pointer group"
+                className="flex items-center gap-2 md:gap-3 cursor-pointer group min-w-0 flex-1"
                 onClick={onToggleProfile}
               >
-                <div className="relative">
+                <div className="relative shrink-0">
                   <Avatar
                     user={chat.isGroup ? undefined : otherUser!}
                     isGroup={chat.isGroup}
                     groupName={chat.isGroup ? chat.groupName : undefined}
-                    size="md"
+                    size={window.innerWidth < 768 ? "sm" : "md"}
                     showStatus={!chat.isGroup}
                   />
                 </div>
 
-                <div className="flex flex-col min-w-0">
-                  <span className="text-text-main font-bold leading-tight text-base md:text-lg truncate group-hover:text-primary transition-colors">
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-text-main font-bold leading-tight text-sm md:text-lg truncate group-hover:text-primary transition-colors">
                     {chat.isGroup
                       ? chat.groupName || "Group"
                       : otherUser?.name || "Unknown"}
                   </span>
-                  <span className="text-xs text-secondary truncate max-w-45 sm:max-w-xs flex items-center gap-1.5 font-medium">
+                  <span className="text-xs text-secondary truncate flex items-center gap-1 font-medium">
                     {chat.isGroup ? (
                       `${chat.members?.length || 0} members`
                     ) : otherUser?.status === UserStatus.ONLINE ? (
                       <span className="text-primary flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
                         Online
                       </span>
                     ) : (
                       <span className="opacity-80">
                         {formatLastMessageTime(otherUser?.lastSeen || "") ||
-                          "Unknown"}
+                          "last seen recently"}
                       </span>
                     )}
                   </span>
                 </div>
 
-                {/* Refresh Button */}
+                {/* Refresh Button - Hidden on mobile, visible on desktop */}
                 <button
                   onClick={handleManualRefresh}
                   disabled={isLoadingMessages}
-                  className="p-1.5 hover:bg-surface-hover rounded-full transition-colors text-secondary hover:text-primary"
+                  className="hidden md:block p-1.5 hover:bg-surface-hover rounded-full transition-colors text-secondary hover:text-primary shrink-0"
                   title="Refresh messages"
                 >
                   <RefreshCw
@@ -2358,7 +2359,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           </>
         )}
-      </header>
+      </header> 
 
       {/* New Messages Indicator */}
       {showNewMessageIndicator && (
@@ -2374,7 +2375,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {/* Messages Container */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar relative z-0"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar scroll-smooth relative z-0"
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -2717,7 +2718,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
 
       {/* Input Area */}
-      <div className="bg-surface/50 backdrop-blur-sm px-4 pb-4 pt-2 relative z-20">
+      <div className="bg-surface/50 backdrop-blur-sm p-2 relative z-20">
         {/* Reply Context */}
         {replyingTo && (
           <div className="flex items-center justify-between bg-surface border border-border p-3 mb-2 rounded-2xl shadow-lg animate-in slide-in-from-bottom-2 fade-in">

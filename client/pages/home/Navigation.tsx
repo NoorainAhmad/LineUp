@@ -148,7 +148,7 @@ const NavigationItemButton = memo(
           aria-label={item.label}
         >
           <Icon size={24} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
-          <span className="text-xs mt-1 font-medium">{item.label}</span>
+          <span className="text-[10px] mt-1 font-medium">{item.label}</span>
           {isActive && (
             <div
               className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full"
