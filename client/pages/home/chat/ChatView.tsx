@@ -1225,7 +1225,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
               if (requestedNames.length > 0) {
                 if (requestedNames.length !== msgNames.length) return false;
-                return requestedNames.every((name, idx) => name === msgNames[idx]);
+                return requestedNames.every((name: string, idx: number) => name === msgNames[idx]);
               }
 
               return msg.content === variables.content;
@@ -2661,7 +2661,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {isMe && !isDeleted && (
                           <MessageStatusIcon
-                            status={getMessageStatus(msg, chat, user.id)}
+                            status={getMessageStatus(msg, chat, user!.id || "")}
                             size={14}
                           />
                         )}
@@ -2716,7 +2716,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <ArrowDown size={20} />
         </button>
       )}
-
+ 
       {/* Input Area */}
       <div className="bg-surface/50 backdrop-blur-sm p-2 relative z-20">
         {/* Reply Context */}
@@ -2728,8 +2728,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                    (m) => m.user.id === replyingTo.sender?.id,
-                  )?.user.name || "Unknown"}
+                      (m) => m.user.id === replyingTo.sender?.id
+                    )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -2783,14 +2783,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-surface-hover border border-transparent"
-                      }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
+                      index === selectedCannedIndex
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-surface-hover border border-transparent"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`font-mono text-sm font-bold ${index === selectedCannedIndex ? "text-primary" : "text-text-main"}`}
+                        className={`font-mono text-sm font-bold ${
+                          index === selectedCannedIndex ? "text-primary" : "text-text-main"
+                        }`}
                       >
                         {item.command}
                       </span>
@@ -2798,9 +2801,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         {item.description}
                       </span>
                     </div>
-                    <p className="text-xs text-secondary truncate">
-                      {item.text}
-                    </p>
+                    <p className="text-xs text-secondary truncate">{item.text}</p>
                   </button>
                 ))
               ) : (
@@ -2812,59 +2813,68 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         )}
 
-        {/* Input Bar */}
-        {(user?.role == UserRole.USER ||
-          user?.role == UserRole.BRANCH ||
-          (user?.role == UserRole.ADMIN && chat.isGroup) ||
-          (user?.role == UserRole.MASTER && chat.isGroup)) && (
-            <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
-              {showEmojiPicker && (
+        {/* Input Bar - Only show for authorized users */}
+        {(user?.role === UserRole.USER ||
+          user?.role === UserRole.BRANCH ||
+          (user?.role === UserRole.ADMIN && chat.isGroup) ||
+          (user?.role === UserRole.MASTER && chat.isGroup)) && (
+          <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <div
+                className={`absolute left-0 z-50 ${
+                  replyingTo || editingMessage ? "bottom-20" : "bottom-16"
+                }`}
+              >
                 <div
-                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
-                >
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  ></div>
-                  <EmojiPicker
-                    onSelect={handleEmojiSelect}
-                    onClose={() => {
-                      setShowEmojiPicker(false);
-                      setActiveReactionMessageId(null);
-                    }}
-                  />
-                </div>
-              )}
+                  className="fixed inset-0 z-40"
+                  onClick={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
+                />
+                <EmojiPicker
+                  onSelect={handleEmojiSelect}
+                  onClose={() => {
+                    setShowEmojiPicker(false);
+                    setActiveReactionMessageId(null);
+                  }}
+                />
+              </div>
+            )}
 
-              {showStickerPicker && (
+            {/* Sticker Picker */}
+            {showStickerPicker && (
+              <div
+                className={`absolute left-0 z-50 ${
+                  replyingTo || editingMessage ? "bottom-20" : "bottom-16"
+                }`}
+              >
                 <div
-                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"}`}
-                >
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowStickerPicker(false)}
-                  ></div>
-                  <StickerPicker
-                    onSelect={(stickerId) => {
-                      handleSendMessage(MessageType.STICKER, stickerId);
-                      setShowStickerPicker(false);
-                    }}
-                    onClose={() => setShowStickerPicker(false)}
-                  />
-                </div>
-              )}
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowStickerPicker(false)}
+                />
+                <StickerPicker
+                  onSelect={(stickerId) => {
+                    handleSendMessage(MessageType.STICKER, stickerId);
+                    setShowStickerPicker(false);
+                  }}
+                  onClose={() => setShowStickerPicker(false)}
+                />
+              </div>
+            )}
 
-              {/* Attachments & Emoji */}
-              <div className="flex items-center pl-1 pb-1 transition-all duration-500 ease-in-out gap-0" 
-                style={{ 
-                  opacity: (inputValue.trim() || isRecording) ? 0 : 1,
-                  width: (inputValue.trim() || isRecording) ? 0 : 'auto',
-                  pointerEvents: (inputValue.trim() || isRecording) ? 'none' : 'auto',
-                  overflow: 'hidden',
-                }}>
+            {/* Action Buttons - Emoji, Sticker, Attach */}
+            <div className="flex items-center pl-1 pb-1">
+              {/* Emoji Button - Hides when typing */}
+              <div
+                className="transition-all duration-300 ease-in-out overflow-hidden"
+                style={{
+                  width: inputValue.trim() || isRecording ? 0 : "auto",
+                  opacity: inputValue.trim() || isRecording ? 0 : 1,
+                  marginRight: inputValue.trim() || isRecording ? 0 : "0px",
+                }}
+              >
                 <button
                   onClick={() => {
                     setShowEmojiPicker(!showEmojiPicker);
@@ -2872,11 +2882,26 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     setShowAttachMenu(false);
                     setShowStickerPicker(false);
                   }}
-                  className={`p-2 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  className={`p-2 rounded-full transition-colors ${
+                    showEmojiPicker && !activeReactionMessageId
+                      ? "text-primary bg-primary/10"
+                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
+                  }`}
+                  aria-label="Open emoji picker"
                 >
                   <Smile size={24} />
                 </button>
+              </div>
 
+              {/* Sticker Button - Hides when typing */}
+              <div
+                className="transition-all duration-300 ease-in-out overflow-hidden"
+                style={{
+                  width: inputValue.trim() || isRecording ? 0 : "auto",
+                  opacity: inputValue.trim() || isRecording ? 0 : 1,
+                  marginRight: inputValue.trim() || isRecording ? 0 : "0px",
+                }}
+              >
                 <button
                   onClick={() => {
                     setShowStickerPicker(!showStickerPicker);
@@ -2884,212 +2909,219 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     setActiveReactionMessageId(null);
                     setShowAttachMenu(false);
                   }}
-                  className={`p-2 rounded-full transition-colors ${showStickerPicker ? "text-primary bg-primary/10" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
+                  className={`p-2 rounded-full transition-colors ${
+                    showStickerPicker
+                      ? "text-primary bg-primary/10"
+                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
+                  }`}
+                  aria-label="Open sticker picker"
                 >
                   <Sticker size={24} />
                 </button>
-
-                {!editingMessage && (
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setShowAttachMenu(!showAttachMenu);
-                        setShowEmojiPicker(false);
-                      }}
-                      className={`p-2 transition-colors rounded-full attach-menu-trigger ${showAttachMenu ? "text-primary bg-primary/10 rotate-45" : "text-secondary hover:text-text-main hover:bg-surface-hover"}`}
-                    >
-                      <Plus
-                        size={24}
-                        className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""}`}
-                      />
-                    </button>
-
-                    {showAttachMenu && (
-                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                        <button
-                          onClick={() => setShowCamera(true)}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                            <Camera size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Camera
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                            <Image size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Photos & Videos
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                        >
-                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                            <FileText size={18} />
-                          </div>
-                          <span className="text-text-main font-medium text-sm">
-                            Document
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                  multiple
-                />
               </div>
 
-              {/* Text Input */}
-              <div className="flex-1 min-w-0 relative min-h-12.5">
-                {" "}
-                {/* Changed from min-h-12.5 flex items-center */}
-                {isRecording ? (
-                  <div className="absolute inset-0 z-20 flex items-center justify-between ps-0 pe-3">
-                    {/* LEFT: Cancel */}
-                    <button
-                      onClick={() => stopRecording(true)}
-                      className="shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white"
-                    >
-                      <X size={16} />
-                    </button>
+              {/* Attach Button - Always visible */}
+              {!editingMessage && (
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setShowAttachMenu(!showAttachMenu);
+                      setShowEmojiPicker(false);
+                      setShowStickerPicker(false);
+                    }}
+                    className={`p-2 transition-colors rounded-full attach-menu-trigger ${
+                      showAttachMenu
+                        ? "text-primary bg-primary/10 rotate-45"
+                        : "text-secondary hover:text-text-main hover:bg-surface-hover"
+                    }`}
+                    aria-label="Open attachment menu"
+                  >
+                    <Plus
+                      size={24}
+                      className={`transition-transform duration-200 ${
+                        showAttachMenu ? "rotate-45" : ""
+                      }`}
+                    />
+                  </button>
 
-                    {/* CENTER: Timer (Compact for Mobile) */}
-                    <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
-                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                      {formatTime(recordingDuration)}
-                      <span className="hidden sm:inline text-secondary">
-                        {isPaused ? "Paused" : "Recording"}
-                      </span>
-                    </div>
-
-                    {/* RIGHT: Controls */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      {/* Preview ONLY when paused */}
-                      {isPaused && (
-                        <button
-                          onClick={playPreviewAudio}
-                          className="shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary"
-                          title="Preview"
-                        >
-                          <Volume2 size={16} />
-                        </button>
-                      )}
-
-                      {/* Pause / Resume */}
+                  {/* Attachment Menu */}
+                  {showAttachMenu && (
+                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
                       <button
-                        onClick={togglePauseRecording}
-                        className="shrink-0 p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10"
-                        title={isPaused ? "Resume" : "Pause"}
+                        onClick={() => setShowCamera(true)}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
                       >
-                        {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                          <Camera size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">Camera</span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                          <Image size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">
+                          Photos & Videos
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                      >
+                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                          <FileText size={18} />
+                        </div>
+                        <span className="text-text-main font-medium text-sm">Document</span>
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-full relative">
-                    {/* Hidden measuring div - exact same styling as textarea */}
-                    <div
-                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
-                      style={{
-                        minHeight: "44px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                    >
-                      {inputValue || "placeholder"}
-                    </div>
+                  )}
+                </div>
+              )}
 
-                    {/* Actual textarea */}
-                    <textarea
-                      ref={inputRef}
-                      placeholder={
-                        replyingTo
-                          ? "Reply..."
-                          : editingMessage
-                            ? "Edit message..."
-                            : "Message"
-                      }
-                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                      style={{
-                        minHeight: "44px",
-                        maxHeight: "120px",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      rows={1}
-                      wrap="soft"
-                      inputMode="text"
-                      // enterKeyHint="send"
-                      enterKeyHint="enter"
-                      autoCapitalize="sentences"
-                      autoCorrect="on"
-                      spellCheck="true"
-                    />
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                multiple
+              />
+            </div>
 
-                    {/* Command hint - absolutely positioned */}
-                    {!inputValue &&
-                      !isRecording &&
-                      (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                          <Command size={14} className="hidden sm:block" />
-                          <span className="text-xs hidden sm:inline">/</span>
-                          <span className="text-xs sm:hidden">/</span>{" "}
-                          {/* Mobile fallback */}
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-
-              {/* Send Button */}
-              <div className="pr-1 pb-0.5">
-                {inputValue.trim() || isRecording ? (
+            {/* Text Input Area */}
+            <div className="flex-1 flex items-end justify-center min-w-0 relative min-h-13">
+              {isRecording ? (
+                /* Recording UI */
+                <div className="absolute inset-0 z-20 flex items-center justify-between px-3 bg-surface rounded-4xl">
+                  {/* Cancel Button */}
                   <button
-                    onClick={
-                      isRecording
-                        ? () => stopRecording(false)
-                        : editingMessage
-                          ? handleEndEdit
-                          : handleTextSend
-                    }
-                    className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
+                    onClick={() => stopRecording(true)}
+                    className="shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors"
+                    aria-label="Cancel recording"
                   >
-                    {editingMessage ? (
-                      <Check size={24} />
-                    ) : isRecording ? (
-                      <Send size={24} />
-                    ) : (
-                      <Send size={24} />
-                    )}
+                    <X size={16} />
                   </button>
-                ) : !editingMessage ? (
+
+                  {/* Timer */}
+                  <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    {formatTime(recordingDuration)}
+                    <span className="hidden sm:inline text-secondary">
+                      {isPaused ? "Paused" : "Recording"}
+                    </span>
+                  </div>
+
+                  {/* Recording Controls */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {isPaused && (
+                      <button
+                        onClick={playPreviewAudio}
+                        className="shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                        title="Preview recording"
+                        aria-label="Preview recording"
+                      >
+                        <Volume2 size={16} />
+                      </button>
+                    )}
+                    <button
+                      onClick={togglePauseRecording}
+                      className="shrink-0 p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10 transition-colors"
+                      title={isPaused ? "Resume" : "Pause"}
+                      aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                    >
+                      {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Text Input */
+                <div className="w-full relative">
+                  {/* Hidden measuring div for auto-expand */}
+                  <div
+                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
+                    style={{
+                      minHeight: "44px",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {inputValue || "placeholder"}
+                  </div>
+
+                  {/* Textarea */}
+                  <textarea
+                    ref={inputRef}
+                    placeholder={
+                      replyingTo
+                        ? "Reply..."
+                        : editingMessage
+                        ? "Edit message..."
+                        : "Message"
+                    }
+                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "120px",
+                      wordBreak: "break-word",
+                    }}
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    rows={1}
+                    wrap="soft"
+                    inputMode="text"
+                    enterKeyHint="enter"
+                    autoCapitalize="sentences"
+                    autoCorrect="on"
+                    spellCheck="true"
+                    aria-label="Message input"
+                  />
+
+                  {/* Command Hint */}
+                  {!inputValue && !isRecording && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                      <Command size={14} className="hidden sm:block" />
+                      <span className="text-xs hidden sm:inline">/</span>
+                      <span className="text-xs sm:hidden">/</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Send/Action Button */}
+            <div className="pr-1 pb-0.5">
+              {inputValue.trim() || isRecording ? (
+                <button
+                  onClick={
+                    isRecording
+                      ? () => stopRecording(false)
+                      : editingMessage
+                      ? handleEndEdit
+                      : handleTextSend
+                  }
+                  className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
+                  aria-label={editingMessage ? "Save edit" : isRecording ? "Send recording" : "Send message"}
+                >
+                  {editingMessage ? <Check size={24} /> : <Send size={24} />}
+                </button>
+              ) : (
+                !editingMessage && (
                   <button
                     onClick={startRecording}
                     className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
+                    aria-label="Start voice recording"
                   >
                     <Mic size={24} />
                   </button>
-                ) : null}
-              </div>
+                )
+              )}
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );
