@@ -1,8 +1,8 @@
 import { io, Socket } from "socket.io-client";
 
-// The backend API is typically at port 5000 locally
-const SOCKET_URL = (import.meta as any).env?.VITE_API_BASE_URL?.replace(/\/api(\/v1)?$/, '') 
-  || "http://localhost:5000";
+const BASE_URL = (process.env.API_BASE_URL || "").replace(/\/api(\/v1)?\/?$/, "");
+
+const SOCKET_URL = BASE_URL || ((import.meta as any).env.DEV ? "http://localhost:5000" : window.location.origin);
 
 let socket: Socket | null = null;
 
