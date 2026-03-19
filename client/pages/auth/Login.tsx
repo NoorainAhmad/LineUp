@@ -74,7 +74,7 @@ export const Login: React.FC = () => {
             {error}
           </div>
         )}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="relative group">
             <Fingerprint
               className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors"

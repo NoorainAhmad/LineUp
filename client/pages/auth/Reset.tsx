@@ -96,14 +96,14 @@ export const Reset: React.FC = () => {
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2">
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-3 rounded-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
               <AlertCircle size={16} />
               {error}
             </div>
           )}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="relative group">
               <Lock
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors"

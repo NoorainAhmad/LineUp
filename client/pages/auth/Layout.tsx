@@ -37,7 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({
       </button>
       {/* Main Card Container */}
       <div className="w-full max-w-115 z-10 animate-in fade-in slide-in-from-bottom-8 duration-500 my-auto">
-        <div className="bg-surface border border-border rounded-3xl shadow-2xl overflow-hidden p-8 md:p-10">
+        <div className="md:bg-surface md:border md:border-border md:rounded-3xl md:shadow-2xl overflow-hidden p-4 md:p-10">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="cursor-pointer w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-primary/30 mb-6"
               onClick={() => navigate("/")}>
