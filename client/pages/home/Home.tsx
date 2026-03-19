@@ -193,7 +193,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeStatusData);
     },
     enabled: activeTab === "status" || activeTab === "dashboard",
-    refetchInterval: activeTab === "status" ? 2000 : 20000,
+    refetchInterval: activeTab === "status" ? 10000 : 30000,
   });
 
   const {
@@ -206,11 +206,11 @@ export const Home: React.FC = () => {
       const response =
         currentUser?.role == UserRole.USER
           ? []
-          :  await UserService.teamMembers();
+          : await UserService.teamMembers();
       return (response.data || response).map(normalizeUserData);
     },
     enabled: activeTab === "user" || activeTab === "dashboard",
-    refetchInterval: activeTab === "user" ? 3000 : 30000,
+    refetchInterval: activeTab === "user" ? 45000 : 90000,
   });
 
   const {
@@ -227,7 +227,7 @@ export const Home: React.FC = () => {
       return (response.data || response).map(normalizeCannedResponseData);
     },
     enabled: activeTab === "response" || activeTab === "dashboard",
-    refetchInterval: activeTab === "response" ? 4000 : 40000,
+    refetchInterval: activeTab === "response" ? 50000 : 120000,
   });
 
   // Derived data
@@ -341,7 +341,7 @@ export const Home: React.FC = () => {
   const handleLogoutDevice = useCallback(async () => {
     if (isLoggingOut) return; // prevent double clicks
     try {
-      setIsLoggingOut(true);  
+      setIsLoggingOut(true);
       await logout();
     } catch (error) {
       console.error("Logout device error:", error);

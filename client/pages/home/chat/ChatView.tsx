@@ -869,7 +869,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
 
     console.log(`[ChatView] Attempting to join chat room: ${currentChatId}`);
-    let cleanup = () => {};
+    let cleanup = () => { };
 
     import("@/utils/socket")
       .then(({ getSocket }) => {
@@ -1169,8 +1169,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
           alert(skipAlert);
         }
       }
-
-      setTimeout(() => scrollToBottom("smooth"), 100);
     },
     onError: (error, variables) => {
       console.error("Failed to send message:", error);
@@ -1303,11 +1301,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   };
 
   // Scroll utilities
-  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
-    setShowNewMessageIndicator(false);
-  };
-
+  // Scroll utilities
   const scrollToMessage = (messageId: string) => {
     const el = messageRefs.current[messageId];
     if (el) {
@@ -1317,24 +1311,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setTimeout(() => {
         el.classList.remove("ring-2", "ring-primary/60", "rounded-2xl");
       }, 1000);
-    }
-  };
-
-  const handleNewMessageClick = () => {
-    scrollToBottom();
-  };
-
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        scrollContainerRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      isScrolledToBottomRef.current = isNearBottom;
-      setShowScrollButton(!isNearBottom);
-
-      if (isNearBottom) {
-        setShowNewMessageIndicator(false);
-      }
     }
   };
 
@@ -1378,20 +1354,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
     // Mark as read
     if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
-      setTimeout(() => { markAsRead();
+      setTimeout(() => {
+        markAsRead();
       }, 0);
     }
 
     // Reset message length tracking for the new chat
     prevMessagesLengthRef.current = 0;
 
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollToBottom("auto");
-      isScrolledToBottomRef.current = true;
-    }, 100);
+    // Reset scroll button
+    setShowScrollButton(false);
   },
-  [chat?.id, cleanupAllPendingAttachmentUrls, markAsRead, queryClient, resetCursor, user?.role,]);
+    [chat?.id, cleanupAllPendingAttachmentUrls, markAsRead, queryClient, resetCursor, user?.role,]);
+
+
 
   // Track new messages
   useEffect(() => {
@@ -1399,13 +1375,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const newMessages = messages.slice(prevMessagesLengthRef.current);
       const hasIncoming = newMessages.some((m) => m.senderId !== user?.id);
 
-      if (!isScrolledToBottomRef.current) {
-        setShowNewMessageIndicator(true);
-      }
 
-      if (isScrolledToBottomRef.current) {
-        setTimeout(() => scrollToBottom("smooth"), 100);
-      }
 
       // If we have incoming messages and we are "active" (viewing this chat), mark them read
       if (
@@ -1418,14 +1388,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     prevMessagesLengthRef.current = messages.length;
   }, [messages, user, markAsRead]);
 
-  // Setup scroll listener
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", handleScroll);
-      return () => scrollContainer.removeEventListener("scroll", handleScroll);
-    }
-  }, []);
+
 
   // Search logic
   useEffect(() => {
@@ -2209,7 +2172,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           onForward={forwardMessageHandler}
         />
       )}
- 
+
       {/* Header */}
       <header className="h-18 px-4 lg:px-6 bg-surface/90 backdrop-blur-xl sticky lg:relative top-0 left-0 right-0 flex items-center justify-between border-b border-border/60 shadow-sm z-50 transition-all shrink-0">
         {isSearchOpen ? (
@@ -2347,23 +2310,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           </>
         )}
-      </header> 
+      </header>
 
-      {/* New Messages Indicator */}
-      {showNewMessageIndicator && (
-        <button
-          onClick={handleNewMessageClick}
-          className="absolute bottom-20 right-6 z-20 bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 hover:bg-primary/90 transition-colors"
-        >
-          <ArrowDown size={16} />
-          <span className="text-sm font-medium">New messages</span>
-        </button>
-      )}
+
 
       {/* Messages Container */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar scroll-smooth relative z-0"
+        className="flex-1 overflow-y-auto flex flex-col-reverse p-4 sm:p-6 gap-y-4 custom-scrollbar relative z-0"
       >
         {isLoadingMessages && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -2377,7 +2331,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </span>
             </div> */}
 
-            {messages.map((msg) => {
+            <div ref={messagesEndRef} />
+            {[...messages].reverse().map((msg) => {
               const isMe = msg.sender?.id === user?.id;
               const isPending = msg.isPending;
               const pendingLabel = getPendingStatusLabel(msg);
@@ -2690,21 +2645,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </div>
               );
             })}
-            <div ref={messagesEndRef} />
           </>
         )}
       </div>
 
-      {/* Scroll to Bottom Button */}
-      {showScrollButton && !showNewMessageIndicator && (
-        <button
-          onClick={() => scrollToBottom()}
-          className="absolute bottom-24 right-6 p-3 bg-surface border border-border rounded-full shadow-lg text-secondary hover:text-primary z-20 animate-in fade-in zoom-in"
-        >
-          <ArrowDown size={20} />
-        </button>
-      )}
- 
+
+
       {/* Input Area */}
       <div className="bg-surface/50 backdrop-blur-sm p-2 relative z-20">
         {/* Reply Context */}
@@ -2716,8 +2662,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 {replyingTo.sender?.id === user?.id
                   ? "You"
                   : chat.members.find(
-                      (m) => m.user.id === replyingTo.sender?.id
-                    )?.user.name || "Unknown"}
+                    (m) => m.user.id === replyingTo.sender?.id
+                  )?.user.name || "Unknown"}
               </span>
               <p className="text-sm text-secondary truncate">
                 {replyingTo?.content || "Attachment"}
@@ -2771,17 +2717,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     key={item.command}
                     onClick={() => selectCannedResponse(item)}
-                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${
-                      index === selectedCannedIndex
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-surface-hover border border-transparent"
-                    }`}
+                    className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 ${index === selectedCannedIndex
+                      ? "bg-primary/10 border border-primary/20"
+                      : "hover:bg-surface-hover border border-transparent"
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`font-mono text-sm font-bold ${
-                          index === selectedCannedIndex ? "text-primary" : "text-text-main"
-                        }`}
+                        className={`font-mono text-sm font-bold ${index === selectedCannedIndex ? "text-primary" : "text-text-main"
+                          }`}
                       >
                         {item.command}
                       </span>
@@ -2806,310 +2750,304 @@ export const ChatView: React.FC<ChatViewProps> = ({
           user?.role === UserRole.BRANCH ||
           (user?.role === UserRole.ADMIN && chat.isGroup) ||
           (user?.role === UserRole.MASTER && chat.isGroup)) && (
-          <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
-            {/* Emoji Picker */}
-            {showEmojiPicker && (
-              <div
-                className={`absolute left-0 z-50 ${
-                  replyingTo || editingMessage ? "bottom-20" : "bottom-16"
-                }`}
-              >
+            <div className="flex items-end gap-2 p-1.5 bg-surface rounded-4xl shadow-xl border border-border relative">
+              {/* Emoji Picker */}
+              {showEmojiPicker && (
                 <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => {
-                    setShowEmojiPicker(false);
-                    setActiveReactionMessageId(null);
-                  }}
-                />
-                <EmojiPicker
-                  onSelect={handleEmojiSelect}
-                  onClose={() => {
-                    setShowEmojiPicker(false);
-                    setActiveReactionMessageId(null);
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Sticker Picker */}
-            {showStickerPicker && (
-              <div
-                className={`absolute left-0 z-50 ${
-                  replyingTo || editingMessage ? "bottom-20" : "bottom-16"
-                }`}
-              >
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowStickerPicker(false)}
-                />
-                <StickerPicker
-                  onSelect={(stickerId) => {
-                    handleSendMessage(MessageType.STICKER, stickerId);
-                    setShowStickerPicker(false);
-                  }}
-                  onClose={() => setShowStickerPicker(false)}
-                />
-              </div>
-            )}
-
-            {/* Action Buttons - Emoji, Sticker, Attach */}
-            <div className="flex items-center pl-1 pb-1">
-              {/* Emoji Button - Hides when typing */}
-              <div
-                className="transition-all duration-300 ease-in-out overflow-hidden"
-                style={{
-                  width: inputValue.trim() || isRecording ? 0 : "auto",
-                  opacity: inputValue.trim() || isRecording ? 0 : 1,
-                  marginRight: inputValue.trim() || isRecording ? 0 : "0px",
-                }}
-              >
-                <button
-                  onClick={() => {
-                    setShowEmojiPicker(!showEmojiPicker);
-                    setActiveReactionMessageId(null);
-                    setShowAttachMenu(false);
-                    setShowStickerPicker(false);
-                  }}
-                  className={`p-2 rounded-full transition-colors ${
-                    showEmojiPicker && !activeReactionMessageId
-                      ? "text-primary bg-primary/10"
-                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
-                  }`}
-                  aria-label="Open emoji picker"
+                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"
+                    }`}
                 >
-                  <Smile size={24} />
-                </button>
-              </div>
-
-              {/* Sticker Button - Hides when typing */}
-              <div
-                className="transition-all duration-300 ease-in-out overflow-hidden"
-                style={{
-                  width: inputValue.trim() || isRecording ? 0 : "auto",
-                  opacity: inputValue.trim() || isRecording ? 0 : 1,
-                  marginRight: inputValue.trim() || isRecording ? 0 : "0px",
-                }}
-              >
-                <button
-                  onClick={() => {
-                    setShowStickerPicker(!showStickerPicker);
-                    setShowEmojiPicker(false);
-                    setActiveReactionMessageId(null);
-                    setShowAttachMenu(false);
-                  }}
-                  className={`p-2 rounded-full transition-colors ${
-                    showStickerPicker
-                      ? "text-primary bg-primary/10"
-                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
-                  }`}
-                  aria-label="Open sticker picker"
-                >
-                  <Sticker size={24} />
-                </button>
-              </div>
-
-              {/* Attach Button - Always visible */}
-              {!editingMessage && (
-                <div className="relative">
-                  <button
+                  <div
+                    className="fixed inset-0 z-40"
                     onClick={() => {
-                      setShowAttachMenu(!showAttachMenu);
                       setShowEmojiPicker(false);
+                      setActiveReactionMessageId(null);
+                    }}
+                  />
+                  <EmojiPicker
+                    onSelect={handleEmojiSelect}
+                    onClose={() => {
+                      setShowEmojiPicker(false);
+                      setActiveReactionMessageId(null);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Sticker Picker */}
+              {showStickerPicker && (
+                <div
+                  className={`absolute left-0 z-50 ${replyingTo || editingMessage ? "bottom-20" : "bottom-16"
+                    }`}
+                >
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowStickerPicker(false)}
+                  />
+                  <StickerPicker
+                    onSelect={(stickerId) => {
+                      handleSendMessage(MessageType.STICKER, stickerId);
                       setShowStickerPicker(false);
                     }}
-                    className={`p-2 transition-colors rounded-full attach-menu-trigger ${
-                      showAttachMenu
+                    onClose={() => setShowStickerPicker(false)}
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons - Emoji, Sticker, Attach */}
+              <div className="flex items-center pl-1 pb-1">
+                {/* Emoji Button - Hides when typing */}
+                <div
+                  className="transition-all duration-300 ease-in-out overflow-hidden"
+                  style={{
+                    width: inputValue.trim() || isRecording ? 0 : "auto",
+                    opacity: inputValue.trim() || isRecording ? 0 : 1,
+                    marginRight: inputValue.trim() || isRecording ? 0 : "0px",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setShowEmojiPicker(!showEmojiPicker);
+                      setActiveReactionMessageId(null);
+                      setShowAttachMenu(false);
+                      setShowStickerPicker(false);
+                    }}
+                    className={`p-2 rounded-full transition-colors ${showEmojiPicker && !activeReactionMessageId
+                      ? "text-primary bg-primary/10"
+                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
+                      }`}
+                    aria-label="Open emoji picker"
+                  >
+                    <Smile size={24} />
+                  </button>
+                </div>
+
+                {/* Sticker Button - Hides when typing */}
+                <div
+                  className="transition-all duration-300 ease-in-out overflow-hidden"
+                  style={{
+                    width: inputValue.trim() || isRecording ? 0 : "auto",
+                    opacity: inputValue.trim() || isRecording ? 0 : 1,
+                    marginRight: inputValue.trim() || isRecording ? 0 : "0px",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setShowStickerPicker(!showStickerPicker);
+                      setShowEmojiPicker(false);
+                      setActiveReactionMessageId(null);
+                      setShowAttachMenu(false);
+                    }}
+                    className={`p-2 rounded-full transition-colors ${showStickerPicker
+                      ? "text-primary bg-primary/10"
+                      : "text-secondary hover:text-text-main hover:bg-surface-hover"
+                      }`}
+                    aria-label="Open sticker picker"
+                  >
+                    <Sticker size={24} />
+                  </button>
+                </div>
+
+                {/* Attach Button - Always visible */}
+                {!editingMessage && (
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        setShowAttachMenu(!showAttachMenu);
+                        setShowEmojiPicker(false);
+                        setShowStickerPicker(false);
+                      }}
+                      className={`p-2 transition-colors rounded-full attach-menu-trigger ${showAttachMenu
                         ? "text-primary bg-primary/10 rotate-45"
                         : "text-secondary hover:text-text-main hover:bg-surface-hover"
-                    }`}
-                    aria-label="Open attachment menu"
-                  >
-                    <Plus
-                      size={24}
-                      className={`transition-transform duration-200 ${
-                        showAttachMenu ? "rotate-45" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {/* Attachment Menu */}
-                  {showAttachMenu && (
-                    <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
-                      <button
-                        onClick={() => setShowCamera(true)}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
-                          <Camera size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">Camera</span>
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
-                          <Image size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">
-                          Photos & Videos
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
-                      >
-                        <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
-                          <FileText size={18} />
-                        </div>
-                        <span className="text-text-main font-medium text-sm">Document</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileSelect}
-                accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                multiple
-              />
-            </div>
-
-            {/* Text Input Area */}
-            <div className="flex-1 flex items-end justify-center min-w-0 relative min-h-13">
-              {isRecording ? (
-                /* Recording UI */
-                <div className="absolute inset-0 z-20 flex items-center justify-between px-3 bg-surface rounded-4xl">
-                  {/* Cancel Button */}
-                  <button
-                    onClick={() => stopRecording(true)}
-                    className="shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors"
-                    aria-label="Cancel recording"
-                  >
-                    <X size={16} />
-                  </button>
-
-                  {/* Timer */}
-                  <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
-                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    {formatTime(recordingDuration)}
-                    <span className="hidden sm:inline text-secondary">
-                      {isPaused ? "Paused" : "Recording"}
-                    </span>
-                  </div>
-
-                  {/* Recording Controls */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {isPaused && (
-                      <button
-                        onClick={playPreviewAudio}
-                        className="shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-                        title="Preview recording"
-                        aria-label="Preview recording"
-                      >
-                        <Volume2 size={16} />
-                      </button>
-                    )}
-                    <button
-                      onClick={togglePauseRecording}
-                      className="shrink-0 p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10 transition-colors"
-                      title={isPaused ? "Resume" : "Pause"}
-                      aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                        }`}
+                      aria-label="Open attachment menu"
                     >
-                      {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                      <Plus
+                        size={24}
+                        className={`transition-transform duration-200 ${showAttachMenu ? "rotate-45" : ""
+                          }`}
+                      />
                     </button>
-                  </div>
-                </div>
-              ) : (
-                /* Text Input */
-                <div className="w-full relative">
-                  {/* Hidden measuring div for auto-expand */}
-                  <div
-                    className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
-                    style={{
-                      minHeight: "44px",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {inputValue || "placeholder"}
-                  </div>
 
-                  {/* Textarea */}
-                  <textarea
-                    ref={inputRef}
-                    placeholder={
-                      replyingTo
-                        ? "Reply..."
-                        : editingMessage
-                        ? "Edit message..."
-                        : "Message"
-                    }
-                    className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
-                    style={{
-                      minHeight: "44px",
-                      maxHeight: "120px",
-                      wordBreak: "break-word",
-                    }}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    rows={1}
-                    wrap="soft"
-                    inputMode="text"
-                    enterKeyHint="enter"
-                    autoCapitalize="sentences"
-                    autoCorrect="on"
-                    spellCheck="true"
-                    aria-label="Message input"
-                  />
+                    {/* Attachment Menu */}
+                    {showAttachMenu && (
+                      <div className="absolute bottom-16 left-0 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in fade-in slide-in-from-bottom-2 z-50 attach-menu p-1">
+                        <button
+                          onClick={() => setShowCamera(true)}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-pink-500 to-rose-500 rounded-full text-white">
+                            <Camera size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">Camera</span>
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-purple-500 to-indigo-500 rounded-full text-white">
+                            <Image size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">
+                            Photos & Videos
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-3 p-3 hover:bg-surface-hover rounded-xl text-left transition-colors"
+                        >
+                          <div className="p-2 bg-linear-to-br from-indigo-500 to-blue-500 rounded-full text-white">
+                            <FileText size={18} />
+                          </div>
+                          <span className="text-text-main font-medium text-sm">Document</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                  {/* Command Hint */}
-                  {!inputValue && !isRecording && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
-                      <Command size={14} className="hidden sm:block" />
-                      <span className="text-xs hidden sm:inline">/</span>
-                      <span className="text-xs sm:hidden">/</span>
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                  multiple
+                />
+              </div>
+
+              {/* Text Input Area */}
+              <div className="flex-1 flex items-end justify-center min-w-0 relative min-h-13">
+                {isRecording ? (
+                  /* Recording UI */
+                  <div className="absolute inset-0 z-20 flex items-center justify-between px-3 bg-surface rounded-4xl">
+                    {/* Cancel Button */}
+                    <button
+                      onClick={() => stopRecording(true)}
+                      className="shrink-0 p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white transition-colors"
+                      aria-label="Cancel recording"
+                    >
+                      <X size={16} />
+                    </button>
+
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 text-red-500 font-mono font-bold text-sm">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      {formatTime(recordingDuration)}
+                      <span className="hidden sm:inline text-secondary">
+                        {isPaused ? "Paused" : "Recording"}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
 
-            {/* Send/Action Button */}
-            <div className="pr-1 pb-0.5">
-              {inputValue.trim() || isRecording ? (
-                <button
-                  onClick={
-                    isRecording
-                      ? () => stopRecording(false)
-                      : editingMessage
-                      ? handleEndEdit
-                      : handleTextSend
-                  }
-                  className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
-                  aria-label={editingMessage ? "Save edit" : isRecording ? "Send recording" : "Send message"}
-                >
-                  {editingMessage ? <Check size={24} /> : <Send size={24} />}
-                </button>
-              ) : (
-                !editingMessage && (
+                    {/* Recording Controls */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isPaused && (
+                        <button
+                          onClick={playPreviewAudio}
+                          className="shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                          title="Preview recording"
+                          aria-label="Preview recording"
+                        >
+                          <Volume2 size={16} />
+                        </button>
+                      )}
+                      <button
+                        onClick={togglePauseRecording}
+                        className="shrink-0 p-2 rounded-full bg-surface-hover text-text-main hover:bg-primary/10 transition-colors"
+                        title={isPaused ? "Resume" : "Pause"}
+                        aria-label={isPaused ? "Resume recording" : "Pause recording"}
+                      >
+                        {isPaused ? <Play size={16} /> : <Pause size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Text Input */
+                  <div className="w-full relative">
+                    {/* Hidden measuring div for auto-expand */}
+                    <div
+                      className="invisible whitespace-pre-wrap wrap-break-word max-h-30 overflow-y-auto px-3 py-3 text-base"
+                      style={{
+                        minHeight: "44px",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {inputValue || "placeholder"}
+                    </div>
+
+                    {/* Textarea */}
+                    <textarea
+                      ref={inputRef}
+                      placeholder={
+                        replyingTo
+                          ? "Reply..."
+                          : editingMessage
+                            ? "Edit message..."
+                            : "Message"
+                      }
+                      className="absolute inset-0 w-full h-full bg-transparent text-text-main px-3 py-3 focus:outline-none placeholder-secondary/70 text-base resize-none overflow-y-auto"
+                      style={{
+                        minHeight: "44px",
+                        maxHeight: "120px",
+                        wordBreak: "break-word",
+                      }}
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      rows={1}
+                      wrap="soft"
+                      inputMode="text"
+                      enterKeyHint="enter"
+                      autoCapitalize="sentences"
+                      autoCorrect="on"
+                      spellCheck="true"
+                      aria-label="Message input"
+                    />
+
+                    {/* Command Hint */}
+                    {!inputValue && !isRecording && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 flex items-center gap-1 text-secondary">
+                        <Command size={14} className="hidden sm:block" />
+                        <span className="text-xs hidden sm:inline">/</span>
+                        <span className="text-xs sm:hidden">/</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Send/Action Button */}
+              <div className="pr-1 pb-0.5">
+                {inputValue.trim() || isRecording ? (
                   <button
-                    onClick={startRecording}
-                    className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
-                    aria-label="Start voice recording"
+                    onClick={
+                      isRecording
+                        ? () => stopRecording(false)
+                        : editingMessage
+                          ? handleEndEdit
+                          : handleTextSend
+                    }
+                    className="w-12 h-12 rounded-full transition-all shadow-lg text-white transform active:scale-95 flex items-center justify-center bg-primary hover:bg-primary/90"
+                    aria-label={editingMessage ? "Save edit" : isRecording ? "Send recording" : "Send message"}
                   >
-                    <Mic size={24} />
+                    {editingMessage ? <Check size={24} /> : <Send size={24} />}
                   </button>
-                )
-              )}
+                ) : (
+                  !editingMessage && (
+                    <button
+                      onClick={startRecording}
+                      className="w-12 h-12 rounded-full transition-all bg-surface-hover text-text-main hover:bg-secondary/20 flex items-center justify-center active:scale-95"
+                      aria-label="Start voice recording"
+                    >
+                      <Mic size={24} />
+                    </button>
+                  )
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

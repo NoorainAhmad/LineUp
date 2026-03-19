@@ -151,8 +151,8 @@ function initializeRateLimiters() {
 
     // Create separate stores for each limiter
     globalLimiter = rateLimit({
-      windowMs: 30 * 1000,
-      max: 200,
+      windowMs: 60 * 1000,          // 60 seconds
+      max: 1000,                      // 1000 requests per minute 
       message: { error: "Too many requests, please try again later." },
       standardHeaders: true,
       legacyHeaders: false,
@@ -179,17 +179,18 @@ function initializeRateLimiters() {
 
     apiLimiter = rateLimit({
       windowMs: 60 * 1000,
-      max: 60,
+      max: 200,
       message: { error: "API rate limit exceeded. Please slow down." },
       standardHeaders: true,
       legacyHeaders: false,
       store: createRedisStore(redisClient, 'rl:api:'),
       keyGenerator: (req) => getClientIp(req),
+      skip: (req) => req.path === `${API_PREFIX}/health`,
     });
 
     uploadLimiter = rateLimit({
-      windowMs: 60 * 60 * 1000,
-      max: 20,
+      windowMs: 60 * 60 * 1000,                      // 1 hour
+      max: 50,                                        // 50 uploads per hour (increased from 20)
       message: { error: "Upload limit exceeded. Please try again later." },
       standardHeaders: true,
       legacyHeaders: false,
@@ -219,8 +220,8 @@ function initializeFallbackRateLimiters() {
   console.warn("⚠️ Using fallback memory-based rate limiting");
 
   globalLimiter = rateLimit({
-    windowMs: 30 * 1000,
-    max: 200,
+    windowMs: 60 * 1000,
+    max: 1000,
     message: { error: "Too many requests, please try again later." },
     standardHeaders: true,
     legacyHeaders: false,
@@ -238,7 +239,7 @@ function initializeFallbackRateLimiters() {
 
   apiLimiter = rateLimit({
     windowMs: 60 * 1000,
-    max: 60,
+    max: 200,
     message: { error: "API rate limit exceeded. Please slow down." },
     standardHeaders: true,
     legacyHeaders: false,
@@ -246,7 +247,7 @@ function initializeFallbackRateLimiters() {
 
   uploadLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 20,
+    max: 50,
     message: { error: "Upload limit exceeded. Please try again later." },
     standardHeaders: true,
     legacyHeaders: false,

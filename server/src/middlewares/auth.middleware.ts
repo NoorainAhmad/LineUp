@@ -1,6 +1,7 @@
 import { JwtPayload } from "../utils/jwt.js";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { HierarchyService } from "@/utils/hierarchy.service.js";
 
 // Interface for authenticated requests
 export interface AuthRequest extends Request {
@@ -28,6 +29,11 @@ export const authMiddleware = (
     req.userId = decoded.userId;
     req.userRole = decoded.userRole;
     req.ipAddress = req.ip;
+    
+    // Clear hierarchy cache at the start of each authenticated request
+    // This ensures fresh data without accumulating stale cached entries
+    HierarchyService.clearCache();
+    
     next();
   } catch (error: any) {
     if (error.name === "TokenExpiredError") {
