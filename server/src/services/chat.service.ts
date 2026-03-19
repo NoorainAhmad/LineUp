@@ -224,23 +224,18 @@ const lastMessage = messages[messages.length - 1];
         });
         const memberUserIds = members.map((m) => m.userId);
 
-        // FIX: Also find supervisors/parents of these members who are authorized
-        // to see this chat. This ensures they get real-time updates even if they
-        // aren't explicit members.
-        const parentIdsSet = new Set<string>();
+        // FIX: Find ALL supervisors (up the hierarchy chain) for each member.
+        // This ensures that managers/admins at all levels can see messages from
+        // their subordinates' chats, even if those chats are not explicitly shared with them.
+        const allSupervisorIds = new Set<string>();
         for (const uid of memberUserIds) {
-          const userWithParent = await prisma.user.findUnique({
-            where: { id: uid },
-            select: { parentId: true }
-          });
-          if (userWithParent?.parentId) {
-            parentIdsSet.add(userWithParent.parentId);
-          }
+          const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+          supervisorIds.forEach((id) => allSupervisorIds.add(id));
         }
-        const supervisorUserIds = Array.from(parentIdsSet);
-        const allRelevantUserIds = [...new Set([...memberUserIds, ...supervisorUserIds])];
 
-        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${allRelevantUserIds.length} personal rooms`);
+        const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+
+        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${allRelevantUserIds.length} personal rooms (members: ${memberUserIds.length}, supervisors: ${allSupervisorIds.size})`);
 
         for (const message of createdMessages) {
           const messageData = {
@@ -259,7 +254,7 @@ const lastMessage = messages[messages.length - 1];
           // Deliver to members currently inside the chat room
           io.to(chatRoom).emit("new_message", messageData);
 
-          // FIX: Also deliver to each member's personal room (and their supervisors')
+          // Deliver to each member's personal room (and their supervisors')
           // so users who are online but viewing a different chat still receive inbox/badge updates.
           for (const userId of allRelevantUserIds) {
             io.to(userId).emit("new_message", messageData);
@@ -632,12 +627,14 @@ const lastMessage = messages[messages.length - 1];
   ) {
     try {
       const { originalMessageId, targetChatIds } = data;
+      const io = getIO();
 
       // Find original message
       const original = await prisma.message.findUnique({
         where: { id: originalMessageId },
         include: {
           sender: { select: { id: true, name: true, avatarUrl: true } },
+          chat: { select: { id: true } },
         },
       });
 
@@ -691,6 +688,75 @@ const lastMessage = messages[messages.length - 1];
           ...message,
           originalSenderName: original.sender.name,
         });
+
+        // SOCKET.IO: Emit new_message event so all clients see the forwarded message in real-time
+        try {
+          const messageData = {
+            id: String(message.id),
+            type: message.type,
+            content: message.content,
+            chatId: targetChatId,
+            senderId: message.senderId,
+            replyToId: message.replyToId ? String(message.replyToId) : null,
+            sender: message.sender,
+            createdAt: message.createdAt,
+            isEdited: message.isEdited,
+            isDeleted: message.isDeleted,
+            forwardedFromId: message.forwardedFromId ? String(message.forwardedFromId) : null,
+            originalSenderId: message.originalSenderId,
+          };
+
+          // Emit to chat room
+          const chatRoom = `chat:${targetChatId}`;
+          io.to(chatRoom).emit("new_message", messageData);
+
+          // Get all members of the target chat and include supervisors
+          const targetChat = await prisma.chat.findUnique({
+            where: { id: targetChatId },
+            select: { members: { select: { userId: true } } },
+          });
+
+          if (targetChat) {
+            const memberUserIds = targetChat.members.map((m) => m.userId);
+            
+            // Find all supervisors for these members
+            const allSupervisorIds = new Set<string>();
+            for (const uid of memberUserIds) {
+              const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+              supervisorIds.forEach((id) => allSupervisorIds.add(id));
+            }
+
+            const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+            
+            for (const userId of allRelevantUserIds) {
+              io.to(userId).emit("new_message", messageData);
+            }
+          }
+
+          // Emit chat_updated event
+          const chatUpdateData = { chatId: targetChatId, updatedAt: new Date() };
+          io.to(chatRoom).emit("chat_updated", chatUpdateData);
+          if (targetChat) {
+            const memberUserIds = targetChat.members.map((m) => m.userId);
+            
+            // Find all supervisors for these members
+            const allSupervisorIds = new Set<string>();
+            for (const uid of memberUserIds) {
+              const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+              supervisorIds.forEach((id) => allSupervisorIds.add(id));
+            }
+
+            const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+            
+            for (const userId of allRelevantUserIds) {
+              io.to(userId).emit("chat_updated", chatUpdateData);
+            }
+          }
+
+          console.log(`[Socket.io] New forwarded message emitted for chat ${targetChatId}`);
+        } catch (emitError) {
+          console.error(`[Socket Emit Error] forwardMessage:`, emitError);
+        }
       }
 
       return forwardedMessages;
@@ -772,10 +838,26 @@ const lastMessage = messages[messages.length - 1];
         where: { userId_chatId: { userId, chatId } },
       });
       if (!member) throw new Error("Chat member not found");
-      return prisma.chatMember.update({
+      
+      const updated = await prisma.chatMember.update({
         where: { userId_chatId: { userId, chatId } },
         data: { isArchived: !member.isArchived },
       });
+
+      // SOCKET.IO: Emit event to notify chat state change
+      try {
+        const io = getIO();
+        io.to(userId).emit("chat_updated", {
+          chatId,
+          isArchived: updated.isArchived,
+          updatedAt: new Date(),
+        });
+        console.log(`[Socket.io] toggleArchive emitted for user ${userId}, chat ${chatId}`);
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] toggleArchive:`, emitError);
+      }
+
+      return updated;
     } catch (error) {
       console.log(`[Toggle Archive] Error: ${error}`);
       throw new Error("Toggle archive failed: " + (error as Error).message);
@@ -821,19 +903,39 @@ const lastMessage = messages[messages.length - 1];
     }
   }
 
-  //Pin a message
+  //Pin a chat
   static async pinChat(chatId: string, userId: string) {
-    const member = await prisma.chatMember.findFirst({
-      where: { userId, chatId },
-    });
+    try {
+      const member = await prisma.chatMember.findFirst({
+        where: { userId, chatId },
+      });
 
-    if (!member) throw new Error("No such chat exists");
+      if (!member) throw new Error("No such chat exists");
 
-    return prisma.chatMember.update({
-      where: { id: member.id },
-      data: {
-        isPinned: !member.isPinned, // 🔥 toggle instead of always true
-      },
-    });
+      const updated = await prisma.chatMember.update({
+        where: { id: member.id },
+        data: {
+          isPinned: !member.isPinned, // 🔥 toggle instead of always true
+        },
+      });
+
+      // SOCKET.IO: Emit event to notify chat state change
+      try {
+        const io = getIO();
+        io.to(userId).emit("chat_updated", {
+          chatId,
+          isPinned: updated.isPinned,
+          updatedAt: new Date(),
+        });
+        console.log(`[Socket.io] pinChat emitted for user ${userId}, chat ${chatId}`);
+      } catch (emitError) {
+        console.error(`[Socket Emit Error] pinChat:`, emitError);
+      }
+
+      return updated;
+    } catch (error) {
+      console.log(`[Pin Chat] Error: ${error}`);
+      throw new Error("Pin chat failed: " + (error as Error).message);
+    }
   }
 }

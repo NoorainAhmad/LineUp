@@ -63,6 +63,7 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      _retryCount?: number;
     };
 
     const status = error.response?.status;
@@ -77,7 +78,30 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Ignore 401 errors
+    // FIX: Handle 429 (Too Many Requests) - Rate limit exceeded
+    if (status === 429) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      
+      // Max 3 retries for rate limit
+      if (originalRequest._retryCount > 3) {
+        console.error("[Rate Limit] Max retries exceeded");
+        return Promise.reject(error);
+      }
+      
+      const retryAfter = parseInt(error.response?.headers['retry-after'] || '1', 10);
+      const waitTime = Math.min(retryAfter * 1000, 5000); // Cap at 5 seconds
+
+      console.warn(`[Rate Limit] Hit limit. Retrying after ${waitTime}ms (Attempt ${originalRequest._retryCount})`);
+      
+      // Retry the request after wait
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(api(originalRequest));
+        }, waitTime);
+      });
+    }
+
+    // Ignore non-401 errors
     if (status !== 401) {
       return Promise.reject(error);
     }

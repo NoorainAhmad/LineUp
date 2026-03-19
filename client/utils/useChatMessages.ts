@@ -102,7 +102,9 @@ export function useChatMessages(chat: Chat | null) {
 
     const handleMessageUpdated = (data: any) => {
       console.log(`[useChatMessages] message_updated received:`, data);
-      if (data.chatId && String(data.chatId) !== String(chatId)) return;
+      // Old logic: `if (data.chatId && String(data.chatId) !== String(chatId)) return;`
+      // caused events without chatId to be applied to wrong chats
+      if (!data.chatId || String(data.chatId) !== String(chatId)) return;
       patchMessageInCache(data);
     };
 
@@ -139,7 +141,7 @@ export function useChatMessages(chat: Chat | null) {
     // socket.connected was false and listeners were never attached.
     if (socket) {
       console.log(`[useChatMessages] Attaching connection-aware listener for chat ${chatId}`);
-      let detachListeners = () => {};
+      let detachListeners = () => { };
 
       const onConnect = () => {
         detachListeners(); // clean up previous if any
