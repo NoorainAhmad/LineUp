@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useCallback, useEffect } from "react";
-import { ChatService } from "@/services/chat.service";
+import { ChatService, mergeMessages } from "@/services/chat.service";
 import type { Message, Chat } from "@/types";
 import { getSocket } from "./socket";
 
@@ -42,13 +42,7 @@ export function useChatMessages(chat: Chat | null) {
         lastKnownSeqRef.current = maxSeq;
 
         const existing = queryClient.getQueryData<Message[]>(queryKey) ?? [];
-        const existingIds = new Set(existing.map((m) => String(m.id)));
-        const merged = [
-          ...existing,
-          ...newMessages.filter((m) => !existingIds.has(String(m.id))),
-        ].sort((a, b) => Number(BigInt(a.id) - BigInt(b.id)));
-
-        return merged;
+        return mergeMessages(existing, newMessages);
       } catch (error) {
         console.error("Error fetching messages:", error);
         return queryClient.getQueryData<Message[]>(queryKey) ?? [];
@@ -74,13 +68,7 @@ export function useChatMessages(chat: Chat | null) {
     const applyMessageToCache = (incomingMessage: Message) => {
       queryClient.setQueryData<Message[]>(
         ["chat-messages", chatId],
-        (existing = []) => {
-          const idStr = String(incomingMessage.id);
-          if (existing.some((m) => String(m.id) === idStr)) return existing;
-          return [...existing, incomingMessage].sort(
-            (a, b) => Number(BigInt(a.id) - BigInt(b.id))
-          );
-        }
+        (existing = []) => mergeMessages(existing, [incomingMessage])
       );
     };
 

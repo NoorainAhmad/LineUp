@@ -4,7 +4,7 @@ import {
   sendMessageSchema,
   type ChatCreateInput,
 } from "../validators/chat.validator.js";
-import type { MessageAttachment } from "../types";
+import type { Message, MessageAttachment } from "../types";
 
 type UploadTicket = {
   mediaId: string;
@@ -86,27 +86,59 @@ const getS3FileUrl = (fileKey: string) => {
   return `https://${bucket}.s3.${region}.amazonaws.com/${fileKey}`;
 };
 
-const normalizeMessage = (message: any) => {
+const compareMessages = (a: Message, b: Message) => {
+  const aId = String(a.id);
+  const bId = String(b.id);
+  const numericIdPattern = /^\d+$/;
+
+  if (numericIdPattern.test(aId) && numericIdPattern.test(bId)) {
+    const aBigInt = BigInt(aId);
+    const bBigInt = BigInt(bId);
+
+    if (aBigInt < bBigInt) return -1;
+    if (aBigInt > bBigInt) return 1;
+  }
+
+  return (
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
+    aId.localeCompare(bId)
+  );
+};
+
+const hasAttachments = (message?: Partial<Message>) =>
+  Array.isArray(message?.attachments) && message.attachments.length > 0;
+
+export const normalizeMessage = (message: any): Message => {
   const mediaLinks: RawMessageMedia[] = Array.isArray(message?.medias)
     ? message.medias
     : [];
 
-  const attachments: MessageAttachment[] = mediaLinks
-    .map((link, index) => {
-      const media = link?.media;
-      if (!media?.fileKey) return null;
+  const directAttachments: MessageAttachment[] = Array.isArray(message?.attachments)
+    ? message.attachments.map((attachment: MessageAttachment, index: number) => ({
+        ...attachment,
+        order: attachment.order ?? index,
+      }))
+    : [];
 
-      return {
-        id: media.id,
-        fileKey: media.fileKey,
-        fileUrl: getS3FileUrl(media.fileKey),
-        fileName: media.originalName || "Attachment",
-        mimeType: media.mimeType || "application/octet-stream",
-        fileSize: media.fileSize ?? undefined,
-        order: link.order ?? index,
-      };
-    })
-    .filter(Boolean) as MessageAttachment[];
+  const attachments: MessageAttachment[] =
+    directAttachments.length > 0
+      ? directAttachments
+      : (mediaLinks
+          .map((link, index) => {
+            const media = link?.media;
+            if (!media?.fileKey) return null;
+
+            return {
+              id: media.id,
+              fileKey: media.fileKey,
+              fileUrl: getS3FileUrl(media.fileKey),
+              fileName: media.originalName || "Attachment",
+              mimeType: media.mimeType || "application/octet-stream",
+              fileSize: media.fileSize ?? undefined,
+              order: link.order ?? index,
+            };
+          })
+          .filter(Boolean) as MessageAttachment[]);
 
   const firstAttachment = attachments[0];
 
@@ -121,10 +153,42 @@ const normalizeMessage = (message: any) => {
       (firstAttachment?.fileSize != null
         ? String(firstAttachment.fileSize)
         : undefined),
-  };
+  } as Message;
 };
 
-const normalizeMessagesPayload = (payload: any) => {
+const mergeMessage = (existing: Message, incoming: Message): Message => ({
+  ...existing,
+  ...incoming,
+  attachments: hasAttachments(incoming)
+    ? incoming.attachments
+    : existing.attachments,
+  fileUrl: incoming.fileUrl ?? existing.fileUrl,
+  fileName: incoming.fileName ?? existing.fileName,
+  mimeType: incoming.mimeType ?? existing.mimeType,
+  fileSize: incoming.fileSize ?? existing.fileSize,
+});
+
+export const mergeMessages = (
+  existing: Message[] = [],
+  incomingMessages: any[] = [],
+) => {
+  if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
+    return existing;
+  }
+
+  const byId = new Map(existing.map((message) => [String(message.id), message]));
+
+  incomingMessages.forEach((rawMessage) => {
+    const incoming = normalizeMessage(rawMessage);
+    const key = String(incoming.id);
+    const current = byId.get(key);
+    byId.set(key, current ? mergeMessage(current, incoming) : incoming);
+  });
+
+  return Array.from(byId.values()).sort(compareMessages);
+};
+
+export const normalizeMessagesPayload = (payload: any) => {
   if (Array.isArray(payload)) {
     return payload.map(normalizeMessage);
   }
