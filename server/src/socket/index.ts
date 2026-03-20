@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
 import { prisma } from "../config/db.js";
 import { HierarchyService } from "../utils/hierarchy.service.js";
+import { UserService } from "@/services/user.service.js";
 
 interface ServerToClientEvents {
   new_message: (data: any) => void;
@@ -152,8 +153,9 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log(`[Socket.io] User disconnected: ${userId}`);
+      await UserService.updateLastSeen(userId);
       // Note: user is automatically removed from all rooms on disconnect
     });
   });

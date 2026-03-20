@@ -358,7 +358,6 @@ export class UserService {
     }
   }
 
-
   // Helper: Get hierarchy level based on role
   private static getHierarchyLevel(role: string): number {
     const levels: Record<string, number> = {
@@ -495,6 +494,19 @@ export class UserService {
     } catch (error) {
       console.log(`[User Deletion] Error: ${error}`);
       throw new Error("User deletion failed: " + (error as Error).message);
+    }
+  }
+
+  // Update last seen time
+  static async updateLastSeen(userId: string) {
+    try {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { lastSeen: new Date() },
+      });
+    } catch (error) {
+      console.log(`[Update Last Seen] Error: ${error}`);
+      throw new Error("Last seen update failed: " + (error as Error).message);
     }
   }
 
