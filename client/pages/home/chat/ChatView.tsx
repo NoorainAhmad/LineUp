@@ -2266,8 +2266,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       </span>
                     ) : (
                       <span className="opacity-80">
-                        last seen {formatLastMessageTime(otherUser?.lastSeen || "") ||
-                          "last seen recently"}
+                        {`last seen ${formatLastMessageTime(otherUser?.lastSeen || "")}`.toLocaleLowerCase()}
                       </span>
                     )}
                   </span>
