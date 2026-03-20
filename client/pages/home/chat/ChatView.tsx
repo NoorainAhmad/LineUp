@@ -62,6 +62,7 @@ import { MediaComposerModal } from "../../../components/modals/MediaComposerModa
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ChatService,
+  mergeMessages,
   type MediaSendProgress,
   type MediaSendReport,
 } from "@/services/chat.service";
@@ -1136,20 +1137,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       queryClient.setQueryData(
         ["chat-messages", chat?.id],
-        (old: Message[] = []) => {
-          const existingIds = new Set(old.map((m) => m.id));
-
-          const merged = [
-            ...old,
-            ...newMessages.filter((msg) => !existingIds.has(msg.id)),
-          ];
-
-          return merged.sort(
-            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        }
+        (old: Message[] = []) => mergeMessages(old, newMessages)
       );
-
+console.log("NEW MESSAGE:", newMessages[0]);
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });

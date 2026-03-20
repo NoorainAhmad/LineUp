@@ -10,6 +10,40 @@ import { HierarchyService } from "@/utils/hierarchy.service.js";
 import { getIO } from "@/socket/index.js";
 
 export class ChatService {
+  private static liveMessageInclude = {
+    sender: {
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+      },
+    },
+    medias: {
+      include: {
+        media: {
+          select: {
+            id: true,
+            fileKey: true,
+            originalName: true,
+            mimeType: true,
+            fileSize: true,
+          },
+        },
+      },
+      orderBy: { order: "asc" as const },
+    },
+  };
+
+  private static async hydrateMessagesForRealtime(messageIds: bigint[]) {
+    if (messageIds.length === 0) return [];
+
+    return prisma.message.findMany({
+      where: { id: { in: messageIds } },
+      include: this.liveMessageInclude,
+      orderBy: { id: "asc" as const },
+    });
+  }
+
   private static chatSelection = {
     id: true,
     isGroup: true,
@@ -150,8 +184,8 @@ export class ChatService {
   }
 console.log("Send message data", data)
 console.log(" Media IDs", mediaIds)
-      const createdMessages = await prisma.$transaction(async (tx) => {
-        const messages = [];
+      const createdMessageIds = await prisma.$transaction(async (tx) => {
+        const messageIds: bigint[] = [];
 
 if (mediaIds?.length) {
   for (const mediaId of mediaIds) {
@@ -163,9 +197,6 @@ if (mediaIds?.length) {
         chatId,
         replyToId,
       },
-      include: {
-        sender: { select: { id: true, name: true, avatarUrl: true } },
-      },
     });
 
     await tx.messageMedia.create({
@@ -176,7 +207,7 @@ if (mediaIds?.length) {
       },
     });
 
-    messages.push(msg);
+    messageIds.push(msg.id);
   }
 } else {
   const msg = await tx.message.create({
@@ -187,27 +218,26 @@ if (mediaIds?.length) {
       chatId,
       replyToId,
     },
-    include: {
-      sender: { select: { id: true, name: true, avatarUrl: true } },
-    },
   });
 
-  messages.push(msg);
+  messageIds.push(msg.id);
 }
-const lastMessage = messages[messages.length - 1];
+const lastMessageId = messageIds[messageIds.length - 1];
         await tx.chat.update({
           where: { id: chatId },
           data: {
-            lastMessageId: lastMessage.id,
+            lastMessageId,
             updatedAt: new Date(),
           },
         });
         await tx.chatMember.updateMany({
           where: { chatId, userId: { not: senderId } },
-          data: { unreadCount: { increment: messages.length } },
+          data: { unreadCount: { increment: messageIds.length } },
         });
-        return messages;
+        return messageIds;
       });
+
+      const createdMessages = await this.hydrateMessagesForRealtime(createdMessageIds);
 
       // Emit socket events
       try {
@@ -247,8 +277,10 @@ const lastMessage = messages[messages.length - 1];
             replyToId: message.replyToId ? String(message.replyToId) : null,
             sender: message.sender,
             createdAt: message.createdAt,
+            updatedAt: message.updatedAt,
             isEdited: message.isEdited,
             isDeleted: message.isDeleted,
+            medias: message.medias,
           };
 
           // Deliver to members currently inside the chat room
