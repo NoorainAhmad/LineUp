@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'lineup-server',
       script: 'dist/server.js',
-      instances: 1,
+      instances: 'max',
       exec_mode: 'cluster',
       watch: false,
       autorestart: true,
