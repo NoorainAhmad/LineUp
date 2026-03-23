@@ -1,7 +1,9 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
+import { createAdapter } from "@socket.io/redis-adapter";
 import { prisma } from "../config/db.js";
+import { pubClient, subClient } from "../config/redis.js";
 import { HierarchyService } from "../utils/hierarchy.service.js";
 import { UserService } from "@/services/user.service.js";
 
@@ -41,6 +43,7 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
     cors: {
       origin: [
         "http://localhost:5173",
+        //   "http://localhost:5174", testing for different frontend locally
         "http://lineup24x7.com",
         "https://lineup24x7.com",
         "https://www.lineup24x7.com",
@@ -51,6 +54,10 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
     pingTimeout: 60000, // 60 seconds
     pingInterval: 25000, // 25 seconds
   });
+
+  // Attach Redis adapter for cross-server pub/sub
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log("✅ Redis Pub/Sub adapter attached to Socket.io");
 
   // Authentication Middleware
   io.use(async (socket: TypedSocket, next) => {

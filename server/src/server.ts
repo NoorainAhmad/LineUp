@@ -1,7 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit"; 
+import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import dotenv from "dotenv";
@@ -64,6 +64,7 @@ app.use(express.urlencoded({ limit: "1mb", extended: true }));
 const corsOptions = {
   origin: [
     "http://localhost:5173",
+    //   "http://localhost:5174", testing for different frontend locally
     "http://lineup24x7.com",
     "https://lineup24x7.com",
     "https://www.lineup24x7.com",
@@ -88,7 +89,7 @@ app.use((req, res, next) => {
 // ====================================
 
 // Helper function to create a unique store for each limiter
-const createRedisStore = (client: any, prefix: string) : any => {
+const createRedisStore = (client: any, prefix: string): any => {
   return {
     increment: async (key: string) => {
       const prefixedKey = `${prefix}${key}`;
@@ -99,17 +100,17 @@ const createRedisStore = (client: any, prefix: string) : any => {
       const count = results[0][1];
       return count;
     },
-    
+
     decrement: async (key: string) => {
       const prefixedKey = `${prefix}${key}`;
       return await client.decr(prefixedKey);
     },
-    
+
     resetKey: async (key: string) => {
       const prefixedKey = `${prefix}${key}`;
       return await client.del(prefixedKey);
     },
-    
+
     get: async (key: string) => {
       const prefixedKey = `${prefix}${key}`;
       const value = await client.get(prefixedKey);
@@ -121,15 +122,15 @@ const createRedisStore = (client: any, prefix: string) : any => {
 // Helper function to safely get client IP (handles IPv6 properly)
 const getClientIp = (req: any): string => {
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  
+
   if (ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1') {
     return 'localhost';
   }
-  
+
   if (ip.startsWith('::ffff:')) {
     return ip.substring(7);
   }
-  
+
   return ip;
 };
 
@@ -293,14 +294,14 @@ async function bootstrap() {
 
     await Promise.all([connectRedis(), connectDB()]);
     clearTimeout(timeout);
-    
+
     // Initialize rate limiters after Redis is connected
     initializeRateLimiters();
 
     // ====================================
     // APPLY RATE LIMITERS IN CORRECT ORDER
     // ====================================
-    
+
     // 1. Apply global rate limiter first (catches all requests)
     if (globalLimiter) {
       app.use(globalLimiter);
@@ -308,24 +309,24 @@ async function bootstrap() {
 
     // 2. Apply specific rate limiters to routes
     // Note: Order matters - more specific routes should come before general ones
-    
+
     // Auth routes with stricter limits
     if (authLimiter) {
       app.use(`${API_PREFIX}/auth/login`, authLimiter);
       app.use(`${API_PREFIX}/auth/register`, authLimiter);
       app.use(`${API_PREFIX}/auth/forgot-password`, authLimiter);
     }
-    
+
     // Upload routes
     if (uploadLimiter) {
       app.use(`${API_PREFIX}/media`, uploadLimiter);
     }
-    
+
     // WebSocket connection endpoint
     if (websocketLimiter) {
       app.use(`${API_PREFIX}/socket.io/`, websocketLimiter);
     }
-    
+
     // API rate limiter for all remaining API routes
     if (apiLimiter) {
       app.use(`${API_PREFIX}`, apiLimiter);
@@ -334,7 +335,7 @@ async function bootstrap() {
     // ====================================
     // REGISTER ROUTES
     // ====================================
-    
+
     // Now register all route handlers
     app.use(`${API_PREFIX}/auth`, authRoutes);
     app.use(`${API_PREFIX}/media`, mediaRoutes);
@@ -353,8 +354,8 @@ async function bootstrap() {
     app.use((err: any, req: any, res: any, next: any) => {
       console.error("Error:", err.message);
       res.status(err.status || 500).json({
-        error: process.env.NODE_ENV === "production" 
-          ? "Internal Server Error" 
+        error: process.env.NODE_ENV === "production"
+          ? "Internal Server Error"
           : err.message,
       });
     });
