@@ -65,8 +65,7 @@ app.use(express.urlencoded({ limit: "1mb", extended: true }));
 // 3. CORS configuration
 const corsOptions = {
   origin: [
-    "http://localhost:5173",
-    //   "http://localhost:5174", testing for different frontend locally
+    "http://localhost:5173", 
     "http://lineup24x7.com",
     "https://lineup24x7.com",
     "https://www.lineup24x7.com",
@@ -81,8 +80,9 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 
 // Request logging middleware (after body parsing)
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} from ${req.ip}`);
+app.use((req, _res, next) => {
+  const serverInstanceId = process.pid;
+  console.log(`PID: ${serverInstanceId} : ${req.method} ${req.url} from ${req.ip}`);
   next();
 });
 
