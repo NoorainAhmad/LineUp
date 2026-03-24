@@ -15,6 +15,7 @@ export class ChatService {
       select: {
         id: true,
         name: true,
+        role: true,
         avatarUrl: true,
       },
     },
@@ -78,6 +79,7 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            role: true,
             avatarUrl: true,
           },
         },
@@ -97,6 +99,7 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            role: true,
             avatarUrl: true,
             status: true,
             lastSeen: true,
@@ -114,6 +117,7 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            role: true,
             avatarUrl: true,
           },
         },
@@ -610,7 +614,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
       orderBy: { id: "asc" },
       include: {
         sender: {
-          select: { id: true, name: true, avatarUrl: true },
+          select: { id: true, name: true, role: true, avatarUrl: true },
         },
         medias: {
           include: {

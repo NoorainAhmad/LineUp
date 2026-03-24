@@ -169,6 +169,7 @@ const renderMessageContent = (
   onImagePreview?: (url: string, fileName?: string) => void,
   onStatusClick?: (statusId: string) => void,
   isPending?: boolean,
+  isMonitored?: boolean
 ) => {
   // Determine if this is a group chat
   const isGroupChat = chat?.isGroup || false;
@@ -184,7 +185,7 @@ const renderMessageContent = (
   return (
     <div>
       {/* Sender Name - Only show in group chats and not for own messages */}
-      {isGroupChat && !isMe && (
+      {(isGroupChat || isMonitored) && !isMe && (
         <div className="px-4 pt-2 pb-0.5">
           <span className="text-xs font-semibold text-primary">
             {senderName}
@@ -744,7 +745,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onTogglePin,
   onStatusClick,
 }) => {
-  const { user } = useAuth();
+  let { user } = useAuth();
+  let isMonitored = [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!); 
   const queryClient = useQueryClient();
 
   // State
@@ -2314,15 +2316,10 @@ console.log("NEW MESSAGE:", newMessages[0]);
           </div>
         ) : (
           <>
-            {/* <div className="flex justify-center mb-8 sticky top-0 z-10 pointer-events-none">
-              <span className="bg-surface/80 backdrop-blur text-secondary text-[10px] font-bold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide border border-border">
-                Today
-              </span>
-            </div> */}
-
             <div ref={messagesEndRef} />
             {[...messages].reverse().map((msg) => {
-              const isMe = msg.sender?.id === user?.id;
+              const isMe = (msg.sender?.id === user?.id);
+              const isUser = msg.sender?.role === UserRole.USER;
               const isPending = msg.isPending;
               const pendingLabel = getPendingStatusLabel(msg);
               const pendingProgress =
@@ -2351,8 +2348,8 @@ console.log("NEW MESSAGE:", newMessages[0]);
                   ref={(el) => {
                     messageRefs.current[msg.id] = el;
                   }}
-                  className={`flex shrink ${isMe ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
-                >
+                  className={`flex shrink ${!isMonitored ? ( isMe ? "justify-end" : "justify-start") : (isUser ? "justify-start" : "justify-end")} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
+                > 
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
                     {!isDeleted && !isPending && (
@@ -2556,6 +2553,7 @@ console.log("NEW MESSAGE:", newMessages[0]);
                             setPreviewImage({ url, fileName }),
                           onStatusClick,
                           isPending,
+                          isMonitored,
                         )
                       )}
                       {isPending && msg.type !== MessageType.STICKER && (
