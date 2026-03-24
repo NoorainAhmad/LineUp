@@ -7,7 +7,7 @@ import {
 } from "../validators/chat.validator.js";
 import { UserRole } from "@/generated/prisma/index.js";
 import { HierarchyService } from "@/utils/hierarchy.service.js";
-import { getIO } from "@/socket/index.js";
+import { KafkaEventService } from "@/services/kafka.service.js";
 
 export class ChatService {
   private static liveMessageInclude = {
@@ -239,24 +239,18 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       const createdMessages = await this.hydrateMessagesForRealtime(createdMessageIds);
 
-      // Emit socket events
+      // Publish events to Kafka for async Socket.io delivery
       try {
-        const io = getIO();
         const chatRoom = `chat:${chatId}`;
 
-        // Fetch all member userIds for this chat so we can fan-out to personal
-        // rooms. This covers members who are online but currently viewing a
-        // different chat (they have joined their personal userId room but NOT
-        // the chat:${chatId} room, so io.to(chatRoom) alone would miss them).
+        // Fetch all member userIds for fan-out to personal rooms
         const members = await prisma.chatMember.findMany({
           where: { chatId },
           select: { userId: true },
         });
         const memberUserIds = members.map((m) => m.userId);
 
-        // FIX: Find ALL supervisors (up the hierarchy chain) for each member.
-        // This ensures that managers/admins at all levels can see messages from
-        // their subordinates' chats, even if those chats are not explicitly shared with them.
+        // Find ALL supervisors (up the hierarchy chain) for each member
         const allSupervisorIds = new Set<string>();
         for (const uid of memberUserIds) {
           const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
@@ -265,7 +259,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
         const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
 
-        console.log(`[Socket.io] Emitting new_message to room ${chatRoom} + ${allRelevantUserIds.length} personal rooms (members: ${memberUserIds.length}, supervisors: ${allSupervisorIds.size})`);
+        console.log(`[Kafka] Publishing new_message for chat ${chatId} to ${allRelevantUserIds.length} users`);
 
         for (const message of createdMessages) {
           const messageData = {
@@ -283,26 +277,26 @@ const lastMessageId = messageIds[messageIds.length - 1];
             medias: message.medias,
           };
 
-          // Deliver to members currently inside the chat room
-          io.to(chatRoom).emit("new_message", messageData);
-
-          // Deliver to each member's personal room (and their supervisors')
-          // so users who are online but viewing a different chat still receive inbox/badge updates.
-          for (const userId of allRelevantUserIds) {
-            io.to(userId).emit("new_message", messageData);
-          }
+          await KafkaEventService.publishNewMessage({
+            chatId,
+            messageData,
+            targetRooms: [chatRoom],
+            targetUserIds: allRelevantUserIds,
+          });
         }
 
         const chatUpdateData = { chatId, updatedAt: new Date() };
-        io.to(chatRoom).emit("chat_updated", chatUpdateData);
-        for (const userId of allRelevantUserIds) {
-          io.to(userId).emit("chat_updated", chatUpdateData);
-        }
+        await KafkaEventService.publishChatUpdated({
+          chatId,
+          updateData: chatUpdateData,
+          targetRooms: [chatRoom],
+          targetUserIds: allRelevantUserIds,
+        });
 
-        console.log(`[Socket.io] Finished emitting events for chat ${chatId}`);
+        console.log(`[Kafka] Finished publishing events for chat ${chatId}`);
       } catch (emitError) {
-        console.error(`[Socket Emit Error] sendMessage:`, emitError);
-        console.error(`[Socket Emit Error] Stack:`, (emitError as Error).stack);
+        console.error(`[Kafka Publish Error] sendMessage:`, emitError);
+        console.error(`[Kafka Publish Error] Stack:`, (emitError as Error).stack);
       }
 
       return createdMessages;
@@ -354,22 +348,22 @@ const lastMessageId = messageIds[messageIds.length - 1];
         },
       });
 
-      // Emit socket event
+      // Publish edit event to Kafka
       try {
-        const io = getIO();
         const room = `chat:${updatedMessage.chat.id}`;
-        // FIX: Include chatId in the payload. Without it the client-side
-        // handler (which guards on data.chatId !== chat.id) silently drops
-        // every message_updated event.
-        io.to(room).emit("message_updated", {
-          id: String(updatedMessage.id),
+        await KafkaEventService.publishMessageUpdated({
           chatId: updatedMessage.chat.id,
-          content: updatedMessage.content,
-          isEdited: updatedMessage.isEdited,
-          updatedAt: updatedMessage.updatedAt,
+          room,
+          updateData: {
+            id: String(updatedMessage.id),
+            chatId: updatedMessage.chat.id,
+            content: updatedMessage.content,
+            isEdited: updatedMessage.isEdited,
+            updatedAt: updatedMessage.updatedAt,
+          },
         });
       } catch (emitError) {
-        console.error(`[Socket Emit Error] editMessage: ${emitError}`);
+        console.error(`[Kafka Publish Error] editMessage: ${emitError}`);
       }
 
       return updatedMessage;
@@ -409,18 +403,20 @@ const lastMessageId = messageIds[messageIds.length - 1];
         include: { chat: { select: { id: true } } },
       });
 
-      // Emit socket event
+      // Publish reaction event to Kafka
       try {
-        const io = getIO();
         const room = `chat:${updatedMessage.chat.id}`;
-        // FIX: Include chatId so the client-side filter doesn't drop this event.
-        io.to(room).emit("message_updated", {
-          id: String(updatedMessage.id),
+        await KafkaEventService.publishMessageUpdated({
           chatId: updatedMessage.chat.id,
-          reactions: updatedMessage.reactions,
+          room,
+          updateData: {
+            id: String(updatedMessage.id),
+            chatId: updatedMessage.chat.id,
+            reactions: updatedMessage.reactions,
+          },
         });
       } catch (emitError) {
-        console.error(`[Socket Emit Error] toggleReaction: ${emitError}`);
+        console.error(`[Kafka Publish Error] toggleReaction: ${emitError}`);
       }
 
       return updatedMessage;
@@ -659,7 +655,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
   ) {
     try {
       const { originalMessageId, targetChatIds } = data;
-      const io = getIO();
+      // Kafka will handle socket emission
 
       // Find original message
       const original = await prisma.message.findUnique({
@@ -721,7 +717,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
           originalSenderName: original.sender.name,
         });
 
-        // SOCKET.IO: Emit new_message event so all clients see the forwarded message in real-time
+        // Publish forwarded message events to Kafka
         try {
           const messageData = {
             id: String(message.id),
@@ -738,9 +734,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
             originalSenderId: message.originalSenderId,
           };
 
-          // Emit to chat room
           const chatRoom = `chat:${targetChatId}`;
-          io.to(chatRoom).emit("new_message", messageData);
 
           // Get all members of the target chat and include supervisors
           const targetChat = await prisma.chat.findUnique({
@@ -748,46 +742,35 @@ const lastMessageId = messageIds[messageIds.length - 1];
             select: { members: { select: { userId: true } } },
           });
 
+          let allRelevantUserIds: string[] = [];
           if (targetChat) {
             const memberUserIds = targetChat.members.map((m) => m.userId);
-            
-            // Find all supervisors for these members
             const allSupervisorIds = new Set<string>();
             for (const uid of memberUserIds) {
               const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
               supervisorIds.forEach((id) => allSupervisorIds.add(id));
             }
-
-            const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
-            
-            for (const userId of allRelevantUserIds) {
-              io.to(userId).emit("new_message", messageData);
-            }
+            allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
           }
 
-          // Emit chat_updated event
+          await KafkaEventService.publishNewMessage({
+            chatId: targetChatId,
+            messageData,
+            targetRooms: [chatRoom],
+            targetUserIds: allRelevantUserIds,
+          });
+
           const chatUpdateData = { chatId: targetChatId, updatedAt: new Date() };
-          io.to(chatRoom).emit("chat_updated", chatUpdateData);
-          if (targetChat) {
-            const memberUserIds = targetChat.members.map((m) => m.userId);
-            
-            // Find all supervisors for these members
-            const allSupervisorIds = new Set<string>();
-            for (const uid of memberUserIds) {
-              const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
-              supervisorIds.forEach((id) => allSupervisorIds.add(id));
-            }
+          await KafkaEventService.publishChatUpdated({
+            chatId: targetChatId,
+            updateData: chatUpdateData,
+            targetRooms: [chatRoom],
+            targetUserIds: allRelevantUserIds,
+          });
 
-            const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
-            
-            for (const userId of allRelevantUserIds) {
-              io.to(userId).emit("chat_updated", chatUpdateData);
-            }
-          }
-
-          console.log(`[Socket.io] New forwarded message emitted for chat ${targetChatId}`);
+          console.log(`[Kafka] Forwarded message published for chat ${targetChatId}`);
         } catch (emitError) {
-          console.error(`[Socket Emit Error] forwardMessage:`, emitError);
+          console.error(`[Kafka Publish Error] forwardMessage:`, emitError);
         }
       }
 
@@ -842,17 +825,20 @@ const lastMessageId = messageIds[messageIds.length - 1];
         });
       }
 
-      // Emit socket event
+      // Publish read event to Kafka
       try {
-        const io = getIO();
         const room = `chat:${chatId}`;
-        io.to(room).emit("messages_read", {
+        await KafkaEventService.publishMessagesRead({
           chatId,
-          userId,
-          lastReadSeq: chat?.lastMessageId ? String(chat.lastMessageId) : null,
+          room,
+          readData: {
+            chatId,
+            userId,
+            lastReadSeq: chat?.lastMessageId ? String(chat.lastMessageId) : null,
+          },
         });
       } catch (emitError) {
-        console.error(`[Socket Emit Error] markAsRead: ${emitError}`);
+        console.error(`[Kafka Publish Error] markAsRead: ${emitError}`);
       }
 
       return result;
@@ -876,17 +862,21 @@ const lastMessageId = messageIds[messageIds.length - 1];
         data: { isArchived: !member.isArchived },
       });
 
-      // SOCKET.IO: Emit event to notify chat state change
+      // Publish archive event to Kafka
       try {
-        const io = getIO();
-        io.to(userId).emit("chat_updated", {
+        await KafkaEventService.publishChatUpdated({
           chatId,
-          isArchived: updated.isArchived,
-          updatedAt: new Date(),
+          updateData: {
+            chatId,
+            isArchived: updated.isArchived,
+            updatedAt: new Date(),
+          },
+          targetRooms: [],
+          targetUserIds: [userId],
         });
-        console.log(`[Socket.io] toggleArchive emitted for user ${userId}, chat ${chatId}`);
+        console.log(`[Kafka] toggleArchive published for user ${userId}, chat ${chatId}`);
       } catch (emitError) {
-        console.error(`[Socket Emit Error] toggleArchive:`, emitError);
+        console.error(`[Kafka Publish Error] toggleArchive:`, emitError);
       }
 
       return updated;
@@ -913,19 +903,21 @@ const lastMessageId = messageIds[messageIds.length - 1];
         },
       });
 
-      // FIX: Emit deletion as a message_updated event so all clients
-      // immediately reflect the soft-delete without waiting for a poll.
+      // Publish deletion as message_updated event to Kafka
       try {
-        const io = getIO();
         const room = `chat:${message.chat.id}`;
-        io.to(room).emit("message_updated", {
-          id: String(updated.id),
+        await KafkaEventService.publishMessageUpdated({
           chatId: message.chat.id,
-          isDeleted: true,
-          content: "This message has been deleted",
+          room,
+          updateData: {
+            id: String(updated.id),
+            chatId: message.chat.id,
+            isDeleted: true,
+            content: "This message has been deleted",
+          },
         });
       } catch (emitError) {
-        console.error(`[Socket Emit Error] deleteMessage: ${emitError}`);
+        console.error(`[Kafka Publish Error] deleteMessage: ${emitError}`);
       }
 
       return updated;
@@ -951,17 +943,21 @@ const lastMessageId = messageIds[messageIds.length - 1];
         },
       });
 
-      // SOCKET.IO: Emit event to notify chat state change
+      // Publish pin event to Kafka
       try {
-        const io = getIO();
-        io.to(userId).emit("chat_updated", {
+        await KafkaEventService.publishChatUpdated({
           chatId,
-          isPinned: updated.isPinned,
-          updatedAt: new Date(),
+          updateData: {
+            chatId,
+            isPinned: updated.isPinned,
+            updatedAt: new Date(),
+          },
+          targetRooms: [],
+          targetUserIds: [userId],
         });
-        console.log(`[Socket.io] pinChat emitted for user ${userId}, chat ${chatId}`);
+        console.log(`[Kafka] pinChat published for user ${userId}, chat ${chatId}`);
       } catch (emitError) {
-        console.error(`[Socket Emit Error] pinChat:`, emitError);
+        console.error(`[Kafka Publish Error] pinChat:`, emitError);
       }
 
       return updated;
