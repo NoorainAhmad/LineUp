@@ -50,15 +50,20 @@ export const connectKafka = async (): Promise<void> => {
     await kafkaAdmin.connect();
     console.log("✅ Kafka admin connected");
 
-    // Create topics if they don't exist
-    await kafkaAdmin.createTopics({
-      waitForLeaders: true,
-      topics: [
-        { topic: KAFKA_TOPICS.CHAT_EVENTS, numPartitions: 3, replicationFactor: 1 },
-        { topic: KAFKA_TOPICS.CHAT_UPDATES, numPartitions: 3, replicationFactor: 1 },
-      ],
-    });
-    console.log("✅ Kafka topics created/verified");
+    const existingTopics = await kafkaAdmin.listTopics();
+    const topicsToCreate = [
+      { topic: KAFKA_TOPICS.CHAT_EVENTS, numPartitions: 3, replicationFactor: 1 },
+      { topic: KAFKA_TOPICS.CHAT_UPDATES, numPartitions: 3, replicationFactor: 1 },
+    ].filter(t => !existingTopics.includes(t.topic));
+
+    if (topicsToCreate.length > 0) {
+      await kafkaAdmin.createTopics({
+        topics: topicsToCreate,
+      });
+      console.log("✅ Kafka topics created");
+    } else {
+      console.log("✅ Kafka topics already exist");
+    }
 
     await kafkaAdmin.disconnect();
 
