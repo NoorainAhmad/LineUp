@@ -747,6 +747,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   let { user } = useAuth();
   const isMember = chat?.members?.some((m) => m.user.id === user?.id) ?? false;
+  let isGroup = chat?.isGroup ?? false;
   let isMonitored = !isMember && [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
   const queryClient = useQueryClient();
 
