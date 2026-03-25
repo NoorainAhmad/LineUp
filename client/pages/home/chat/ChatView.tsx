@@ -67,7 +67,7 @@ import {
   type MediaSendReport,
 } from "@/services/chat.service";
 import AudioMessage from "@/components/ui/AudioMessage";
-import { CurrentUser } from "@/constants";
+
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
 import {
@@ -326,7 +326,7 @@ const renderMessageContent = (
         <AudioMessage
           msg={msg}
           isGroupChat={chat.isGroup} // or however you determine if it's a group chat
-          isMe={msg.sender?.id === CurrentUser.id}
+          isMe={isMe}
           senderName={msg.sender?.name}
           playingAudioId={playingAudioId}
           toggleAudio={toggleAudio}
