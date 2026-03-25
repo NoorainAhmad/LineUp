@@ -413,9 +413,9 @@ export const ChatList: React.FC<ChatListProps> = ({
         return {
           chat,
           displayUser,
-          isPinned: myMemberData?.isPinned ?? false,
-          isArchived: myMemberData?.isArchived ?? false,
-          unreadCount: myMemberData?.unreadCount ?? 0,
+          isPinned: myMemberData?.user?.id === currentUserId ? (myMemberData?.isPinned ?? false) : false,
+          isArchived: myMemberData?.user?.id === currentUserId ? (myMemberData?.isArchived ?? false) : false,
+          unreadCount: myMemberData?.user?.id === currentUserId ? (myMemberData?.unreadCount ?? 0) : 0,
           otherMember: otherMember?.user,
           lastMessageTime,
           isMeSender,

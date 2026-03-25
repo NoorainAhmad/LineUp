@@ -746,7 +746,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onStatusClick,
 }) => {
   let { user } = useAuth();
-  let isMonitored = [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
+  const isMember = chat?.members?.some((m) => m.user.id === user?.id) ?? false;
+  let isMonitored = !isMember && [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
   const queryClient = useQueryClient();
 
   // State
@@ -1345,7 +1346,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     queryClient.setQueryData(["pending-messages", chat.id], []);
 
     // Mark as read
-    if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
+    if (isMember || user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
       setTimeout(() => {
         markAsRead();
       }, 0);
@@ -1372,7 +1373,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       // If we have incoming messages and we are "active" (viewing this chat), mark them read
       if (
         hasIncoming &&
-        (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
+        (isMember || user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
       ) {
         markAsRead();
       }
