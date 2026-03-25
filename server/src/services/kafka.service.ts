@@ -32,6 +32,7 @@ export class KafkaEventService {
     chatId: string;
     room: string;
     updateData: any;
+    targetUserIds?: string[];   // optional but recommended for inbox sync
   }): Promise<void> {
     await this.publish(KAFKA_TOPICS.CHAT_EVENTS, data.chatId, {
       type: KAFKA_EVENT_TYPES.MESSAGE_UPDATED,

@@ -32,9 +32,19 @@ export async function startKafkaConsumer(): Promise<void> {
           }
 
           case KAFKA_EVENT_TYPES.MESSAGE_UPDATED: {
-            const { room, updateData } = payload;
+            const { room, updateData, targetUserIds } = payload;
 
+            console.log(`[Kafka Consumer] Delivering message_updated to room: ${room} and ${targetUserIds?.length || 0} user rooms`);
+
+            // Emit to the specific chat room (members currently viewing the chat)
             io.to(room).emit("message_updated", updateData);
+
+            // Emit to each relevant user's personal room (members + supervisors) for inbox state sync
+            if (targetUserIds && Array.isArray(targetUserIds)) {
+              for (const userId of targetUserIds) {
+                io.to(userId).emit("message_updated", updateData);
+              }
+            }
             break;
           }
 

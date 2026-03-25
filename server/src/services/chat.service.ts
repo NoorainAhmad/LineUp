@@ -1,11 +1,10 @@
-import { file, z } from "zod";
+import { z } from "zod";
 import { prisma } from "../config/db.js";
 import {
   sendMessageSchema,
   chatCreateSchema,
   forwardMessageSchema,
 } from "../validators/chat.validator.js";
-import { UserRole } from "@/generated/prisma/index.js";
 import { HierarchyService } from "@/utils/hierarchy.service.js";
 import { KafkaEventService } from "@/services/kafka.service.js";
 
@@ -61,19 +60,19 @@ export class ChatService {
         isDeleted: true,
         reactions: true,
         medias: {
-  select: {
-    order: true,
-    media: {
-      select: {
-        id: true,
-        fileKey: true,
-        originalName: true,
-        mimeType: true,
-        fileSize: true,
-      },
-    },
-  },
-},
+          select: {
+            order: true,
+            media: {
+              select: {
+                id: true,
+                fileKey: true,
+                originalName: true,
+                mimeType: true,
+                fileSize: true,
+              },
+            },
+          },
+        },
         sender: {
           select: {
             id: true,
@@ -91,8 +90,8 @@ export class ChatService {
         isMuted: true,
         isArchived: true,
         joinedAt: true,
-        lastDeliveredSeq: true,  // ← ADD
-        lastReadSeq: true,  
+        lastDeliveredSeq: true,
+        lastReadSeq: true,
         user: {
           select: {
             id: true,
@@ -105,6 +104,7 @@ export class ChatService {
         },
       },
     },
+    lastMessageId: true,
     lastMessage: {
       select: {
         id: true,
@@ -170,59 +170,59 @@ export class ChatService {
     try {
       const { chatId, content, type, replyToId, mediaIds } = data;
       // 🔒 CRITICAL: Check membership
-  const membership = await prisma.chatMember.findUnique({
-    where: {
-      userId_chatId: {
-        userId: senderId,
-        chatId: chatId,
-      },
-    },
-  });
+      const membership = await prisma.chatMember.findUnique({
+        where: {
+          userId_chatId: {
+            userId: senderId,
+            chatId: chatId,
+          },
+        },
+      });
 
-  if (!membership) {
-    throw new Error("You are not a member of this chat. Read-only access only.");
-  }
-console.log("Send message data", data)
-console.log(" Media IDs", mediaIds)
+      if (!membership) {
+        throw new Error("You are not a member of this chat. Read-only access only.");
+      }
+
       const createdMessageIds = await prisma.$transaction(async (tx) => {
         const messageIds: bigint[] = [];
 
-if (mediaIds?.length) {
-  for (const mediaId of mediaIds) {
-    const msg = await tx.message.create({
-      data: {
-        type,
-        content,
-        senderId,
-        chatId,
-        replyToId,
-      },
-    });
+        if (mediaIds?.length) {
+          for (const mediaId of mediaIds) {
+            const msg = await tx.message.create({
+              data: {
+                type,
+                content,
+                senderId,
+                chatId,
+                replyToId,
+              },
+            });
 
-    await tx.messageMedia.create({
-      data: {
-        messageId: msg.id,
-        mediaId,
-        order: 0,
-      },
-    });
+            await tx.messageMedia.create({
+              data: {
+                messageId: msg.id,
+                mediaId,
+                order: 0,
+              },
+            });
 
-    messageIds.push(msg.id);
-  }
-} else {
-  const msg = await tx.message.create({
-    data: {
-      type,
-      content,
-      senderId,
-      chatId,
-      replyToId,
-    },
-  });
+            messageIds.push(msg.id);
+          }
+        } else {
+          const msg = await tx.message.create({
+            data: {
+              type,
+              content,
+              senderId,
+              chatId,
+              replyToId,
+            },
+          });
 
-  messageIds.push(msg.id);
-}
-const lastMessageId = messageIds[messageIds.length - 1];
+          messageIds.push(msg.id);
+        }
+
+        const lastMessageId = messageIds[messageIds.length - 1];
         await tx.chat.update({
           where: { id: chatId },
           data: {
@@ -230,10 +230,12 @@ const lastMessageId = messageIds[messageIds.length - 1];
             updatedAt: new Date(),
           },
         });
+
         await tx.chatMember.updateMany({
           where: { chatId, userId: { not: senderId } },
           data: { unreadCount: { increment: messageIds.length } },
         });
+
         return messageIds;
       });
 
@@ -258,8 +260,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
         }
 
         const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
-
-        console.log(`[Kafka] Publishing new_message for chat ${chatId} to ${allRelevantUserIds.length} users`);
 
         for (const message of createdMessages) {
           const messageData = {
@@ -293,10 +293,8 @@ const lastMessageId = messageIds[messageIds.length - 1];
           targetUserIds: allRelevantUserIds,
         });
 
-        console.log(`[Kafka] Finished publishing events for chat ${chatId}`);
       } catch (emitError) {
         console.error(`[Kafka Publish Error] sendMessage:`, emitError);
-        console.error(`[Kafka Publish Error] Stack:`, (emitError as Error).stack);
       }
 
       return createdMessages;
@@ -313,29 +311,18 @@ const lastMessageId = messageIds[messageIds.length - 1];
     newContent: string,
   ) {
     try {
-      // Verify the message exists and belongs to the user
       const message = await prisma.message.findFirst({
         where: {
           id: messageId,
           senderId: userId,
-          isDeleted: false, // Can't edit deleted messages
+          isDeleted: false,
         },
       });
 
       if (!message) {
-        throw new Error(
-          "Message not found or you don't have permission to edit it",
-        );
+        throw new Error("Message not found or you don't have permission to edit it");
       }
 
-      // Check if message is too old to edit (optional - 1 hour limit)
-      // const messageAge = Date.now() - new Date(message.createdAt).getTime();
-      // const oneHourInMs = 60 * 60 * 1000;
-      // if (messageAge > oneHourInMs) {
-      //   throw new Error("Messages older than 1 hour cannot be edited");
-      // }
-
-      // Update the message
       const updatedMessage = await prisma.message.update({
         where: { id: messageId },
         data: {
@@ -351,6 +338,19 @@ const lastMessageId = messageIds[messageIds.length - 1];
       // Publish edit event to Kafka
       try {
         const room = `chat:${updatedMessage.chat.id}`;
+        
+        const members = await prisma.chatMember.findMany({
+          where: { chatId: updatedMessage.chat.id },
+          select: { userId: true },
+        });
+        const memberUserIds = members.map((m) => m.userId);
+        const allSupervisorIds = new Set<string>();
+        for (const uid of memberUserIds) {
+          const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+          supervisorIds.forEach((id) => allSupervisorIds.add(id));
+        }
+        const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+
         await KafkaEventService.publishMessageUpdated({
           chatId: updatedMessage.chat.id,
           room,
@@ -361,6 +361,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
             isEdited: updatedMessage.isEdited,
             updatedAt: updatedMessage.updatedAt,
           },
+          targetUserIds: allRelevantUserIds,
         });
       } catch (emitError) {
         console.error(`[Kafka Publish Error] editMessage: ${emitError}`);
@@ -368,7 +369,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return updatedMessage;
     } catch (error) {
-      console.log(`[Edit Message] Error: ${error}`);
       throw new Error("Message edit failed: " + (error as Error).message);
     }
   }
@@ -384,19 +384,20 @@ const lastMessageId = messageIds[messageIds.length - 1];
         where: { id: messageId, isDeleted: false, chat: { members: { some: { userId } } } },
       });
       if (!message) throw new Error("Message not found");
+      
       let reactions = (message.reactions as Record<string, string[]>) || {};
-      // If user already has this same emoji => remove it (toggle off)
-    const hadSameEmoji = reactions[emoji]?.includes(userId) ?? false;
-    // Remove user's reaction from all emojis first (single reaction rule)
-    for (const key of Object.keys(reactions)) {
-      reactions[key] = reactions[key].filter((id) => id !== userId);
-      if (reactions[key].length === 0) delete reactions[key];
-    }
-    // If it was a different/new emoji, add it
-    if (!hadSameEmoji) {
-      if (!reactions[emoji]) reactions[emoji] = [];
-      reactions[emoji].push(userId);
-    }
+      const hadSameEmoji = reactions[emoji]?.includes(userId) ?? false;
+      
+      for (const key of Object.keys(reactions)) {
+        reactions[key] = reactions[key].filter((id) => id !== userId);
+        if (reactions[key].length === 0) delete reactions[key];
+      }
+      
+      if (!hadSameEmoji) {
+        if (!reactions[emoji]) reactions[emoji] = [];
+        reactions[emoji].push(userId);
+      }
+      
       const updatedMessage = await prisma.message.update({
         where: { id: messageId },
         data: { reactions },
@@ -406,6 +407,19 @@ const lastMessageId = messageIds[messageIds.length - 1];
       // Publish reaction event to Kafka
       try {
         const room = `chat:${updatedMessage.chat.id}`;
+        
+        const members = await prisma.chatMember.findMany({
+          where: { chatId: updatedMessage.chat.id },
+          select: { userId: true },
+        });
+        const memberUserIds = members.map((m) => m.userId);
+        const allSupervisorIds = new Set<string>();
+        for (const uid of memberUserIds) {
+          const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+          supervisorIds.forEach((id) => allSupervisorIds.add(id));
+        }
+        const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+
         await KafkaEventService.publishMessageUpdated({
           chatId: updatedMessage.chat.id,
           room,
@@ -414,6 +428,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
             chatId: updatedMessage.chat.id,
             reactions: updatedMessage.reactions,
           },
+          targetUserIds: allRelevantUserIds,
         });
       } catch (emitError) {
         console.error(`[Kafka Publish Error] toggleReaction: ${emitError}`);
@@ -421,7 +436,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return updatedMessage;
     } catch (error) {
-      console.log(`[Reaction Toggle] Error: ${error}`);
       throw new Error("Reaction toggle failed: " + (error as Error).message);
     }
   }
@@ -435,7 +449,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
         select: this.chatSelection,
       });
     } catch (error) {
-      console.log(`[Inbox] Error: ${error}`);
       throw new Error("Inbox not found: " + (error as Error).message);
     }
   }
@@ -448,15 +461,10 @@ const lastMessageId = messageIds[messageIds.length - 1];
         select: { id: true, role: true },
       });
 
-      if (!currentUser) {
-        throw new Error("User not found");
-      }
+      if (!currentUser) throw new Error("User not found");
 
-      const visibleUserIds = await HierarchyService.getVisibleUserIds(
-        currentUser.id,
-      );
+      const visibleUserIds = await HierarchyService.getVisibleUserIds(currentUser.id);
 
-      // Fetch chats with the constructed condition
       const chats = await prisma.chat.findMany({
         where: {
           members: {
@@ -467,53 +475,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
         },
         orderBy: { updatedAt: "desc" },
         select: {
-          id: true,
-          isGroup: true,
-          groupName: true,
-          groupImage: true,
-          createdAt: true,
-          updatedAt: true,
-          lastMessageId: true,
-          lastMessage: {
-            select: {
-              id: true,
-              content: true,
-              type: true,
-              createdAt: true,
-              senderId: true,
-              sender: {
-                select: {
-                  id: true,
-                  name: true,
-                  avatarUrl: true,
-                },
-              },
-            },
-          },
-          members: {
-            select: {
-              id: true,
-              userId: true,
-              unreadCount: true,
-              isPinned: true,
-              isMuted: true,
-              isArchived: true,
-              joinedAt: true,
-              lastDeliveredSeq: true,
-              lastReadSeq: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  avatarUrl: true,
-                  status: true,
-                  lastSeen: true,
-                  role: true,
-                  parentId: true,
-                },
-              },
-            },
-          },
+          ...this.chatSelection,
           _count: {
             select: {
               messages: true,
@@ -524,8 +486,7 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       const chatsNeedingDeliveredAdvance = chats.filter((chat) => {
         if (!chat.lastMessageId) return false;
-
-        const membership = chat.members.find((member) => member.userId === userId);
+        const membership = chat.members.find((member) => member.user.id === userId);
         return (
           !!membership &&
           (membership.lastDeliveredSeq === null ||
@@ -549,18 +510,10 @@ const lastMessageId = messageIds[messageIds.length - 1];
             }),
           ),
         );
-
-        chatsNeedingDeliveredAdvance.forEach((chat) => {
-          const membership = chat.members.find((member) => member.userId === userId);
-          if (membership) {
-            membership.lastDeliveredSeq = chat.lastMessageId;
-          }
-        });
       }
 
       return chats;
     } catch (error) {
-      console.error(`[Inbox] Error for user ${userId}:`, error);
       throw new Error("Failed to fetch inbox: " + (error as Error).message);
     }
   }
@@ -569,69 +522,52 @@ const lastMessageId = messageIds[messageIds.length - 1];
   static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, after?: bigint) {
     try {
       if (!chatId) return [];
-      // Verify user has access to the chat based on role
+      
       const currentUser = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, role: true },
+        select: { id: true },
       });
-      if (!currentUser) {
-        return [];
-      }
-      const relevantUserIds = await HierarchyService.getVisibleUserIds(
-        currentUser.id,
-      );
-      // 3️⃣ CRITICAL SECURITY CHECK: Verify chat belongs to hierarchy
-    const isAuthorizedChat = await prisma.chat.findFirst({
-      where: {
-        id: chatId,
-        members: {
-          some: {
-            userId: { in: relevantUserIds },
-          },
-        },
-      },
-      select: { id: true },
-    });
+      if (!currentUser) return [];
 
-    if (!isAuthorizedChat) {
-      console.warn(
-        `[SECURITY] Unauthorized chat access blocked | user=${userId} role=${userRole} chat=${chatId}`
-      );
-      return []; // or throw 403
-    }
-     // 4️⃣ Only fetch messages AFTER authorization passes
-    const messages = await prisma.message.findMany({
-      where: { chatId, ...(after !== undefined && { id: { gt: after } }), },
-      take: limit,
-      orderBy: { id: "asc" },
-      include: {
-        sender: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-        medias: {
-          include: {
-            media: true,
+      const relevantUserIds = await HierarchyService.getVisibleUserIds(currentUser.id);
+
+      const isAuthorizedChat = await prisma.chat.findFirst({
+        where: {
+          id: chatId,
+          members: {
+            some: {
+              userId: { in: relevantUserIds },
+            },
           },
-          orderBy: { order: "asc" },
         },
-        asLastMessage: { select: { id: true } },
-      },
-    });
-    // ── Advance lastDeliveredSeq (side effect, best-effort) ──
-      //
-      // We only advance — never move the pointer backwards.
-      // Using updateMany with a condition is safe and index-backed.
-      // Runs even when messages[] is empty (pointer was already up to date).
+        select: { id: true },
+      });
+
+      if (!isAuthorizedChat) return [];
+
+      const messages = await prisma.message.findMany({
+        where: { chatId, ...(after !== undefined && { id: { gt: after } }), },
+        take: limit,
+        orderBy: { id: "asc" },
+        include: {
+          sender: {
+            select: { id: true, name: true, avatarUrl: true },
+          },
+          medias: {
+            include: {
+              media: true,
+            },
+            orderBy: { order: "asc" },
+          },
+        },
+      });
+
       if (messages.length > 0) {
-        const maxSeq = messages[messages.length - 1].id; // messages ordered asc
-
+        const maxSeq = messages[messages.length - 1].id;
         await prisma.chatMember.updateMany({
           where: {
             userId,
             chatId,
-            // Only update if the new seq is actually higher.
-            // Prisma doesn't support "update if new value > old value" directly,
-            // so we use a raw conditional. This avoids unnecessary writes.
             OR: [
               { lastDeliveredSeq: null },
               { lastDeliveredSeq: { lt: maxSeq } },
@@ -643,7 +579,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return messages;
     } catch (error) {
-      console.log(`[Messages] Error: ${error}`);
       throw new Error("Messages not found: " + (error as Error).message);
     }
   }
@@ -655,14 +590,10 @@ const lastMessageId = messageIds[messageIds.length - 1];
   ) {
     try {
       const { originalMessageId, targetChatIds } = data;
-      // Kafka will handle socket emission
-
-      // Find original message
       const original = await prisma.message.findUnique({
         where: { id: originalMessageId },
         include: {
           sender: { select: { id: true, name: true, avatarUrl: true } },
-          chat: { select: { id: true } },
         },
       });
 
@@ -672,14 +603,10 @@ const lastMessageId = messageIds[messageIds.length - 1];
       const forwardedMessages = [];
 
       for (const targetChatId of targetChatIds) {
-        // Verify sender is a member of the target chat
         const membership = await prisma.chatMember.findUnique({
           where: { userId_chatId: { userId: senderId, chatId: targetChatId } },
         });
-        if (!membership) {
-          console.log(`[Forward] User ${senderId} is not a member of chat ${targetChatId}, skipping.`);
-          continue;
-        }
+        if (!membership) continue;
 
         const message = await prisma.$transaction(async (tx) => {
           const msg = await tx.message.create({
@@ -712,31 +639,11 @@ const lastMessageId = messageIds[messageIds.length - 1];
           return msg;
         });
 
-        forwardedMessages.push({
-          ...message,
-          originalSenderName: original.sender.name,
-        });
+        forwardedMessages.push(message);
 
         // Publish forwarded message events to Kafka
         try {
-          const messageData = {
-            id: String(message.id),
-            type: message.type,
-            content: message.content,
-            chatId: targetChatId,
-            senderId: message.senderId,
-            replyToId: message.replyToId ? String(message.replyToId) : null,
-            sender: message.sender,
-            createdAt: message.createdAt,
-            isEdited: message.isEdited,
-            isDeleted: message.isDeleted,
-            forwardedFromId: message.forwardedFromId ? String(message.forwardedFromId) : null,
-            originalSenderId: message.originalSenderId,
-          };
-
           const chatRoom = `chat:${targetChatId}`;
-
-          // Get all members of the target chat and include supervisors
           const targetChat = await prisma.chat.findUnique({
             where: { id: targetChatId },
             select: { members: { select: { userId: true } } },
@@ -755,20 +662,22 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
           await KafkaEventService.publishNewMessage({
             chatId: targetChatId,
-            messageData,
+            messageData: {
+              ...message,
+              id: String(message.id),
+              replyToId: null,
+              forwardedFromId: String(message.forwardedFromId),
+            },
             targetRooms: [chatRoom],
             targetUserIds: allRelevantUserIds,
           });
 
-          const chatUpdateData = { chatId: targetChatId, updatedAt: new Date() };
           await KafkaEventService.publishChatUpdated({
             chatId: targetChatId,
-            updateData: chatUpdateData,
+            updateData: { chatId: targetChatId, updatedAt: new Date() },
             targetRooms: [chatRoom],
             targetUserIds: allRelevantUserIds,
           });
-
-          console.log(`[Kafka] Forwarded message published for chat ${targetChatId}`);
         } catch (emitError) {
           console.error(`[Kafka Publish Error] forwardMessage:`, emitError);
         }
@@ -776,61 +685,41 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return forwardedMessages;
     } catch (error) {
-      console.log(`[Forward Message] Error: ${error}`);
       throw new Error("Message forwarding failed: " + (error as Error).message);
     }
   }
 
   // Mark a chat as read
-  // Advances lastReadSeq to the latest message in chat.
-  // Called when the user opens a chat.
   static async markAsRead(chatId: string, userId: string) {
     try {
-      // FIX: Verify the caller is actually a member of this chat before
-      // attempting any writes. Supervisors/admins can VIEW chats they don't
-      // belong to, but they have no ChatMember row — so update() throws
-      // "record not found". We silently no-op for non-members since
-      // marking-as-read is meaningless for read-only viewers.
       const membership = await prisma.chatMember.findUnique({
         where: { userId_chatId: { userId, chatId } },
-        select: { userId: true },
       });
 
-      if (!membership) {
-        console.log(
-          `[Mark As Read] User ${userId} is not a member of chat ${chatId} — skipping (read-only access).`
-        );
-        return null;
-      }
+      if (!membership) return null;
 
       const chat = await prisma.chat.findUnique({
         where: { id: chatId },
         select: { lastMessageId: true },
       });
 
-      let result;
-      if (!chat?.lastMessageId) {
-        result = await prisma.chatMember.update({
-          where: { userId_chatId: { userId, chatId } },
-          data: { unreadCount: 0 },
-        });
-      } else {
-        result = await prisma.chatMember.update({
-          where: { userId_chatId: { userId, chatId } },
-          data: {
-            unreadCount: 0,
-            lastReadSeq: chat.lastMessageId,
-            lastDeliveredSeq: chat.lastMessageId,
-          },
-        });
-      }
+      const updateData = {
+        unreadCount: 0,
+        ...(chat?.lastMessageId && {
+          lastReadSeq: chat.lastMessageId,
+          lastDeliveredSeq: chat.lastMessageId,
+        }),
+      };
 
-      // Publish read event to Kafka
+      const result = await prisma.chatMember.update({
+        where: { userId_chatId: { userId, chatId } },
+        data: updateData,
+      });
+
       try {
-        const room = `chat:${chatId}`;
         await KafkaEventService.publishMessagesRead({
           chatId,
-          room,
+          room: `chat:${chatId}`,
           readData: {
             chatId,
             userId,
@@ -843,11 +732,9 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return result;
     } catch (error) {
-      console.log(`[Mark As Read] Error: ${error}`);
-      throw new Error("Mark as read failed");
+      throw new Error("Mark as read failed: " + (error as Error).message);
     }
   }
-
 
   // Toggle archive status for a chat
   static async toggleArchive(chatId: string, userId: string) {
@@ -862,7 +749,6 @@ const lastMessageId = messageIds[messageIds.length - 1];
         data: { isArchived: !member.isArchived },
       });
 
-      // Publish archive event to Kafka
       try {
         await KafkaEventService.publishChatUpdated({
           chatId,
@@ -874,14 +760,12 @@ const lastMessageId = messageIds[messageIds.length - 1];
           targetRooms: [],
           targetUserIds: [userId],
         });
-        console.log(`[Kafka] toggleArchive published for user ${userId}, chat ${chatId}`);
       } catch (emitError) {
         console.error(`[Kafka Publish Error] toggleArchive:`, emitError);
       }
 
       return updated;
     } catch (error) {
-      console.log(`[Toggle Archive] Error: ${error}`);
       throw new Error("Toggle archive failed: " + (error as Error).message);
     }
   }
@@ -903,18 +787,29 @@ const lastMessageId = messageIds[messageIds.length - 1];
         },
       });
 
-      // Publish deletion as message_updated event to Kafka
       try {
-        const room = `chat:${message.chat.id}`;
+        const members = await prisma.chatMember.findMany({
+          where: { chatId: message.chat.id },
+          select: { userId: true },
+        });
+        const memberUserIds = members.map((m) => m.userId);
+        const allSupervisorIds = new Set<string>();
+        for (const uid of memberUserIds) {
+          const supervisorIds = await HierarchyService.getAllSupervisorIds(uid);
+          supervisorIds.forEach((id) => allSupervisorIds.add(id));
+        }
+        const allRelevantUserIds = [...new Set([...memberUserIds, ...Array.from(allSupervisorIds)])];
+
         await KafkaEventService.publishMessageUpdated({
           chatId: message.chat.id,
-          room,
+          room: `chat:${message.chat.id}`,
           updateData: {
             id: String(updated.id),
             chatId: message.chat.id,
             isDeleted: true,
             content: "This message has been deleted",
           },
+          targetUserIds: allRelevantUserIds,
         });
       } catch (emitError) {
         console.error(`[Kafka Publish Error] deleteMessage: ${emitError}`);
@@ -922,28 +817,24 @@ const lastMessageId = messageIds[messageIds.length - 1];
 
       return updated;
     } catch (error) {
-      console.log(`[Delete Message] Error: ${error}`);
       throw new Error("Delete message failed: " + (error as Error).message);
     }
   }
 
-  //Pin a chat
+  // Pin a chat
   static async pinChat(chatId: string, userId: string) {
     try {
-      const member = await prisma.chatMember.findFirst({
-        where: { userId, chatId },
+      const member = await prisma.chatMember.findUnique({
+        where: { userId_chatId: { userId, chatId } },
       });
 
       if (!member) throw new Error("No such chat exists");
 
       const updated = await prisma.chatMember.update({
         where: { id: member.id },
-        data: {
-          isPinned: !member.isPinned, // 🔥 toggle instead of always true
-        },
+        data: { isPinned: !member.isPinned },
       });
 
-      // Publish pin event to Kafka
       try {
         await KafkaEventService.publishChatUpdated({
           chatId,
@@ -955,14 +846,12 @@ const lastMessageId = messageIds[messageIds.length - 1];
           targetRooms: [],
           targetUserIds: [userId],
         });
-        console.log(`[Kafka] pinChat published for user ${userId}, chat ${chatId}`);
       } catch (emitError) {
         console.error(`[Kafka Publish Error] pinChat:`, emitError);
       }
 
       return updated;
     } catch (error) {
-      console.log(`[Pin Chat] Error: ${error}`);
       throw new Error("Pin chat failed: " + (error as Error).message);
     }
   }
