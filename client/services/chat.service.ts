@@ -535,7 +535,7 @@ export class ChatService {
   }
 
   // Fetch messages for a specific chat with optional pagination
-  static async getMessages(chatId: string, limit = 50, cursor?: string) {
+  static async getMessages(chatId: string, limit = 200, cursor?: string) {
     const response = await api.get(`/chats/${chatId}/messages`, {
       params: { limit, cursor },
     });

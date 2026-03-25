@@ -519,7 +519,7 @@ export class ChatService {
   }
 
   // Get messages for a specific chat with role-based access control
-  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, after?: bigint) {
+  static async getMessages(userId: string, userRole: string, chatId: string, limit = 200, after?: bigint) {
     try {
       if (!chatId) return [];
       

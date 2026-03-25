@@ -19,7 +19,7 @@ export function useChatMessages(chat: Chat | null) {
       try {
         const response = await ChatService.getMessages(
           chat.id,
-          50,
+          200,
           lastKnownSeqRef.current?.toString()
         );
 
