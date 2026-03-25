@@ -1913,9 +1913,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleDeleteMessage = useCallback(
     (msgId: string) => {
-      if (!window.confirm("Are you sure you want to delete this message?")) {
-        return;
-      }
       deleteMessageMutation.mutate(msgId);
       setSelectedMessageId(null);
     },
