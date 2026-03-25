@@ -1985,7 +1985,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     currentUserMember = chat?.members.find(
       (m) => m.user.role === UserRole.BRANCH,
     );
-  }
+  } 
 
   // Empty state
   if (!chat) {
@@ -2315,7 +2315,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         ) : (
           <>
             <div ref={messagesEndRef} />
-            {[...messages].reverse().map((msg) => {
+            {[...messages].reverse().map((msg) => { 
               const isMe = (msg.sender?.id === user?.id);
               const isUser = msg.sender?.role === UserRole.USER;
               const isPending = msg.isPending;
@@ -2339,6 +2339,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 : 0;
               const isEditableUnder5Minutes =
                 Date.now() - createdAt <= 15 * 60 * 1000;
+              const isRight = isGroup ? isMe : (isMonitored ? !isUser : isMe);
 
               return (
                 <div
@@ -2346,7 +2347,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   ref={(el) => {
                     messageRefs.current[msg.id] = el;
                   }}
-                  className={`flex shrink ${!isMonitored ? (isMe ? "justify-end" : "justify-start") : (isUser ? "justify-start" : "justify-end")} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
+                  className={`flex shrink ${isRight ? "justify-end" : "justify-start"} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
                 >
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
