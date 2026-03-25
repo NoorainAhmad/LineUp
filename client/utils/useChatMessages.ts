@@ -160,7 +160,7 @@ export function useChatMessages(chat: Chat | null) {
 
   const resetCursor = useCallback(() => {
     lastKnownSeqRef.current = undefined;
-    queryClient.setQueryData(queryKey, []);
+    queryClient.removeQueries({ queryKey });
   }, [chat?.id]);
 
   return { messages, isLoading, error, refetch, resetCursor };

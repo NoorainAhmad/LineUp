@@ -746,7 +746,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onStatusClick,
 }) => {
   let { user } = useAuth();
-  let isMonitored = [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!); 
+  let isMonitored = [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
   const queryClient = useQueryClient();
 
   // State
@@ -1141,7 +1141,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         ["chat-messages", chat?.id],
         (old: Message[] = []) => mergeMessages(old, newMessages)
       );
-console.log("NEW MESSAGE:", newMessages[0]);
+      console.log("NEW MESSAGE:", newMessages[0]);
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
@@ -1318,7 +1318,7 @@ console.log("NEW MESSAGE:", newMessages[0]);
     if (!chat?.id) return;
     // Reset all states
     resetCursor();
-    queryClient.invalidateQueries({ queryKey: ["chat-messages", chat.id] }); // Ensure we fetch fresh messages for the new chat
+    queryClient.refetchQueries({ queryKey: ["chat-messages", chat.id] }); // Force refetch regardless of staleTime
     setInputValue("");
     setShowEmojiPicker(false);
     setShowAttachMenu(false);
@@ -1913,9 +1913,6 @@ console.log("NEW MESSAGE:", newMessages[0]);
 
   const handleDeleteMessage = useCallback(
     (msgId: string) => {
-      if (!window.confirm("Are you sure you want to delete this message?")) {
-        return;
-      }
       deleteMessageMutation.mutate(msgId);
       setSelectedMessageId(null);
     },
@@ -2348,8 +2345,8 @@ console.log("NEW MESSAGE:", newMessages[0]);
                   ref={(el) => {
                     messageRefs.current[msg.id] = el;
                   }}
-                  className={`flex shrink ${!isMonitored ? ( isMe ? "justify-end" : "justify-start") : (isUser ? "justify-start" : "justify-end")} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
-                > 
+                  className={`flex shrink ${!isMonitored ? (isMe ? "justify-end" : "justify-start") : (isUser ? "justify-start" : "justify-end")} group mb-2 relative message-bubble transition-colors ${isSearchResult ? "z-10" : ""}`}
+                >
                   <div className="flex flex-col max-w-[85%] sm:max-w-[65%] relative">
                     {/* Floating Actions */}
                     {!isDeleted && !isPending && (

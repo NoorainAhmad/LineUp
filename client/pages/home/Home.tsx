@@ -163,12 +163,13 @@ export const Home: React.FC = () => {
 
     socket.on("chat_updated", handleChatUpdate);
     socket.on("messages_read", handleChatUpdate);
-    // Also invalidate on new_message just in case it's a new chat entirely
+    socket.on("message_updated", handleChatUpdate);
     socket.on("new_message", handleChatUpdate);
 
     return () => {
       socket.off("chat_updated", handleChatUpdate);
       socket.off("messages_read", handleChatUpdate);
+      socket.off("message_updated", handleChatUpdate);
       socket.off("new_message", handleChatUpdate);
     };
   }, [queryClient]);
