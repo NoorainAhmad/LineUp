@@ -16,6 +16,7 @@ export class ChatService {
         name: true,
         role: true,
         avatarUrl: true,
+        role: true,
       },
     },
     medias: {
@@ -80,6 +81,7 @@ export class ChatService {
             name: true,
             role: true,
             avatarUrl: true,
+            role: true,
           },
         },
         createdAt: true,
@@ -103,6 +105,7 @@ export class ChatService {
             status: true,
             lastSeen: true,
             parentId: true,
+            role: true,
           },
         },
       },
@@ -119,6 +122,7 @@ export class ChatService {
             name: true,
             role: true,
             avatarUrl: true,
+            role: true,
           },
         },
         createdAt: true,
@@ -335,7 +339,7 @@ export class ChatService {
         },
         include: {
           chat: { select: { id: true } },
-          sender: { select: { id: true, name: true, role: true, avatarUrl: true } },
+          sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
         },
       });
 
@@ -555,7 +559,7 @@ export class ChatService {
         orderBy: { id: "asc" },
         include: {
           sender: {
-            select: { id: true, name: true, role: true, avatarUrl: true },
+            select: { id: true, name: true, avatarUrl: true, role: true },
           },
           medias: {
             include: {
@@ -597,7 +601,7 @@ export class ChatService {
       const original = await prisma.message.findUnique({
         where: { id: originalMessageId },
         include: {
-          sender: { select: { id: true, name: true, role: true, avatarUrl: true } },
+          sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
         },
       });
 
@@ -623,7 +627,7 @@ export class ChatService {
               originalSenderId: original.senderId,
             },
             include: {
-              sender: { select: { id: true, name: true, role: true, avatarUrl: true } },
+              sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
             },
           });
 

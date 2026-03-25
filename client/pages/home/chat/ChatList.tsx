@@ -108,8 +108,8 @@ const ChatListItem = memo(
       <div
         onClick={handleClick}
         className={`group relative p-3 flex items-center gap-3.5 cursor-pointer transition-all rounded-2xl border border-transparent ${isSelected
-            ? "bg-primary/5 border-primary/10 shadow-sm"
-            : "hover:bg-surface-hover hover:border-border/20"
+          ? "bg-primary/5 border-primary/10 shadow-sm"
+          : "hover:bg-surface-hover hover:border-border/20"
           }`}
         role="button"
         tabIndex={0}
@@ -339,27 +339,23 @@ export const ChatList: React.FC<ChatListProps> = ({
   const processedChats = useMemo(() => {
     return chats
       .map((chat) => {
-        let myMemberData;
+        // find MY member data using currentUserId first
+        let myMemberData = chat.members?.find((m) => m.user.id === currentUserId);
         let otherMembers;
 
-        if (
-          currentUser?.role === UserRole.BRANCH ||
-          currentUser?.role === UserRole.USER
-        ) {
-          // Find MY member data (where userId matches currentUserId)
-          myMemberData = chat.members?.find((m) => m.user.id === currentUserId);
-          // Find OTHER members (excluding myself)
+        if (myMemberData) {
+          // Current user is a member of this chat — standard self/other logic
           otherMembers = chat.members.filter(
             (m) => m.user.id !== currentUserId,
           );
         } else {
-          // Find MY member data (where userId matches currentUserId)
+          // Admin/Master/Developer monitoring a chat they're not a member of
+          // Show it from the branch's perspective: branch = "self", others = display
           myMemberData = chat.members?.find(
             (m) => m.user.role === UserRole.BRANCH,
           );
-          // Find OTHER members (excluding myself)
           otherMembers = chat.members.filter(
-            (m) => m.user.role === UserRole.USER,
+            (m) => m.user.id !== myMemberData?.user?.id,
           );
         }
 
@@ -417,9 +413,9 @@ export const ChatList: React.FC<ChatListProps> = ({
         return {
           chat,
           displayUser,
-          isPinned: myMemberData?.isPinned ?? false,
-          isArchived: myMemberData?.isArchived ?? false,
-          unreadCount: myMemberData?.unreadCount ?? 0,
+          isPinned: myMemberData?.user?.id === currentUserId ? (myMemberData?.isPinned ?? false) : false,
+          isArchived: myMemberData?.user?.id === currentUserId ? (myMemberData?.isArchived ?? false) : false,
+          unreadCount: myMemberData?.user?.id === currentUserId ? (myMemberData?.unreadCount ?? 0) : 0,
           otherMember: otherMember?.user,
           lastMessageTime,
           isMeSender,

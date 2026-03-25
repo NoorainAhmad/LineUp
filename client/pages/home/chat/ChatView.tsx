@@ -67,7 +67,7 @@ import {
   type MediaSendReport,
 } from "@/services/chat.service";
 import AudioMessage from "@/components/ui/AudioMessage";
-import { CurrentUser } from "@/constants";
+
 import TextMessage from "@/components/ui/TextMessage";
 import { MediaUtils } from "@/utils/media.utils";
 import {
@@ -326,7 +326,7 @@ const renderMessageContent = (
         <AudioMessage
           msg={msg}
           isGroupChat={chat.isGroup} // or however you determine if it's a group chat
-          isMe={msg.sender?.id === CurrentUser.id}
+          isMe={isMe}
           senderName={msg.sender?.name}
           playingAudioId={playingAudioId}
           toggleAudio={toggleAudio}
@@ -746,8 +746,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onStatusClick,
 }) => {
   let { user } = useAuth();
-  let isMonitored = [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
-  let isGroup = chat?.isGroup;
+  const isMember = chat?.members?.some((m) => m.user.id === user?.id) ?? false;
+  let isMonitored = !isMember && [UserRole.DEVELOPER, UserRole.MASTER, UserRole.ADMIN].includes(user?.role!);
   const queryClient = useQueryClient();
 
   // State
@@ -1346,7 +1346,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     queryClient.setQueryData(["pending-messages", chat.id], []);
 
     // Mark as read
-    if (user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
+    if (isMember || user?.role === UserRole.USER || user?.role === UserRole.BRANCH) {
       setTimeout(() => {
         markAsRead();
       }, 0);
@@ -1373,7 +1373,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       // If we have incoming messages and we are "active" (viewing this chat), mark them read
       if (
         hasIncoming &&
-        (user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
+        (isMember || user?.role === UserRole.USER || user?.role === UserRole.BRANCH)
       ) {
         markAsRead();
       }
