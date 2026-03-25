@@ -8,7 +8,9 @@ import dotenv from "dotenv";
 
 import { connectRedis, redisClient, pubClient, subClient } from "@/config/redis.js";
 import { connectDB } from "@/config/db.js";
+import { connectKafka, disconnectKafka } from "@/config/kafka.js";
 import { initSocket } from "@/socket/index.js";
+import { startKafkaConsumer } from "@/workers/kafka.consumer.js";
 
 dotenv.config();
 
@@ -292,7 +294,7 @@ async function bootstrap() {
       process.exit(1);
     }, 30000);
 
-    await Promise.all([connectRedis(), connectDB()]);
+    await Promise.all([connectRedis(), connectDB(), connectKafka()]);
     clearTimeout(timeout);
 
     // Initialize rate limiters after Redis is connected
@@ -364,6 +366,10 @@ async function bootstrap() {
     initSocket(httpServer);
     console.log("✅ Socket.io initialized.");
 
+    // Start Kafka consumer (must be after Socket.io init)
+    await startKafkaConsumer();
+    console.log("✅ Kafka consumer started.");
+
     httpServer.listen(PORT, () => {
       console.log(`-----------------------------------------------`);
       console.log(`🚀 Server running on http://localhost:${PORT}`);
@@ -381,11 +387,12 @@ async function bootstrap() {
 // Graceful shutdown
 function shutdown() {
   console.log("Shutting down gracefully...");
-  httpServer.close(() => {
+  httpServer.close(async () => {
     console.log("Closed out remaining connections.");
     if (redisClient) redisClient.quit();
     if (pubClient) pubClient.quit();
     if (subClient) subClient.quit();
+    await disconnectKafka();
     process.exit(0);
   });
 }
