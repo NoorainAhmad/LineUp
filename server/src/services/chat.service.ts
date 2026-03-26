@@ -598,6 +598,7 @@ export class ChatService {
         where: { id: originalMessageId },
         include: {
           sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+           medias: { select: { mediaId: true, order: true, }},
         },
       });
 
@@ -626,6 +627,15 @@ export class ChatService {
               sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
             },
           });
+          if (original.medias.length > 0) {
+            await tx.messageMedia.createMany({
+              data: original.medias.map((m) => ({
+                messageId: msg.id,
+                mediaId: m.mediaId,
+                order: m.order,
+              })),
+            });
+          }
 
           await tx.chat.update({
             where: { id: targetChatId },
