@@ -788,6 +788,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
     fileName?: string;
   } | null>(null);
 
+  // Typing indicator state
+  const [typingUsers, setTypingUsers] = useState<Map<string, { name: string; timestamp: number }>>(new Map());
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
@@ -889,16 +895,46 @@ export const ChatView: React.FC<ChatViewProps> = ({
           s.emit("join_chat", currentChatId);
         };
 
+        // Listen for typing indicators
+        const handleTypingStatus = (data: { userId: string; chatId: string; status: "typing" | "idle" }) => {
+          if (data.chatId !== currentChatId || data.userId === user?.id) return;
+
+          setTypingUsers((prev) => {
+            const updated = new Map(prev);
+            if (data.status === "typing") {
+              // Get the user name from chat members
+              const member = chat?.members?.find((m) => m.user.id === data.userId);
+              const userName = member?.user?.name || "Unknown";
+              updated.set(data.userId, { name: userName, timestamp: Date.now() });
+            } else {
+              updated.delete(data.userId);
+            }
+            return updated;
+          });
+        };
+
         if (s.connected) {
           doJoin();
         }
 
         s.on("connect", doJoin);
+        s.on("user_status_changed", handleTypingStatus);
 
         cleanup = () => {
           console.log(`[ChatView] Cleaning up socket for chat: ${currentChatId}`);
           s.off("connect", doJoin);
+          s.off("user_status_changed", handleTypingStatus);
           s.emit("leave_chat", currentChatId);
+
+          // Clear typing indicator when leaving chat
+          setTypingUsers(new Map());
+          if (typingDebounceRef.current) {
+            clearTimeout(typingDebounceRef.current);
+          }
+          if (isTypingRef.current) {
+            s.emit("typing_end", currentChatId);
+            isTypingRef.current = false;
+          }
         };
       })
       .catch((err) =>
@@ -906,7 +942,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
       );
 
     return () => cleanup();
-  }, [chat?.id]);
+  }, [chat?.id, user?.id, chat?.members]);
+
+  // Cleanup stale typing indicators (if typing_end is missed due to network issues)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTypingUsers((prev) => {
+        const now = Date.now();
+        const updated = new Map(prev);
+        for (const [userId, data] of updated.entries()) {
+          if (now - data.timestamp > 5000) { // 5 second timeout
+            updated.delete(userId);
+          }
+        }
+        return updated;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Polling query for messages
   const {
@@ -1550,6 +1604,40 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const val = e.target.value;
       setInputValue(val);
 
+      // Typing indicator logic
+      if (!chat?.id) return;
+
+      import("@/utils/socket").then(({ getSocket }) => {
+        const socket = getSocket();
+        if (!socket) return;
+
+        if (val.trim().length > 0) {
+          // User is typing
+          if (!isTypingRef.current) {
+            isTypingRef.current = true;
+            socket.emit("typing_start", chat.id);
+          }
+
+          // Debounce typing_end
+          if (typingDebounceRef.current) {
+            clearTimeout(typingDebounceRef.current);
+          }
+          typingDebounceRef.current = setTimeout(() => {
+            isTypingRef.current = false;
+            socket.emit("typing_end", chat.id);
+          }, 2000);
+        } else {
+          // User stopped typing
+          if (isTypingRef.current) {
+            isTypingRef.current = false;
+            socket.emit("typing_end", chat.id);
+          }
+          if (typingDebounceRef.current) {
+            clearTimeout(typingDebounceRef.current);
+          }
+        }
+      });
+
       if (val.startsWith("/")) {
         const query = val.slice(1).toLowerCase();
         if (query.includes(" ")) {
@@ -1563,7 +1651,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         setShowCannedMenu(false);
       }
     },
-    [],
+    [chat?.id],
   );
 
   const filteredCannedResponses = cannedResponses.filter(
@@ -2636,7 +2724,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
         )}
       </div>
 
-
+      {/* Typing Indicator */}
+      {typingUsers.size > 0 && (
+        <div className="px-4 sm:px-6 py-2 text-sm text-secondary flex items-center gap-2">
+          <div className="flex gap-1">
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0s" }}></span>
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.1s" }}></span>
+            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.2s" }}></span>
+          </div>
+          <span>
+            {Array.from(typingUsers.values())
+              .map((u) => u.name)
+              .join(", ")}{" "}
+            {typingUsers.size === 1 ? "is" : "are"} typing...
+          </span>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="bg-surface/50 backdrop-blur-sm p-2 relative z-20">
