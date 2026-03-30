@@ -523,7 +523,7 @@ export class ChatService {
   }
 
   // Get messages for a specific chat with role-based access control
-  static async getMessages(userId: string, userRole: string, chatId: string, limit = 200, after?: bigint) {
+  static async getMessages(userId: string, userRole: string, chatId: string, limit = 50, after?: bigint, before?: bigint) {
     try {
       if (!chatId) return [];
       
@@ -550,9 +550,14 @@ export class ChatService {
       if (!isAuthorizedChat) return [];
 
       const messages = await prisma.message.findMany({
-        where: { chatId, ...(after !== undefined && { id: { gt: after } }), },
+        where: { chatId, ...(after !== undefined && { id: { gt: after } }),
+                ...(before !== undefined && { id: { lt: before } }), },
         take: limit,
-        orderBy: { id: "asc" },
+        // Older-page fetches use a descending slice so we can reverse it back
+        // to oldest -> newest. Initial loads use desc to grab the latest page.
+        orderBy: {
+          id: before !== undefined ? "desc" : after !== undefined ? "asc" : "desc",
+        },
         include: {
           sender: {
             select: { id: true, name: true, avatarUrl: true, role: true },
@@ -565,9 +570,12 @@ export class ChatService {
           },
         },
       });
-
-      if (messages.length > 0) {
-        const maxSeq = messages[messages.length - 1].id;
+      // If we fetched backwards, reverse so array is always oldest→newest
+    const ordered =
+      before !== undefined || after === undefined ? messages.reverse() : messages;
+        // Advance lastDeliveredSeq (only for forward fetches)
+    if (ordered.length > 0 && before === undefined) {
+      const maxSeq = ordered[ordered.length - 1].id;
         await prisma.chatMember.updateMany({
           where: {
             userId,
@@ -581,7 +589,7 @@ export class ChatService {
         });
       }
 
-      return messages;
+      return ordered;
     } catch (error) {
       throw new Error("Messages not found: " + (error as Error).message);
     }

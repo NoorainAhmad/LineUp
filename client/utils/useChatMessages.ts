@@ -1,85 +1,97 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useCallback, useEffect } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 import { ChatService, mergeMessages } from "@/services/chat.service";
 import type { Message, Chat } from "@/types";
 import { getSocket } from "./socket";
 
+const PAGE_SIZE = 50;
+
 export function useChatMessages(chat: Chat | null) {
   const queryClient = useQueryClient();
-
-  const lastKnownSeqRef = useRef<bigint | undefined>(undefined);
-
   const queryKey = ["chat-messages", chat?.id];
 
-  const { data: messages = [], isLoading, error, refetch } = useQuery({
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,   // we use "next" to mean "older" (going back in time)
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       if (!chat?.id) return [];
 
-      try {
-        const response = await ChatService.getMessages(
-          chat.id,
-          200,
-          lastKnownSeqRef.current?.toString()
-        );
+      // pageParam is the oldest message ID we have — fetch messages before it
+      // On first load, pageParam is undefined → fetch the latest PAGE_SIZE messages
+      const response = await ChatService.getMessages(
+        chat.id,
+        PAGE_SIZE,
+        undefined,          // after
+        pageParam           // before (undefined on first load = get latest)
+      );
 
-        const newMessages: Message[] = Array.isArray(response.data)
-          ? response.data
-          : response;
+      const newMessages: Message[] = Array.isArray(response.data)
+        ? response.data
+        : response;
 
-        if (newMessages.length === 0) {
-          return queryClient.getQueryData<Message[]>(queryKey) ?? [];
-        }
+      return newMessages;
+    },
 
-        const maxSeq = newMessages.reduce<bigint>(
-          (max, m) => {
-            const curr = BigInt(m.id);
-            return curr > max ? curr : max;
-          },
-          lastKnownSeqRef.current ?? 0n
-        );
+    initialPageParam: undefined as string | undefined,
 
-        lastKnownSeqRef.current = maxSeq;
-
-        const existing = queryClient.getQueryData<Message[]>(queryKey) ?? [];
-        return mergeMessages(existing, newMessages);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        return queryClient.getQueryData<Message[]>(queryKey) ?? [];
-      }
+    // getNextPageParam returns the cursor for the NEXT older page.
+    // It receives the FIRST page loaded (oldest page so far).
+    // If that page returned fewer messages than PAGE_SIZE, we've
+    // reached the beginning — return undefined to stop.
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || lastPage.length < PAGE_SIZE) return undefined;
+      // Return the ID of the oldest message as the next `before` cursor
+      return String(lastPage[0]?.id);
     },
 
     enabled: !!chat?.id,
     refetchOnWindowFocus: false,
     staleTime: Infinity,
-
-    select: (data) => {
-      const pendingMessages =
-        queryClient.getQueryData<Message[]>(["pending-messages", chat?.id]) ?? [];
-      return [...data, ...pendingMessages];
-    },
   });
 
+  // Flatten all pages into a single sorted array
+  const messages: Message[] = data
+    ? mergeMessages([], data.pages.flat())
+    : [];
+
+  // Socket event handlers — patch cache directly
   useEffect(() => {
     if (!chat?.id) return;
-
     const chatId = chat.id;
 
     const applyMessageToCache = (incomingMessage: Message) => {
-      queryClient.setQueryData<Message[]>(
-        ["chat-messages", chatId],
-        (existing = []) => mergeMessages(existing, [incomingMessage])
-      );
+      // Append to the LAST page (most recent)
+      queryClient.setQueryData<any>(queryKey, (old: any) => {
+        if (!old) return old;
+        const pages = [...old.pages];
+        const lastPage = [...(pages[pages.length - 1] ?? [])];
+        const idStr = String(incomingMessage.id);
+        if (lastPage.some((m: Message) => String(m.id) === idStr)) return old;
+        lastPage.push(incomingMessage);
+        pages[pages.length - 1] = lastPage;
+        return { ...old, pages };
+      });
     };
 
     const patchMessageInCache = (patch: Partial<Message> & { id: string }) => {
-      queryClient.setQueryData<Message[]>(
-        ["chat-messages", chatId],
-        (existing = []) =>
-          existing.map((m) =>
-            String(m.id) === String(patch.id) ? { ...m, ...patch } : m
-          )
-      );
+      queryClient.setQueryData<any>(queryKey, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: Message[]) =>
+            page.map((m) =>
+              String(m.id) === String(patch.id) ? { ...m, ...patch } : m
+            )
+          ),
+        };
+      });
     };
 
     const handleNewMessage = (data: any) => {
@@ -116,24 +128,13 @@ export function useChatMessages(chat: Chat | null) {
     };
 
     const socket = getSocket();
+    if (socket?.connected) return attachListeners(socket);
 
-    // Case 1: Socket already connected — attach listeners immediately.
-    if (socket?.connected) {
-      return attachListeners(socket);
-    }
-
-    // Case 2: Socket exists but still connecting (handshake in progress).
-    // Defer listener attachment until the 'connect' event fires.
-    // THIS is the race condition that was causing missed messages:
-    // the effect ran before the WebSocket handshake completed, so
-    // socket.connected was false and listeners were never attached.
     if (socket) {
-      console.log(`[useChatMessages] Attaching connection-aware listener for chat ${chatId}`);
-      let detachListeners = () => { };
-
+      let detach = () => {};
       const onConnect = () => {
-        detachListeners(); // clean up previous if any
-        detachListeners = attachListeners(socket);
+        detach();
+        detach = attachListeners(socket);
       };
 
       // Case 1: Already connected
@@ -146,7 +147,7 @@ export function useChatMessages(chat: Chat | null) {
 
       return () => {
         socket.off("connect", onConnect);
-        detachListeners();
+        detach();
       };
     }
 
@@ -159,9 +160,17 @@ export function useChatMessages(chat: Chat | null) {
   }, [chat?.id, queryClient, refetch]);
 
   const resetCursor = useCallback(() => {
-    lastKnownSeqRef.current = undefined;
     queryClient.removeQueries({ queryKey });
   }, [chat?.id]);
 
-  return { messages, isLoading, error, refetch, resetCursor };
+  return {
+    messages,
+    isLoading,
+    error,
+    refetch,
+    resetCursor,
+    fetchOlderMessages: fetchNextPage,   // renamed for clarity at call site
+    hasOlderMessages: hasNextPage,
+    isFetchingOlder: isFetchingNextPage,
+  };
 }

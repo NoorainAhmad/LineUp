@@ -969,6 +969,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
     error: messagesError,
     refetch: refetchMessages,
     resetCursor,
+    fetchOlderMessages,
+    hasOlderMessages,
+    isFetchingOlder,
   } = useChatMessages(chat);
 
   // Mutations
@@ -1193,14 +1196,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
         },
       );
 
-      queryClient.setQueryData(
-        ["chat-messages", chat?.id],
-        (old: Message[] = []) => mergeMessages(old, newMessages)
-      );
+      queryClient.setQueryData<any>(
+  ["chat-messages", chat?.id],
+  (old: any) => {
+    if (!old) return old;
+    const pages = [...old.pages];
+    const lastPage = [...(pages[pages.length - 1] ?? [])];
+    const existingIds = new Set(lastPage.map((m: Message) => String(m.id)));
+    const toAdd = newMessages.filter((msg) => !existingIds.has(String(msg.id)));
+    if (toAdd.length === 0) return old;
+    pages[pages.length - 1] = [...lastPage, ...toAdd];
+    return { ...old, pages };
+  }
+);
       console.log("NEW MESSAGE:", newMessages[0]);
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["chats"] });
-      queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
+      //queryClient.invalidateQueries({ queryKey: ["chat-messages", chat?.id] });
 
       if (pendingMessageId) {
         cleanupPendingAttachmentUrls(pendingMessageId);
@@ -1577,6 +1589,30 @@ export const ChatView: React.FC<ChatViewProps> = ({
       updateMessageMutation,
     ],
   );
+  
+  const handleScroll = useCallback(() => {
+  const el = scrollContainerRef.current;
+  if (!el) return;
+
+  // flex-col-reverse flips scroll direction:
+  // scrollTop === 0 means you're at the BOTTOM (newest messages)
+  // scrollTop going negative (or large positive in some browsers) = scrolling UP toward older
+  // The reliable check: distance from top
+  const distanceFromTop = el.scrollTop;
+  const isNearBottom = distanceFromTop > -100; // col-reverse: 0 is bottom
+
+  isScrolledToBottomRef.current = isNearBottom;
+  setShowScrollButton(!isNearBottom);
+
+  if (isNearBottom) setShowNewMessageIndicator(false);
+
+  // Load older messages when user scrolls near the top
+  // In flex-col-reverse, "near top" = large negative scrollTop
+  const isNearTop = el.scrollTop < -(el.scrollHeight - el.clientHeight - 100);
+  if (isNearTop && hasOlderMessages && !isFetchingOlder) {
+    fetchOlderMessages();
+  }
+  }, [hasOlderMessages, isFetchingOlder, fetchOlderMessages]);
 
   const handleTextSend = useCallback(() => {
     if (!chat) return;
@@ -2393,8 +2429,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
 
       {/* Messages Container */}
+      {/* Inside your messages container, at the very top */}
+{isFetchingOlder && (
+  <div className="flex justify-center py-3">
+    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+  </div>
+)}
+
       <div
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="flex-1 overflow-y-auto flex flex-col-reverse p-4 sm:p-6 gap-y-4 custom-scrollbar relative z-0"
       >
         {isLoadingMessages && messages.length === 0 ? (

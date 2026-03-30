@@ -85,14 +85,17 @@ export class ChatController {
     try {
       const userId = req.userId as string; 
       const userRole = req.userRole as string;
+      const after = req.query.after ? BigInt(req.query.after as string) : undefined;
+      const before = req.query.before ? BigInt(req.query.before as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const { chatId } = req.params as { chatId: string };
-      const { limit, cursor } = req.query;
       const messages = await ChatService.getMessages(
         userId,
         userRole,
         chatId,
-        limit ? parseInt(limit as string) : 50,
-        typeof cursor === "string" ? BigInt(cursor) : undefined,
+        limit ,
+        after,
+        before
       );
       return res.status(200).json(messages);
     } catch (error: any) {
