@@ -497,16 +497,29 @@ export class UserService {
     }
   }
 
-  // Update last seen time
+  // Update last seen time and set status to OFFLINE
   static async updateLastSeen(userId: string) {
     try {
       return prisma.user.update({
         where: { id: userId },
-        data: { lastSeen: new Date() },
+        data: { lastSeen: new Date(), status: "OFFLINE" },
       });
     } catch (error) {
       console.log(`[Update Last Seen] Error: ${error}`);
       throw new Error("Last seen update failed: " + (error as Error).message);
+    }
+  }
+
+  // Set user status to ONLINE
+  static async setOnline(userId: string) {
+    try {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { status: "ONLINE" },
+      });
+    } catch (error) {
+      console.log(`[Set Online] Error: ${error}`);
+      throw new Error("Set online failed: " + (error as Error).message);
     }
   }
 

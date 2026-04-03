@@ -94,14 +94,27 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
     }
   });
 
-  io.on("connection", (socket: TypedSocket) => {
+  io.on("connection", async (socket: TypedSocket) => {
     const userId = socket.data.userId;
     console.log(`[Socket.io] User connected: ${userId} (Socket ID: ${socket.id})`);
 
     // 1. Automatically join a personal room for direct events
     socket.join(userId);
 
-    // 2. Handle explicit chat room joins (for typing indicators, read receipts)
+    // 2. Set user ONLINE and broadcast presence
+    try {
+      await UserService.setOnline(userId);
+      // Broadcast to ALL connected sockets so every user sees the update
+      io.emit("user_status_changed", {
+        userId,
+        status: "ONLINE",
+      });
+      console.log(`[Socket.io] ✅ User ${userId} is now ONLINE`);
+    } catch (err) {
+      console.error(`[Socket.io] Error setting user online:`, err);
+    }
+
+    // 3. Handle explicit chat room joins (for typing indicators, read receipts)
     socket.on("join_chat", async (chatId) => {
       console.log(`[Socket.io] User ${userId} attempting to join chat room: ${chatId}`);
       // Verify membership OR hierarchical visibility before allowing join
@@ -142,7 +155,7 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
       socket.leave(`chat:${chatId}`);
     });
 
-    // 3. Handle Typing Indicators
+    // 4. Handle Typing Indicators
     socket.on("typing_start", (chatId) => {
       // Broadcast to everyone in the chat EXCEPT the sender
       socket.to(`chat:${chatId}`).emit("user_status_changed", {
@@ -162,7 +175,27 @@ export const initSocket = (httpServer: HttpServer): TypedServer => {
 
     socket.on("disconnect", async () => {
       console.log(`[Socket.io] User disconnected: ${userId}`);
-      await UserService.updateLastSeen(userId);
+
+      // Check if user still has other active sockets (multi-tab support)
+      const userSockets = await io.in(userId).fetchSockets();
+      if (userSockets.length > 0) {
+        console.log(`[Socket.io] User ${userId} still has ${userSockets.length} active socket(s), staying ONLINE`);
+        return;
+      }
+
+      // No more active sockets – mark user as OFFLINE
+      try {
+        await UserService.updateLastSeen(userId);
+        const lastSeen = new Date().toISOString();
+        io.emit("user_status_changed", {
+          userId,
+          status: "OFFLINE",
+          lastSeen,
+        });
+        console.log(`[Socket.io] ✅ User ${userId} is now OFFLINE`);
+      } catch (err) {
+        console.error(`[Socket.io] Error setting user offline:`, err);
+      }
       // Note: user is automatically removed from all rooms on disconnect
     });
   });
