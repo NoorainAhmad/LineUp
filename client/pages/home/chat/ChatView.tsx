@@ -77,6 +77,7 @@ import {
 import { getMessageStatus } from "@/utils/messageStatus";
 import { MessageStatusIcon } from "@/components/ui/MessageStatusIcon";
 import { useChatMessages } from "@/utils/useChatMessages";
+import type { PresenceInfo } from "@/utils/usePresence";
 
 interface ChatViewProps {
   chat: Chat | null;
@@ -84,6 +85,7 @@ interface ChatViewProps {
   onToggleProfile: () => void;
   cannedResponses: CannedResponse[];
   onTogglePin: (chatId: string) => void;
+  getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo;
   onStatusClick?: (statusId: string) => void;
 }
 
@@ -743,6 +745,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onToggleProfile,
   cannedResponses,
   onTogglePin,
+  getUserPresence,
   onStatusClick,
 }) => {
   let { user } = useAuth();
@@ -2357,7 +2360,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
               >
                 <div className="relative shrink-0">
                   <Avatar
-                    user={chat.isGroup ? undefined : otherUser!}
+                    user={chat.isGroup ? undefined : (otherUser ? {
+                      ...otherUser,
+                      status: getUserPresence(otherUser.id, otherUser.status, otherUser.lastSeen).status
+                    } : undefined)}
                     isGroup={chat.isGroup}
                     groupName={chat.isGroup ? chat.groupName : undefined}
                     size={window.innerWidth < 768 ? "sm" : "md"}
@@ -2374,16 +2380,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <span className="text-xs text-secondary truncate flex items-center gap-1 font-medium">
                     {chat.isGroup ? (
                       `${chat.members?.length || 0} members`
-                    ) : otherUser?.status === UserStatus.ONLINE ? (
-                      <span className="text-primary flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                        Online
-                      </span>
-                    ) : (
-                      <span className="opacity-80">
-                        {`last seen ${formatLastMessageTime(otherUser?.lastSeen || "")}`.toLocaleLowerCase()}
-                      </span>
-                    )}
+                    ) : (() => {
+                      const presence = otherUser ? getUserPresence(otherUser.id, otherUser.status, otherUser.lastSeen) : null;
+                      return presence?.status === UserStatus.ONLINE ? (
+                        <span className="text-green-500 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                          Online
+                        </span>
+                      ) : (
+                        <span className="opacity-80">
+                          {`last seen ${formatLastMessageTime(presence?.lastSeen || otherUser?.lastSeen || "")}`.toLocaleLowerCase()}
+                        </span>
+                      );
+                    })()}
                   </span>
                 </div>
 

@@ -16,10 +16,11 @@ import {
   UserCircle2Icon,
   LogOutIcon,
 } from "lucide-react";
-import { UserRole, User } from "../../types";
+import { UserRole, User, UserStatus } from "../../types";
 import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import type { PresenceInfo } from "@/utils/usePresence";
 
 interface NavigationItem {
   id: string;
@@ -34,6 +35,7 @@ interface NavigationProps {
   theme: "dark" | "light";
   onToggleTheme: () => void;
   onLogout?: () => void;
+  getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo;
 }
 
 // Define navigation items outside component to prevent recreation on every render
@@ -237,7 +239,7 @@ const LogoutButton = memo(({ onLogout }: { onLogout?: () => void }) => {
 });
 LogoutButton.displayName = "LogoutButton";
 
-const MyProfileButton = memo(({ handleClick }: { handleClick: () => void }) => {
+const MyProfileButton = memo(({ handleClick, getUserPresence }: { handleClick: () => void; getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo; }) => {
   const { user } = useAuth();
   return (
     <div
@@ -254,7 +256,7 @@ const MyProfileButton = memo(({ handleClick }: { handleClick: () => void }) => {
       }}
       aria-label="My Profile"
     >
-      <Avatar user={user as User} size="sm" showStatus />
+      <Avatar user={user ? { ...user, status: getUserPresence(user.id, user.status).status } : undefined} size="sm" showStatus />
       <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border rounded shadow-lg text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
         My Profile
       </div>
@@ -272,6 +274,7 @@ const MobileTopBar = memo(
     onProfileClick,
     showSettings,
     onSettingsClick,
+    getUserPresence,
   }: {
     theme: "dark" | "light";
     onToggleTheme: () => void;
@@ -279,6 +282,7 @@ const MobileTopBar = memo(
     onProfileClick: () => void;
     showSettings: boolean;
     onSettingsClick: () => void;
+    getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo;
   }) => {
     const [showMenu, setShowMenu] = useState(false);
     const { user } = useAuth();
@@ -305,7 +309,7 @@ const MobileTopBar = memo(
               aria-label="User menu"
               aria-expanded={showMenu}
             >
-              <Avatar user={user as User} size="sm" showStatus />
+              <Avatar user={user ? { ...user, status: getUserPresence(user.id, user.status).status } : undefined} size="sm" showStatus />
             </button>
 
             {/* Dropdown menu */}
@@ -357,6 +361,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   theme,
   onToggleTheme,
   onLogout,
+  getUserPresence,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -416,6 +421,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         onProfileClick={handleProfileClick}
         showSettings={canSeeSettings}
         onSettingsClick={handleSettingsClick}
+        getUserPresence={getUserPresence}
       />
 
       {/* Mobile Bottom Navigation - WhatsApp Style */}
@@ -509,7 +515,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="mt-auto flex flex-col gap-2 w-full px-2">
           <ThemeToggleButton theme={theme} onToggleTheme={onToggleTheme} />
           <LogoutButton onLogout={onLogout} />
-          <MyProfileButton handleClick={handleProfileClick} />
+          <MyProfileButton handleClick={handleProfileClick} getUserPresence={getUserPresence} />
         </div>
       </div>
     </>

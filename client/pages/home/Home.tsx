@@ -40,6 +40,7 @@ import { MyProfileView } from "./profile/MyProfileView";
 import { z } from "zod";
 import api from "@/api/axios";
 import { getSocket } from "@/utils/socket";
+import { usePresence } from "@/utils/usePresence";
 
 //State to handle create User error
 //const [error, setError] = useState<string | null>(null);
@@ -116,6 +117,7 @@ export const Home: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { user: currentUser, logout } = useAuth();
   const queryClient = useQueryClient();
+  const { getUserPresence } = usePresence();
   const [error, setError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState(
@@ -1188,6 +1190,7 @@ export const Home: React.FC = () => {
           onToggleProfile={toggleProfile}
           cannedResponses={responsesData}
           onTogglePin={handleTogglePin}
+          getUserPresence={getUserPresence}
           onStatusClick={(statusId) => {
             // to redirect to status view
             handleStatusSelect(statusId);
@@ -1335,6 +1338,7 @@ export const Home: React.FC = () => {
           theme={theme}
           onToggleTheme={toggleTheme}
           onLogout={() => setShowLogoutModal(true)}
+          getUserPresence={getUserPresence}
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -1380,6 +1384,7 @@ export const Home: React.FC = () => {
           theme={theme}
           onToggleTheme={toggleTheme}
           onLogout={() => setShowLogoutModal(true)}
+          getUserPresence={getUserPresence}
         />
       </div>
 
@@ -1395,6 +1400,7 @@ export const Home: React.FC = () => {
                 chats={chatsData}
                 selectedChatId={selectedChat?.id}
                 currentUserId={currentUser!.id}
+                getUserPresence={getUserPresence}
                 onAddContact={() => {
                   closeModals();
                   setIsAddingUser(true);

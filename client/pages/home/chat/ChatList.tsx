@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, memo } from "react";
+import type { PresenceInfo } from "@/utils/usePresence";
 import {
   Search,
   Archive,
@@ -25,6 +26,7 @@ interface ChatListProps {
   chats: Chat[];
   selectedChatId?: string;
   currentUserId: string;
+  getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo;
   onAddContact: () => void;
   onCreateGroup: () => void;
   onChatSelect: (chat: Chat) => void;
@@ -51,6 +53,7 @@ const ChatListItem = memo(
     processedChat,
     isSelected,
     currentUser,
+    getUserPresence,
     onChatSelect,
     onTogglePin,
     onArchive,
@@ -58,6 +61,7 @@ const ChatListItem = memo(
     processedChat: ProcessedChat;
     isSelected: boolean;
     currentUser?: User | null;
+    getUserPresence: (userId: string, fallbackStatus?: UserStatus, fallbackLastSeen?: string) => PresenceInfo;
     onChatSelect: (chat: Chat) => void;
     onTogglePin: (chatId: string) => void;
     onArchive: (chatId: string) => void;
@@ -131,13 +135,16 @@ const ChatListItem = memo(
         )}
 
         <div className="relative">
-          <Avatar user={displayUser} showStatus={!chat.isGroup} size="lg" />
-          {!chat.isGroup && otherMember?.status === UserStatus.ONLINE && (
-            <div
-              className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-surface rounded-full"
-              aria-hidden="true"
-            />
-          )}
+          <Avatar 
+            user={{ 
+              ...displayUser, 
+              status: !chat.isGroup && otherMember 
+                ? getUserPresence(otherMember.id, otherMember.status, otherMember.lastSeen).status 
+                : displayUser.status 
+            }} 
+            showStatus={!chat.isGroup} 
+            size="lg" 
+          />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -323,6 +330,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   chats,
   selectedChatId,
   currentUserId,
+  getUserPresence,
   onAddContact,
   onCreateGroup,
   onChatSelect,
@@ -594,6 +602,7 @@ export const ChatList: React.FC<ChatListProps> = ({
             processedChat={processedChat}
             isSelected={selectedChatId === processedChat.chat.id}
             currentUser={currentUser}
+            getUserPresence={getUserPresence}
             onChatSelect={onChatSelect}
             onTogglePin={onTogglePin}
             onArchive={onArchive}
